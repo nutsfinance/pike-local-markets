@@ -1,0 +1,39 @@
+{
+  "name": "pike-local-markets",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pike Local Lending Markets",
+  "homepage": "https://nuts.finance",
+  "repository": "https://github.com/nutsfinance/pike-local-markets.git",
+  "license": "MIT",
+  "author": {
+    "name": "NUTS Finance",
+    "email": "security@nuts.finance",
+    "url": "https://nuts.finance"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "forge build",
+    "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
+    "postinstall": "forge install",
+    "lint:check": "yarn lint:sol-tests && yarn lint:sol-logic && forge fmt --check",
+    "lint:fix": "yarn sort-package-json && forge fmt && yarn solhint 'src/**/*.sol' 'test/**/*.sol' --fix",
+    "lint:sol-logic": "solhint -c .solhint.json 'src/**/*.sol'",
+    "lint:sol-tests": "solhint -c .solhint.json 'test/**/*.sol'",
+    "prepare": "husky",
+    "sort-package-json": "sort-package-json",
+    "test": "forge clean && forge test -vv"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2",
+    "@openzeppelin/contracts-upgradeable": "^5.0.2",
+    "forge-std": "git+https://github.com/foundry-rs/forge-std.git"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "17.0.3",
+    "@commitlint/config-conventional": "17.0.3",
+    "husky": ">=8",
+    "solhint": "5.0.3",
+    "sort-package-json": "2.10.0"
+  }
+}
