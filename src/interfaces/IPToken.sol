@@ -36,7 +36,7 @@ interface IPToken is IERC20 {
      *  for senders, explicitly marked as delegates of the supplier using `riskEngine.updateDelegate`
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
      * @param redeemer The user on behalf of whom to redeem
-     * @param redeemTokens The number of vTokens to redeem into underlying
+     * @param redeemTokens The number of pTokens to redeem into underlying
      * @return uint 0=success, otherwise a failure (see Errors for details)
      */
     function redeemBehalf(address redeemer, uint256 redeemTokens)
