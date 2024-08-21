@@ -29,4 +29,28 @@ contract InterestRateModule is IInterestRateModel, InterestRateStorage, OwnableM
             baseRatePerYear, multiplierPerYear, jumpMultiplierPerYear, kink
         );
     }
+
+    /**
+     * @inheritdoc IInterestRateModel
+     */
+    function getBorrowRate(uint256 cash, uint256 borrows, uint256 reserves)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 util = getUtilization(cash, borrows, reserves);
+        uint256 kink = _getIRMStorage().kink;
+
+        if (util <= kink) {
+            return (util * _getIRMStorage().multiplierPerSecond / BASE)
+                + _getIRMStorage().baseRatePerSecond;
+        } else {
+            uint256 normalRate = (kink * _getIRMStorage().multiplierPerSecond / BASE)
+                + _getIRMStorage().baseRatePerSecond;
+            uint256 excessUtil = util - kink;
+            return (excessUtil * _getIRMStorage().jumpMultiplierPerSecond / BASE)
+                + normalRate;
+        }
+    }
+
 }
