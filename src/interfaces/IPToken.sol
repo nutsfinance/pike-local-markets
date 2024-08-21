@@ -6,6 +6,18 @@ import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 
 interface IPToken is IERC20 {
     /**
+     * @notice Event emitted when risk engine is changed
+     */
+    event NewRiskEngine(IRiskEngine oldRiskEngine, IRiskEngine newRiskEngine);
+
+    /**
+     * @notice Event emitted when the reserve factor is changed
+     */
+    event NewReserveFactor(
+        uint256 oldReserveFactorMantissa, uint256 newReserveFactorMantissa
+    );
+
+    /**
      * @notice Sender supplies assets into the market and receives pTokens in exchange
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
      * @param mintAmount The amount of the underlying asset to supply
