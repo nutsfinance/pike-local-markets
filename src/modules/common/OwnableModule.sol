@@ -2,23 +2,14 @@
 pragma solidity 0.8.20;
 
 import {IOwnable} from "@interfaces/IOwnable.sol";
-import {OwnableStorage} from "@storage/OwnableStorage.sol";
+import {OwnableMixin} from "@utils/OwnableMixin.sol";
 import {AddressError} from "@errors/AddressError.sol";
 
 /**
  * @title Contract for facilitating ownership by a single address with 2 steps.
  * See IOwnable.
  */
-contract OwnableModule is IOwnable, OwnableStorage {
-    /**
-     * @dev Reverts if the caller is not the owner.
-     */
-    modifier onlyOwner() {
-        _checkOwner();
-
-        _;
-    }
-
+contract OwnableModule is IOwnable, OwnableMixin {
     /**
      * @inheritdoc IOwnable
      */
