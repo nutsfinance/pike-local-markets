@@ -53,4 +53,34 @@ contract InterestRateModule is IInterestRateModel, InterestRateStorage, OwnableM
         }
     }
 
+    /**
+     * @inheritdoc IInterestRateModel
+     */
+    function getSupplyRate(
+        uint256 cash,
+        uint256 borrows,
+        uint256 reserves,
+        uint256 reserveFactorMantissa
+    ) public view returns (uint256) {
+        uint256 oneMinusReserveFactor = BASE - reserveFactorMantissa;
+        uint256 borrowRate = getBorrowRate(cash, borrows, reserves);
+        uint256 rateToPool = borrowRate * oneMinusReserveFactor / BASE;
+        return getUtilization(cash, borrows, reserves) * rateToPool / BASE;
+    }
+
+    /**
+     * @inheritdoc IInterestRateModel
+     */
+    function getUtilization(uint256 cash, uint256 borrows, uint256 reserves)
+        public
+        pure
+        returns (uint256)
+    {
+        // Utilization rate is 0 when there are no borrows
+        if (borrows == 0) {
+            return 0;
+        }
+
+        return borrows * BASE / (cash + borrows - reserves);
+    }
 }
