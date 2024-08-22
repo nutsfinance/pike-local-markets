@@ -202,6 +202,27 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
+    function borrowRatePerSecond() external view returns (uint256) {
+        return IInterestRateModel(address(this)).getBorrowRate(
+            getCash(), _getPTokenStorage().totalBorrows, _getPTokenStorage().totalReserves
+        );
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function supplyRatePerSecond() external view returns (uint256) {
+        return IInterestRateModel(address(this)).getSupplyRate(
+            getCash(),
+            _getPTokenStorage().totalBorrows,
+            _getPTokenStorage().totalReserves,
+            _getPTokenStorage().reserveFactorMantissa
+        );
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function totalBorrowsCurrent() external view returns (uint256) {
         PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
         return snapshot.totalBorrow;
