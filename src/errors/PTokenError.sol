@@ -8,4 +8,6 @@ library PTokenError {
     error SetReserveFactorFreshCheck();
 
     error SetReserveFactorBoundsCheck();
+
+    error TransferNotAllowed();
 }

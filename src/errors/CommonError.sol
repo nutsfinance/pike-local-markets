@@ -16,4 +16,9 @@ library CommonError {
      * @dev Thrown when a zero value is encountered.
      */
     error ZeroValue();
+
+    /**
+     * @dev Unauthorized reentrant call.
+     */
+    error ReentrancyGuardReentrantCall();
 }
