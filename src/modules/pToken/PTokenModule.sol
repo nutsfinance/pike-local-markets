@@ -120,6 +120,48 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
     }
 
     /**
+     * @notice Approve `spender` to transfer up to `amount` from `src`
+     * @dev This will overwrite the approval amount for `spender`
+     *  and is subject to issues noted [here](https://eips.ethereum.org/EIPS/eip-20#approve)
+     * @param spender The address of the account which may transfer tokens
+     * @param amount The number of tokens that are approved (type(uint256).max for infinite)
+     * @return success Whether or not the approval succeeded
+     */
+    function approve(address spender, uint256 amount) external override returns (bool) {
+        if (spender == address(0)) {
+            revert AddressError.ZeroAddress();
+        }
+        address src = msg.sender;
+        _getPTokenStorage().transferAllowances[src][spender] = amount;
+        emit Approval(src, spender, amount);
+        return true;
+    }
+
+    /**
+     * @notice Get the current allowance from `owner` for `spender`
+     * @param owner The address of the account which owns the tokens to be spent
+     * @param spender The address of the account which may transfer tokens
+     * @return The number of tokens allowed to be spent (type(uint256).max for infinite)
+     */
+    function allowance(address owner, address spender)
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return _getPTokenStorage().transferAllowances[owner][spender];
+    }
+
+    /**
+     * @notice Get the token balance of the `owner`
+     * @param owner The address of the account to query
+     * @return The number of tokens owned by `owner`
+     */
+    function balanceOf(address owner) external view override returns (uint256) {
+        return _getPTokenStorage().accountTokens[owner];
+    }
+
+    /**
      * @notice Transfer `tokens` tokens from `src` to `dst` by `spender`
      * @dev Called by both `transfer` and `transferFrom` internally
      * @param spender The address of the account performing the transfer
@@ -173,12 +215,12 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
      */
     function _setReserveFactorFresh(uint256 newReserveFactorMantissa) internal {
         // Verify market's block timestamp equals current block timestamp
-        if (_getPTokenStorage().accrualBlockTimestamp != getBlockTimestamp()) {
+        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
             revert PTokenError.SetReserveFactorFreshCheck();
         }
 
         // Check newReserveFactor ≤ maxReserveFactor
-        if (newReserveFactorMantissa > reserveFactorMaxMantissa) {
+        if (newReserveFactorMantissa > _RESERVE_FACTOR_MAX_MANTISSA) {
             revert PTokenError.SetReserveFactorBoundsCheck();
         }
 
@@ -186,14 +228,6 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
         _getPTokenStorage().reserveFactorMantissa = newReserveFactorMantissa;
 
         emit NewReserveFactor(oldReserveFactorMantissa, newReserveFactorMantissa);
-    }
-
-    /**
-     * @dev Function to simply retrieve block number
-     *  This exists mainly for inheriting test contracts to stub this result.
-     */
-    function getBlockTimestamp() internal view returns (uint256) {
-        return block.timestamp;
     }
 
     function _setRiskEngine(IRiskEngine newRiskEngine) internal {
@@ -206,5 +240,13 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
 
         // Emit NewRiskEngine(oldRiskEngine, newRiskEngine)
         emit NewRiskEngine(oldRiskEngine, newRiskEngine);
+    }
+
+    /**
+     * @dev Function to simply retrieve block number
+     *  This exists mainly for inheriting test contracts to stub this result.
+     */
+    function _getBlockTimestamp() internal view returns (uint256) {
+        return block.timestamp;
     }
 }
