@@ -1,14 +1,31 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
+import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
+import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
 import {PTokenStorage} from "@storage/PTokenStorage.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
+import {AddressError} from "@errors/AddressError.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {PTokenError} from "@errors/PTokenError.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
 
 contract PToken is IPToken, PTokenStorage, OwnableMixin {
+    using ExponentialNoError for ExponentialNoError.Exp;
+
+    /**
+     * @dev Prevents a contract from calling itself, directly or indirectly.
+     */
+    modifier nonReentrant() {
+        if (!_getPTokenStorage()._notEntered) {
+            revert CommonError.ReentrancyGuardReentrantCall();
+        }
+        _getPTokenStorage()._notEntered = false;
+        _;
+        _getPTokenStorage()._notEntered = true;
+    }
+
     /**
      * @notice Initialize the local market
      * @param underlying_ The address of the underlying token
