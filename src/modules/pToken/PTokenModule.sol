@@ -63,7 +63,7 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
         _setReserveFactorFresh(reserveFactorMantissa_);
 
         // Initialize block timestamp and borrow index (block timestamp is set to current block timestamp)
-        _getPTokenStorage().accrualBlockTimestamp = getBlockTimestamp();
+        _getPTokenStorage().accrualBlockTimestamp = _getBlockTimestamp();
         _getPTokenStorage().borrowIndex = _MANTISSA_ONE;
 
         _getPTokenStorage().name = name_;
@@ -84,6 +84,87 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
      */
     function setRiskEngine(IRiskEngine newRiskEngine) external onlyOwner {
         _setRiskEngine(newRiskEngine);
+    }
+
+    /**
+     * @notice Transfer `amount` tokens from `msg.sender` to `dst`
+     * @param dst The address of the destination account
+     * @param amount The number of tokens to transfer
+     * @return success True if the transfer succeeded, reverts otherwise
+     */
+    function transfer(address dst, uint256 amount)
+        external
+        override
+        nonReentrant
+        returns (bool)
+    {
+        _transferTokens(msg.sender, msg.sender, dst, amount);
+        return true;
+    }
+
+    /**
+     * @notice Transfer `amount` tokens from `src` to `dst`
+     * @param src The address of the source account
+     * @param dst The address of the destination account
+     * @param amount The number of tokens to transfer
+     * @return success True if the transfer succeeded, reverts otherwise
+     */
+    function transferFrom(address src, address dst, uint256 amount)
+        external
+        override
+        nonReentrant
+        returns (bool)
+    {
+        _transferTokens(msg.sender, src, dst, amount);
+        return true;
+    }
+
+    /**
+     * @notice Transfer `tokens` tokens from `src` to `dst` by `spender`
+     * @dev Called by both `transfer` and `transferFrom` internally
+     * @param spender The address of the account performing the transfer
+     * @param src The address of the source account
+     * @param dst The address of the destination account
+     * @param tokens The number of tokens to transfer
+     */
+    function _transferTokens(address spender, address src, address dst, uint256 tokens)
+        internal
+    {
+        /* Fail if transfer not allowed */
+        _getPTokenStorage().riskEngine.transferAllowed(address(this), src, dst, tokens);
+
+        /* Do not allow self-transfers */
+        if (src == dst) {
+            revert PTokenError.TransferNotAllowed();
+        }
+
+        /* Get the allowance, infinite for the account owner */
+        uint256 startingAllowance = 0;
+        if (spender == src) {
+            startingAllowance = type(uint256).max;
+        } else {
+            startingAllowance = _getPTokenStorage().transferAllowances[src][spender];
+        }
+
+        /* Do the calculations, checking for {under,over}flow */
+        uint256 allowanceNew = startingAllowance - tokens;
+        uint256 srcTokensNew = _getPTokenStorage().accountTokens[src] - tokens;
+        uint256 dstTokensNew = _getPTokenStorage().accountTokens[dst] + tokens;
+
+        /////////////////////////
+        // EFFECTS & INTERACTIONS
+        // (No safe failures beyond this point)
+
+        _getPTokenStorage().accountTokens[src] = srcTokensNew;
+        _getPTokenStorage().accountTokens[dst] = dstTokensNew;
+
+        /* Eat some of the allowance (if necessary) */
+        if (startingAllowance != type(uint256).max) {
+            _getPTokenStorage().transferAllowances[src][spender] = allowanceNew;
+        }
+
+        /* We emit a Transfer event */
+        emit Transfer(src, dst, tokens);
     }
 
     /**

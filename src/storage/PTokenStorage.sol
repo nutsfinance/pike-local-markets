@@ -88,7 +88,7 @@ contract PTokenStorage {
     uint256 internal constant _MANTISSA_ONE = 1e18;
 
     // Maximum fraction of interest that can be set aside for reserves
-    uint256 internal constant reserveFactorMaxMantissa = 1e18;
+    uint256 internal constant _RESERVE_FACTOR_MAX_MANTISSA = 1e18;
 
     function _getPTokenStorage() internal pure returns (PTokenData storage data) {
         bytes32 s = _SLOT_PTOKEN_STORAGE;
