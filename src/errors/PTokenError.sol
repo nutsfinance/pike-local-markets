@@ -9,5 +9,7 @@ library PTokenError {
 
     error SetReserveFactorBoundsCheck();
 
+    error BorrowRateBoundsCheck();
+
     error TransferNotAllowed();
 }

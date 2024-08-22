@@ -41,6 +41,7 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
         IRiskEngine riskEngine_,
         uint256 initialExchangeRateMantissa_,
         uint256 reserveFactorMantissa_,
+        uint256 borrowRateMaxMantissa_,
         string memory name_,
         string memory symbol_,
         uint8 decimals_
@@ -51,11 +52,13 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
         ) {
             revert CommonError.AlreadyInitialized();
         }
-        if (initialExchangeRateMantissa_ == 0) {
+        if (initialExchangeRateMantissa_ == 0 || borrowRateMaxMantissa_ == 0) {
             revert CommonError.ZeroValue();
         }
         // Set initial exchange rate
         _getPTokenStorage().initialExchangeRateMantissa = initialExchangeRateMantissa_;
+
+        _getPTokenStorage().borrowRateMaxMantissa = borrowRateMaxMantissa_;
 
         // set risk engine
         _setRiskEngine(riskEngine_);
@@ -244,6 +247,44 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
+    function accrueInterest() public {
+        /* Remember the initial block timestamp */
+        uint256 currentBlockTimestamp = _getBlockTimestamp();
+
+        /* Short-circuit accumulating 0 interest */
+        if (_getPTokenStorage().accrualBlockTimestamp == currentBlockTimestamp) {
+            return;
+        }
+
+        /// Get accrued snapshot
+        PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+
+        if (snapshot.accBorrowIndex > _getPTokenStorage().borrowRateMaxMantissa) {
+            revert PTokenError.BorrowRateBoundsCheck();
+        }
+
+        /////////////////////////
+        // EFFECTS & INTERACTIONS
+        // (No safe failures beyond this point)
+
+        /* We write the previously calculated values into storage */
+        _getPTokenStorage().accrualBlockTimestamp = currentBlockTimestamp;
+        _getPTokenStorage().borrowIndex = snapshot.accBorrowIndex;
+        _getPTokenStorage().totalBorrows = snapshot.totalBorrow;
+        _getPTokenStorage().totalReserves = snapshot.totalReserve;
+
+        /* We emit an AccrueInterest event */
+        emit AccrueInterest(
+            getCash(),
+            snapshot.totalReserve,
+            snapshot.accBorrowIndex,
+            snapshot.totalBorrow
+        );
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function exchangeRateCurrent() public view returns (uint256) {
         uint256 _totalSupply = _getPTokenStorage().totalSupply;
 
@@ -350,7 +391,7 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
         view
         returns (PendingSnapshot memory snapshot)
     {
-        PendingSnapshot memory snapshot;
+        /* Read the previous values out of storage */
         snapshot.totalBorrow = _getPTokenStorage().totalBorrows;
         snapshot.totalReserve = _getPTokenStorage().totalReserves;
         snapshot.accBorrowIndex = _getPTokenStorage().borrowIndex;
@@ -358,19 +399,30 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
         uint256 accrualBlockTimestamp = _getPTokenStorage().accrualBlockTimestamp;
 
         if (_getBlockTimestamp() > accrualBlockTimestamp && snapshot.totalBorrow > 0) {
+            /* Calculate the current borrow interest rate */
             uint256 borrowRate = IInterestRateModel(address(this)).getBorrowRate(
                 getCash(), snapshot.totalBorrow, snapshot.totalReserve
             );
+
+            /*
+         * Calculate the interest accumulated into borrows and reserves and the new index:
+         *  interestFactor = borrowRate * timeDelta
+         *  interestAccumulated = interestFactor * totalBorrows
+         *  totalBorrowsNew = interestAccumulated + totalBorrows
+         *  totalReservesNew = interestAccumulated * reserveFactor + totalReserves
+         *  borrowIndexNew = interestFactor * borrowIndex + borrowIndex
+         */
+
             ExponentialNoError.Exp memory interestFactor = ExponentialNoError.Exp({
                 mantissa: borrowRate
             }).mul_(_getBlockTimestamp() - accrualBlockTimestamp);
-            uint256 pendingInterest =
+            uint256 interestAccumulated =
                 interestFactor.mul_ScalarTruncate(snapshot.totalBorrow);
 
-            snapshot.totalBorrow = snapshot.totalBorrow + pendingInterest;
+            snapshot.totalBorrow = snapshot.totalBorrow + interestAccumulated;
             snapshot.totalReserve = ExponentialNoError.Exp({
                 mantissa: _getPTokenStorage().reserveFactorMantissa
-            }).mul_ScalarTruncateAddUInt(pendingInterest, snapshot.totalReserve);
+            }).mul_ScalarTruncateAddUInt(interestAccumulated, snapshot.totalReserve);
             snapshot.accBorrowIndex = interestFactor.mul_ScalarTruncateAddUInt(
                 snapshot.accBorrowIndex, snapshot.accBorrowIndex
             );

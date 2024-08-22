@@ -38,6 +38,10 @@ contract PTokenStorage {
          */
         uint256 reserveFactorMantissa;
         /**
+         * @notice Maximum borrow rate that can ever be applied per second (.0005e16 = .0005%)
+         */
+        uint256 borrowRateMaxMantissa;
+        /**
          * @notice Block timestamp that interest was last accrued at
          */
         uint256 accrualBlockTimestamp;

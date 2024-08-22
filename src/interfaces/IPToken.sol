@@ -18,6 +18,16 @@ interface IPToken is IERC20 {
     );
 
     /**
+     * @notice Event emitted when interest is accrued
+     */
+    event AccrueInterest(
+        uint256 cashPrior,
+        uint256 totalReserves,
+        uint256 borrowIndex,
+        uint256 totalBorrows
+    );
+
+    /**
      * @notice Sender supplies assets into the market and receives pTokens in exchange
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
      * @param mintAmount The amount of the underlying asset to supply
@@ -129,7 +139,7 @@ interface IPToken is IERC20 {
      * @dev This calculates interest accrued from the last checkpointed timestamp
      *   up to the current timestamp and writes new checkpoint to storage.
      */
-    function accrueInterest() external returns (uint256);
+    function accrueInterest() external;
 
     /**
      * @notice Transfers collateral tokens (this market) to the liquidator.
