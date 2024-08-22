@@ -164,6 +164,15 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
+    function balanceOfUnderlying(address owner) external view returns (uint256) {
+        ExponentialNoError.Exp memory exchangeRate =
+            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
+        return exchangeRate.mul_ScalarTruncate(_getPTokenStorage().accountTokens[owner]);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function getAccountSnapshot(address account)
         external
         view
@@ -182,6 +191,35 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
     function exchangeRateStored() external view returns (uint256) {
         return exchangeRateStoredInternal();
     }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function borrowBalanceStored(address account) external view returns (uint256) {
+        return borrowBalanceStoredInternal(account);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function totalBorrowsCurrent() external view returns (uint256) {
+        PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+        return snapshot.totalBorrow;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function borrowBalanceCurrent(address account) external view returns (uint256) {
+        PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+        BorrowSnapshot memory borrowSnapshot = _getPTokenStorage().accountBorrows[account];
+
+        if (borrowSnapshot.principal == 0) return 0;
+
+        uint256 principalTimesIndex = borrowSnapshot.principal * snapshot.accBorrowIndex;
+        return principalTimesIndex / borrowSnapshot.interestIndex;
+    }
+
     /**
      * @inheritdoc IPToken
      */
@@ -316,6 +354,34 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
                 snapshot.accBorrowIndex, snapshot.accBorrowIndex
             );
         }
+    }
+
+    /**
+     * @notice Return the borrow balance of account based on stored data
+     * @param account The address whose balance should be calculated
+     * @return the calculated balance
+     */
+    function borrowBalanceStoredInternal(address account)
+        internal
+        view
+        returns (uint256)
+    {
+        /* Get borrowBalance and borrowIndex */
+        BorrowSnapshot memory borrowSnapshot = _getPTokenStorage().accountBorrows[account];
+
+        /* If borrowBalance = 0 then borrowIndex is likely also 0.
+         * Rather than failing the calculation with a division by 0, we immediately return 0 in this case.
+         */
+        if (borrowSnapshot.principal == 0) {
+            return 0;
+        }
+
+        /* Calculate new borrow balance using the interest index:
+         *  recentBorrowBalance = borrower.borrowBalance * market.borrowIndex / borrower.borrowIndex
+         */
+        uint256 principalTimesIndex =
+            borrowSnapshot.principal * _getPTokenStorage().borrowIndex;
+        return principalTimesIndex / borrowSnapshot.interestIndex;
     }
 
     /**
