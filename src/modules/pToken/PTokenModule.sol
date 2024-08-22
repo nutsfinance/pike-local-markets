@@ -160,6 +160,28 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
     function balanceOf(address owner) external view override returns (uint256) {
         return _getPTokenStorage().accountTokens[owner];
     }
+    /**
+     * @inheritdoc IPToken
+     */
+    function exchangeRateCurrent() public view returns (uint256) {
+        uint256 _totalSupply = _getPTokenStorage().totalSupply;
+
+        if (_totalSupply == 0) {
+            return _getPTokenStorage().initialExchangeRateMantissa;
+        }
+        PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+        uint256 totalCash = getCash();
+        uint256 cashPlusBorrowsMinusReserves =
+            totalCash + snapshot.totalBorrow - snapshot.totalReserve;
+        return cashPlusBorrowsMinusReserves * ExponentialNoError.expScale / _totalSupply;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function getCash() public view returns (uint256) {
+        return IPToken(_getPTokenStorage().underlying).balanceOf(address(this));
+    }
 
     /**
      * @notice Transfer `tokens` tokens from `src` to `dst` by `spender`
