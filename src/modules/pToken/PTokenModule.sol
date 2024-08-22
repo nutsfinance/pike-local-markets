@@ -160,6 +160,28 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
     function balanceOf(address owner) external view override returns (uint256) {
         return _getPTokenStorage().accountTokens[owner];
     }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function getAccountSnapshot(address account)
+        external
+        view
+        returns (uint256, uint256, uint256)
+    {
+        return (
+            _getPTokenStorage().accountTokens[account],
+            borrowBalanceStoredInternal(account),
+            exchangeRateStoredInternal()
+        );
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function exchangeRateStored() external view returns (uint256) {
+        return exchangeRateStoredInternal();
+    }
     /**
      * @inheritdoc IPToken
      */
@@ -293,6 +315,32 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
             snapshot.accBorrowIndex = interestFactor.mul_ScalarTruncateAddUInt(
                 snapshot.accBorrowIndex, snapshot.accBorrowIndex
             );
+        }
+    }
+
+    /**
+     * @notice Calculates the exchange rate from the underlying to the PToken
+     * @dev This function does not accrue interest before calculating the exchange rate
+     * @return calculated exchange rate scaled by 1e18
+     */
+    function exchangeRateStoredInternal() internal view returns (uint256) {
+        uint256 _totalSupply = _getPTokenStorage().totalSupply;
+        if (_totalSupply == 0) {
+            /*
+             * If there are no tokens minted:
+             *  exchangeRate = initialExchangeRate
+             */
+            return _getPTokenStorage().initialExchangeRateMantissa;
+        } else {
+            /*
+             * Otherwise:
+             *  exchangeRate = (totalCash + totalBorrows - totalReserves) / totalSupply
+             */
+            uint256 totalCash = getCash();
+            uint256 cashPlusBorrowsMinusReserves = totalCash
+                + _getPTokenStorage().totalBorrows - _getPTokenStorage().totalReserves;
+            return
+                cashPlusBorrowsMinusReserves * ExponentialNoError.expScale / _totalSupply;
         }
     }
 
