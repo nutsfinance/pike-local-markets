@@ -81,6 +81,12 @@ contract PTokenStorage {
         uint256 interestIndex;
     }
 
+    struct PendingSnapshot {
+        uint256 totalBorrow;
+        uint256 totalReserve;
+        uint256 accBorrowIndex;
+    }
+
     /// keccak256(abi.encode(uint256(keccak256("pike.LM.PToken")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 internal constant _SLOT_PTOKEN_STORAGE =
         0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d00;

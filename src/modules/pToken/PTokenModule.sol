@@ -242,6 +242,38 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
         emit NewRiskEngine(oldRiskEngine, newRiskEngine);
     }
 
+    function _pendingAccruedSnapshot()
+        internal
+        view
+        returns (PendingSnapshot memory snapshot)
+    {
+        PendingSnapshot memory snapshot;
+        snapshot.totalBorrow = _getPTokenStorage().totalBorrows;
+        snapshot.totalReserve = _getPTokenStorage().totalReserves;
+        snapshot.accBorrowIndex = _getPTokenStorage().borrowIndex;
+
+        uint256 accrualBlockTimestamp = _getPTokenStorage().accrualBlockTimestamp;
+
+        if (_getBlockTimestamp() > accrualBlockTimestamp && snapshot.totalBorrow > 0) {
+            uint256 borrowRate = IInterestRateModel(address(this)).getBorrowRate(
+                getCash(), snapshot.totalBorrow, snapshot.totalReserve
+            );
+            ExponentialNoError.Exp memory interestFactor = ExponentialNoError.Exp({
+                mantissa: borrowRate
+            }).mul_(_getBlockTimestamp() - accrualBlockTimestamp);
+            uint256 pendingInterest =
+                interestFactor.mul_ScalarTruncate(snapshot.totalBorrow);
+
+            snapshot.totalBorrow = snapshot.totalBorrow + pendingInterest;
+            snapshot.totalReserve = ExponentialNoError.Exp({
+                mantissa: _getPTokenStorage().reserveFactorMantissa
+            }).mul_ScalarTruncateAddUInt(pendingInterest, snapshot.totalReserve);
+            snapshot.accBorrowIndex = interestFactor.mul_ScalarTruncateAddUInt(
+                snapshot.accBorrowIndex, snapshot.accBorrowIndex
+            );
+        }
+    }
+
     /**
      * @dev Function to simply retrieve block number
      *  This exists mainly for inheriting test contracts to stub this result.
