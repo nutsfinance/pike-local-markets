@@ -11,5 +11,14 @@ library PTokenError {
 
     error BorrowRateBoundsCheck();
 
+    error MintRiskEngineRejection(uint256 errorCode);
+    error MintFreshnessCheck();
+
+    error RedeemRiskEngineRejection(uint256 errorCode);
+    error RedeemFreshnessCheck();
+    error RedeemTransferOutNotPossible();
+
     error TransferNotAllowed();
+
+    error DelegateNotAllowed();
 }

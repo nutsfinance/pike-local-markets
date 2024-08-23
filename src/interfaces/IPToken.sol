@@ -11,6 +11,16 @@ interface IPToken is IERC20 {
     event NewRiskEngine(IRiskEngine oldRiskEngine, IRiskEngine newRiskEngine);
 
     /**
+     * @notice Event emitted when tokens are minted
+     */
+    event Mint(address minter, uint256 mintAmount, uint256 mintTokens);
+
+    /**
+     * @notice Event emitted when tokens are redeemed
+     */
+    event Redeem(address redeemer, uint256 redeemAmount, uint256 redeemTokens);
+
+    /**
      * @notice Event emitted when the reserve factor is changed
      */
     event NewReserveFactor(
@@ -31,59 +41,50 @@ interface IPToken is IERC20 {
      * @notice Sender supplies assets into the market and receives pTokens in exchange
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
      * @param mintAmount The amount of the underlying asset to supply
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function mint(uint256 mintAmount) external returns (uint256);
+    function mint(uint256 mintAmount) external;
 
     /**
      * @notice Sender calls on-behalf of minter.
      * sender supplies assets into the market and minter receives pTokens in exchange
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
-     * @param minter User whom the supply will be attributed to
+     * @param onBehalfOf User whom the supply will be attributed to
      * @param mintAmount The amount of the underlying asset to supply
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function mintBehalf(address minter, uint256 mintAmount) external returns (uint256);
+    function mintOnBehalfOf(address onBehalfOf, uint256 mintAmount) external;
 
     /**
      * @notice Sender redeems pTokens in exchange for the underlying asset
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
      * @param redeemTokens The number of pTokens to redeem into underlying
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function redeem(uint256 redeemTokens) external returns (uint256);
+    function redeem(uint256 redeemTokens) external;
 
     /**
      * @notice Sender redeems assets on behalf of redeemer address. This function is only available
      *  for senders, explicitly marked as delegates of the supplier using `riskEngine.updateDelegate`
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
-     * @param redeemer The user on behalf of whom to redeem
+     * @param onBehalfOf The user on behalf of whom to redeem
      * @param redeemTokens The number of pTokens to redeem into underlying
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function redeemBehalf(address redeemer, uint256 redeemTokens)
-        external
-        returns (uint256);
+    function redeemOnBehalfOf(address onBehalfOf, uint256 redeemTokens) external;
 
     /**
      * @notice Sender redeems pTokens in exchange for a specified amount of underlying asset
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
      * @param redeemAmount The amount of underlying to redeem
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function redeemUnderlying(uint256 redeemAmount) external returns (uint256);
+    function redeemUnderlying(uint256 redeemAmount) external;
 
     /**
      * @notice Sender redeems underlying assets on behalf of some other address. This function is only available
      *   for senders, explicitly marked as delegates of the supplier using `riskEngine.updateDelegate`
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
-     * @param redeemer, on behalf of whom to redeem
+     * @param onBehalfOf, on behalf of whom to redeem
      * @param redeemAmount The amount of underlying to receive from redeeming pTokens
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function redeemUnderlyingBehalf(address redeemer, uint256 redeemAmount)
-        external
-        returns (uint256);
+    function redeemUnderlyingOnBehalfOf(address onBehalfOf, uint256 redeemAmount)
+        external;
 
     /**
      * @notice Sender borrows assets from the protocol to their own address
