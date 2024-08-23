@@ -123,6 +123,30 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
     }
 
     /**
+     * @inheritdoc IPToken
+     */
+    function mint(uint256 mintAmount) external nonReentrant {
+        accrueInterest();
+        mintFresh(msg.sender, msg.sender, mintAmount);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function mintOnBehalfOf(address onBehalfOf, uint256 mintAmount)
+        external
+        nonReentrant
+        returns (uint256)
+    {
+        if (onBehalfOf == address(0)) {
+            revert AddressError.ZeroAddress();
+        }
+
+        accrueInterest();
+        mintFresh(msg.sender, onBehalfOf, mintAmount);
+    }
+
+    /**
      * @notice Approve `spender` to transfer up to `amount` from `src`
      * @dev This will overwrite the approval amount for `spender`
      *  and is subject to issues noted [here](https://eips.ethereum.org/EIPS/eip-20#approve)
@@ -302,7 +326,67 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
      * @inheritdoc IPToken
      */
     function getCash() public view returns (uint256) {
-        return IPToken(_getPTokenStorage().underlying).balanceOf(address(this));
+        return IERC20(_getPTokenStorage().underlying).balanceOf(address(this));
+    }
+
+    /**
+     * @notice User supplies assets into the market and receives pTokens in exchange
+     * @dev Assumes interest has already been accrued up to the current timestamp
+     * @param minter The address of the account which is supplying the assets
+     * @param onBehalfOf The address whom the supply will be attributed to
+     * @param mintAmount The amount of the underlying asset to supply
+     */
+    function mintFresh(address minter, address onBehalfOf, uint256 mintAmount) internal {
+        /* Fail if mint not allowed */
+        uint256 allowed = _getPTokenStorage().riskEngine.mintAllowed(
+            address(this), onBehalfOf, mintAmount
+        );
+        if (allowed != 0) {
+            revert PTokenError.MintRiskEngineRejection(allowed);
+        }
+
+        /* Verify market's block timestamp equals current block timestamp */
+        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
+            revert PTokenError.MintFreshnessCheck();
+        }
+
+        ExponentialNoError.Exp memory exchangeRate =
+            ExponentialNoError.Exp({mantissa: exchangeRateStoredInternal()});
+
+        /////////////////////////
+        // EFFECTS & INTERACTIONS
+        // (No safe failures beyond this point)
+
+        /*
+         *  We call `doTransferIn` for the minter and the mintAmount.
+         *  `doTransferIn` reverts if anything goes wrong, since we can't be sure if
+         *  side-effects occurred. The function returns the amount actually transferred,
+         *  in case of a fee. On success, the pToken holds an additional `actualMintAmount`
+         *  of cash.
+         */
+        uint256 actualMintAmount = doTransferIn(minter, mintAmount);
+
+        /*
+         * We get the current exchange rate and calculate the number of pTokens to be minted:
+         *  mintTokens = actualMintAmount / exchangeRate
+         */
+
+        uint256 mintTokens = actualMintAmount.div_(exchangeRate);
+
+        /*
+         * We calculate the new total supply of pTokens and onBehalfOf token balance, checking for overflow:
+         *  totalSupplyNew = totalSupply + mintTokens
+         *  accountTokensNew = accountTokens[onBehalfOf] + mintTokens
+         * And write them into storage
+         */
+        _getPTokenStorage().totalSupply = _getPTokenStorage().totalSupply + mintTokens;
+        _getPTokenStorage().accountTokens[onBehalfOf] =
+            _getPTokenStorage().accountTokens[onBehalfOf] + mintTokens;
+
+        /* We emit a Mint event, and a Transfer event */
+        emit Mint(onBehalfOf, actualMintAmount, mintTokens);
+        emit Transfer(address(0), onBehalfOf, mintTokens);
+    }
     }
 
     /**
