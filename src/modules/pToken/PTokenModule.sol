@@ -1,6 +1,9 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
+import {
+    SafeERC20, IERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
 import {PTokenStorage} from "@storage/PTokenStorage.sol";
@@ -13,6 +16,8 @@ import {IPToken} from "@interfaces/IPToken.sol";
 
 contract PToken is IPToken, PTokenStorage, OwnableMixin {
     using ExponentialNoError for ExponentialNoError.Exp;
+    using ExponentialNoError for uint256;
+    using SafeERC20 for IERC20;
 
     /**
      * @dev Prevents a contract from calling itself, directly or indirectly.
@@ -78,7 +83,7 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
 
         // Set underlying and sanity check it
         _getPTokenStorage().underlying = underlying_;
-        IPToken(underlying_).totalSupply();
+        IERC20(underlying_).totalSupply();
     }
 
     /**
@@ -144,6 +149,53 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
 
         accrueInterest();
         mintFresh(msg.sender, onBehalfOf, mintAmount);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function redeem(uint256 redeemTokens) external nonReentrant returns (uint256) {
+        accrueInterest();
+
+        redeemFresh(msg.sender, msg.sender, redeemTokens, 0);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function redeemBehalf(address onBehalfOf, uint256 redeemTokens)
+        external
+        nonReentrant
+        returns (uint256)
+    {
+        _isDelegateeOf(onBehalfOf);
+
+        accrueInterest();
+
+        redeemFresh(msg.sender, onBehalfOf, redeemTokens, 0);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function redeemUnderlying(uint256 redeemAmount) external nonReentrant {
+        accrueInterest();
+
+        redeemFresh(msg.sender, msg.sender, 0, redeemAmount);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function redeemUnderlyingBehalf(address onBehalfOf, uint256 redeemAmount)
+        external
+        nonReentrant
+    {
+        _isDelegateeOf(onBehalfOf);
+
+        accrueInterest();
+
+        redeemFresh(msg.sender, onBehalfOf, 0, redeemAmount);
     }
 
     /**
@@ -387,6 +439,128 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
         emit Mint(onBehalfOf, actualMintAmount, mintTokens);
         emit Transfer(address(0), onBehalfOf, mintTokens);
     }
+
+    /**
+     * @notice User redeems pTokens in exchange for the underlying asset
+     * @dev Assumes interest has already been accrued up to the current timestamp
+     * @param redeemer The address of the account which is redeeming the tokens
+     * @param onBehalfOf The address of user on behalf of whom to redeem
+     * @param redeemTokensIn The number of pTokens to redeem into underlying
+     * (only one of redeemTokensIn or redeemAmountIn may be non-zero)
+     * @param redeemAmountIn The number of underlying tokens to receive from redeeming pTokens
+     */
+    function redeemFresh(
+        address redeemer,
+        address onBehalfOf,
+        uint256 redeemTokensIn,
+        uint256 redeemAmountIn
+    ) internal {
+        if (redeemTokensIn != 0 && redeemAmountIn != 0) {
+            revert CommonError.ZeroValue();
+        }
+
+        /* exchangeRate = invoke Exchange Rate Stored() */
+        ExponentialNoError.Exp memory exchangeRate =
+            ExponentialNoError.Exp({mantissa: exchangeRateStoredInternal()});
+
+        uint256 redeemTokens;
+        uint256 redeemAmount;
+
+        /* If redeemTokensIn > 0: */
+        if (redeemTokensIn > 0) {
+            /*
+             * We calculate the exchange rate and the amount of underlying to be redeemed:
+             *  redeemTokens = redeemTokensIn
+             *  redeemAmount = redeemTokensIn x exchangeRateCurrent
+             */
+            redeemTokens = redeemTokensIn;
+            redeemAmount = exchangeRate.mul_ScalarTruncate(redeemTokensIn);
+        } else {
+            /*
+             * We get the current exchange rate and calculate the amount to be redeemed:
+             *  redeemTokens = redeemAmountIn / exchangeRate
+             *  redeemAmount = redeemAmountIn
+             */
+            redeemTokens = redeemAmountIn.div_(exchangeRate);
+            redeemAmount = redeemAmountIn;
+        }
+
+        /* Fail if redeem not allowed */
+        uint256 allowed = _getPTokenStorage().riskEngine.redeemAllowed(
+            address(this), onBehalfOf, redeemTokens
+        );
+        if (allowed != 0) {
+            revert PTokenError.RedeemRiskEngineRejection(allowed);
+        }
+
+        /* Verify market's block timestamp equals current block timestamp */
+        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
+            revert PTokenError.RedeemFreshnessCheck();
+        }
+
+        /* Fail gracefully if protocol has insufficient cash */
+        if (getCash() < redeemAmount) {
+            revert PTokenError.RedeemTransferOutNotPossible();
+        }
+
+        /////////////////////////
+        // EFFECTS & INTERACTIONS
+        // (No safe failures beyond this point)
+
+        /*
+         * We write the previously calculated values into storage.
+         *  Note: Avoid token reentrancy attacks by writing reduced supply before external transfer.
+         */
+        _getPTokenStorage().totalSupply = _getPTokenStorage().totalSupply - redeemTokens;
+        _getPTokenStorage().accountTokens[onBehalfOf] =
+            _getPTokenStorage().accountTokens[onBehalfOf] - redeemTokens;
+
+        /*
+         * We invoke doTransferOut for the redeemer and the redeemAmount.
+         *  On success, the pToken has redeemAmount less of cash.
+         *  doTransferOut reverts if anything goes wrong, since we can't be sure if side effects occurred.
+         */
+        doTransferOut(redeemer, redeemAmount);
+
+        /* We emit a Transfer event, and a Redeem event */
+        emit Transfer(onBehalfOf, address(0), redeemTokens);
+        emit Redeem(onBehalfOf, redeemAmount, redeemTokens);
+
+        /* We call the defense hook */
+        _getPTokenStorage().riskEngine.redeemVerify(
+            address(this), onBehalfOf, redeemAmount, redeemTokens
+        );
+    }
+
+    /**
+     * @dev Similar to ERC-20 transfer, but handles tokens that have transfer fees.
+     *      This function returns the actual amount received,
+     *      which may be less than `amount` if there is a fee attached to the transfer.
+     * @param from Sender of the underlying tokens
+     * @param amount Amount of underlying to transfer
+     * @return Actual amount received
+     */
+    function doTransferIn(address from, uint256 amount)
+        internal
+        virtual
+        returns (uint256)
+    {
+        // Read from storage once
+        IERC20 token = IERC20(_getPTokenStorage().underlying);
+        uint256 balanceBefore = token.balanceOf(address(this));
+        token.safeTransferFrom(from, address(this), amount);
+        uint256 balanceAfter = token.balanceOf(address(this));
+        // Return the amount that was *actually* transferred
+        return balanceAfter - balanceBefore;
+    }
+
+    /**
+     * @dev Similar to ERC20 transfer, and reverts on failure.
+     * @param to Receiver of the underlying tokens
+     * @param amount Amount of underlying to transfer
+     */
+    function doTransferOut(address to, uint256 amount) internal virtual {
+        IERC20(_getPTokenStorage().underlying).safeTransfer(to, amount);
     }
 
     /**
@@ -564,6 +738,15 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
                 + _getPTokenStorage().totalBorrows - _getPTokenStorage().totalReserves;
             return
                 cashPlusBorrowsMinusReserves * ExponentialNoError.expScale / _totalSupply;
+        }
+    }
+
+    /**
+     * @dev Function to check if msg.sender is delegatee
+     */
+    function _isDelegateeOf(address onBehalfOf) internal view {
+        if (!_getPTokenStorage().riskEngine.delegateAllowed(onBehalfOf, msg.sender)) {
+            revert PTokenError.DelegateNotAllowed();
         }
     }
 
