@@ -141,7 +141,6 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
     function mintOnBehalfOf(address onBehalfOf, uint256 mintAmount)
         external
         nonReentrant
-        returns (uint256)
     {
         if (onBehalfOf == address(0)) {
             revert AddressError.ZeroAddress();
@@ -154,7 +153,7 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
-    function redeem(uint256 redeemTokens) external nonReentrant returns (uint256) {
+    function redeem(uint256 redeemTokens) external nonReentrant {
         accrueInterest();
 
         redeemFresh(msg.sender, msg.sender, redeemTokens, 0);
@@ -163,10 +162,9 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
-    function redeemBehalf(address onBehalfOf, uint256 redeemTokens)
+    function redeemOnBehalfOf(address onBehalfOf, uint256 redeemTokens)
         external
         nonReentrant
-        returns (uint256)
     {
         _isDelegateeOf(onBehalfOf);
 
@@ -187,7 +185,7 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
-    function redeemUnderlyingBehalf(address onBehalfOf, uint256 redeemAmount)
+    function redeemUnderlyingOnBehalfOf(address onBehalfOf, uint256 redeemAmount)
         external
         nonReentrant
     {
