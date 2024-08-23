@@ -12,6 +12,7 @@ jobs:
   lint:
     name: Run Linters
     runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'early-stage') }}
 
     steps:
       - uses: actions/checkout@v4
@@ -25,6 +26,7 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'early-stage') }}
 
     steps:
       - uses: actions/checkout@v4
