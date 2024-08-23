@@ -167,9 +167,8 @@ interface IPToken is IERC20 {
     /**
      * @notice Sets a new risk engine for the market
      * @dev Admin function to set a new risk engine
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function setRiskEngine(IRiskEngine newRiskEngine) external returns (uint256);
+    function setRiskEngine(IRiskEngine newRiskEngine) external;
 
     /**
      * @notice accrues interest and sets a new reserve factor for the protocol

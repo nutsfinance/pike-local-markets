@@ -14,7 +14,7 @@ import {CommonError} from "@errors/CommonError.sol";
 import {PTokenError} from "@errors/PTokenError.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
 
-contract PToken is IPToken, PTokenStorage, OwnableMixin {
+abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
     using ExponentialNoError for ExponentialNoError.Exp;
     using ExponentialNoError for uint256;
     using SafeERC20 for IERC20;
