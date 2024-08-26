@@ -59,6 +59,22 @@ interface IPToken is IERC20 {
     );
 
     /**
+     * @notice Event emitted when a borrow is liquidated
+     */
+    event LiquidateBorrow(
+        address liquidator,
+        address borrower,
+        uint256 repayAmount,
+        address pTokenCollateral,
+        uint256 seizeTokens
+    );
+
+    /**
+     * @notice Event emitted when the reserves are added
+     */
+    event ReservesAdded(address benefactor, uint256 addAmount, uint256 newTotalReserves);
+
+    /**
      * @notice Sender supplies assets into the market and receives pTokens in exchange
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
      * @param mintAmount The amount of the underlying asset to supply
@@ -161,11 +177,8 @@ interface IPToken is IERC20 {
      * @param liquidator The account receiving seized collateral
      * @param borrower The account having collateral seized
      * @param seizeTokens The number of pTokens to seize
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function seize(address liquidator, address borrower, uint256 seizeTokens)
-        external
-        returns (uint256);
+    function seize(address liquidator, address borrower, uint256 seizeTokens) external;
 
     /**
      * @notice The sender adds to reserves.

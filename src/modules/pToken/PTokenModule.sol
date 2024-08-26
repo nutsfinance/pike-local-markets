@@ -242,6 +242,36 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
         repayBorrowFresh(msg.sender, onBehalfOf, repayAmount);
     }
 
+    /**
+     * @inheritdoc IPToken
+     */
+    function liquidateBorrow(
+        address borrower,
+        uint256 repayAmount,
+        IPToken pTokenCollateral
+    ) external nonReentrant {
+        accrueInterest();
+
+        (bool success,) =
+            address(pTokenCollateral).call(abi.encodeWithSignature("accrueInterest()"));
+        if (!success) {
+            // accrueInterest emits logs on errors, but we want to log the fact that an attempted liquidation failed
+            revert PTokenError.LiquidateAccrueCollateralInterestFailed();
+        }
+
+        // liquidateBorrowFresh emits borrow-specific logs on errors, so we don't need to
+        liquidateBorrowFresh(msg.sender, borrower, repayAmount, pTokenCollateral);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function seize(address liquidator, address borrower, uint256 seizeTokens)
+        external
+        nonReentrant
+    {
+        seizeInternal(msg.sender, liquidator, borrower, seizeTokens);
+    }
 
     /**
      * @notice Approve `spender` to transfer up to `amount` from `src`
@@ -710,6 +740,154 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
         return actualRepayAmount;
     }
 
+    /**
+     * @notice The liquidator liquidates the borrowers collateral.
+     *  The collateral seized is transferred to the liquidator.
+     * @param borrower The borrower of this pToken to be liquidated
+     * @param liquidator The address repaying the borrow and seizing collateral
+     * @param pTokenCollateral The market in which to seize collateral from the borrower
+     * @param repayAmount The amount of the underlying borrowed asset to repay
+     */
+    function liquidateBorrowFresh(
+        address liquidator,
+        address borrower,
+        uint256 repayAmount,
+        IPToken pTokenCollateral
+    ) internal {
+        /* Fail if liquidate not allowed */
+        uint256 allowed = _getPTokenStorage().riskEngine.liquidateBorrowAllowed(
+            address(this), address(pTokenCollateral), liquidator, borrower, repayAmount
+        );
+        if (allowed != 0) {
+            revert PTokenError.LiquidateRiskEngineRejection(allowed);
+        }
+
+        /* Verify market's block timestamp equals current block timestamp */
+        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
+            revert PTokenError.LiquidateFreshnessCheck();
+        }
+
+        /* Verify pTokenCollateral market's block timestamp equals current block timestamp */
+        if (pTokenCollateral.accrualBlockTimestamp() != _getBlockTimestamp()) {
+            revert PTokenError.LiquidateCollateralFreshnessCheck();
+        }
+
+        /* Fail if borrower = liquidator */
+        if (borrower == liquidator) {
+            revert PTokenError.LiquidateLiquidatorIsBorrower();
+        }
+
+        /* Fail if repayAmount = 0 */
+        if (repayAmount == 0) {
+            revert PTokenError.LiquidateCloseAmountIsZero();
+        }
+
+        /* Fail if repayAmount = type(uint256).max */
+        if (repayAmount == type(uint256).max) {
+            revert PTokenError.LiquidateCloseAmountIsUintMax();
+        }
+
+        /* Fail if repayBorrow fails */
+        uint256 actualRepayAmount = repayBorrowFresh(liquidator, borrower, repayAmount);
+
+        /////////////////////////
+        // EFFECTS & INTERACTIONS
+        // (No safe failures beyond this point)
+
+        /* We calculate the number of collateral tokens that will be seized */
+        (uint256 amountSeizeError, uint256 seizeTokens) = _getPTokenStorage()
+            .riskEngine
+            .liquidateCalculateSeizeTokens(
+            address(this), address(pTokenCollateral), actualRepayAmount
+        );
+        if (amountSeizeError != CommonError.NO_ERROR) {
+            revert PTokenError.LiquidateCalculateAmountSeizeFailed(amountSeizeError);
+        }
+
+        /* Revert if borrower collateral token balance < seizeTokens */
+        if (pTokenCollateral.balanceOf(borrower) < seizeTokens) {
+            revert PTokenError.LiquidateSeizeTooMuch();
+        }
+
+        // If this is also the collateral, run seizeInternal to avoid re-entrancy, otherwise make an external call
+        if (address(pTokenCollateral) == address(this)) {
+            seizeInternal(address(this), liquidator, borrower, seizeTokens);
+        } else {
+            pTokenCollateral.seize(liquidator, borrower, seizeTokens);
+        }
+
+        /* We emit a LiquidateBorrow event */
+        emit LiquidateBorrow(
+            liquidator,
+            borrower,
+            actualRepayAmount,
+            address(pTokenCollateral),
+            seizeTokens
+        );
+    }
+
+    /**
+     * @notice Transfers collateral tokens (this market) to the liquidator.
+     * @dev Called only during an in-kind liquidation, or by liquidateBorrow during the liquidation of another pToken.
+     *  Its absolutely critical to use msg.sender as the seizer pToken and not a parameter.
+     * @param seizerToken The contract seizing the collateral (i.e. borrowed pToken)
+     * @param liquidator The account receiving seized collateral
+     * @param borrower The account having collateral seized
+     * @param seizeTokens The number of pTokens to seize
+     */
+    function seizeInternal(
+        address seizerToken,
+        address liquidator,
+        address borrower,
+        uint256 seizeTokens
+    ) internal {
+        /* Fail if seize not allowed */
+        uint256 allowed = _getPTokenStorage().riskEngine.seizeAllowed(
+            address(this), seizerToken, liquidator, borrower, seizeTokens
+        );
+        if (allowed != 0) {
+            revert PTokenError.LiquidateSeizeRiskEngineRejection(allowed);
+        }
+
+        /* Fail if borrower = liquidator */
+        if (borrower == liquidator) {
+            revert PTokenError.LiquidateSeizeLiquidatorIsBorrower();
+        }
+
+        /*
+         * We calculate the new borrower and liquidator token balances, failing on underflow/overflow:
+         *  borrowerTokensNew = accountTokens[borrower] - seizeTokens
+         *  liquidatorTokensNew = accountTokens[liquidator] + seizeTokens
+         */
+        uint256 protocolSeizeTokens = seizeTokens.mul_(
+            ExponentialNoError.Exp({
+                mantissa: _getPTokenStorage().protocolSeizeShareMantissa
+            })
+        );
+        uint256 liquidatorSeizeTokens = seizeTokens - protocolSeizeTokens;
+        ExponentialNoError.Exp memory exchangeRate =
+            ExponentialNoError.Exp({mantissa: exchangeRateStoredInternal()});
+        uint256 protocolSeizeAmount = exchangeRate.mul_ScalarTruncate(protocolSeizeTokens);
+        uint256 totalReservesNew = _getPTokenStorage().totalReserves + protocolSeizeAmount;
+
+        /////////////////////////
+        // EFFECTS & INTERACTIONS
+        // (No safe failures beyond this point)
+
+        /* We write the calculated values into storage */
+        _getPTokenStorage().totalReserves = totalReservesNew;
+        _getPTokenStorage().totalSupply =
+            _getPTokenStorage().totalSupply - protocolSeizeTokens;
+        _getPTokenStorage().accountTokens[borrower] =
+            _getPTokenStorage().accountTokens[borrower] - seizeTokens;
+        _getPTokenStorage().accountTokens[liquidator] =
+            _getPTokenStorage().accountTokens[liquidator] + liquidatorSeizeTokens;
+
+        /* Emit a Transfer event */
+        emit Transfer(borrower, liquidator, liquidatorSeizeTokens);
+        emit Transfer(borrower, address(this), protocolSeizeTokens);
+        emit ReservesAdded(address(this), protocolSeizeAmount, totalReservesNew);
+    }
 
     /**
      * @dev Similar to ERC-20 transfer, but handles tokens that have transfer fees.
