@@ -39,6 +39,11 @@ library PTokenError {
     error LiquidateSeizeRiskEngineRejection(uint256 errorCode);
     error LiquidateSeizeLiquidatorIsBorrower();
 
+    error AddReservesFactorFreshCheck();
+    error ReduceReservesFreshCheck();
+    error ReduceReservesCashNotAvailable();
+    error ReduceReservesCashValidation();
+
     error TransferNotAllowed();
 
     error DelegateNotAllowed();

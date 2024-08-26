@@ -90,11 +90,38 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
     }
 
     /**
-     * @notice Sets a new risk engine for the market
-     * @dev Admin function to set a new risk engine
+     * @inheritdoc IPToken
      */
     function setRiskEngine(IRiskEngine newRiskEngine) external onlyOwner {
         _setRiskEngine(newRiskEngine);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function setReserveFactor(uint256 newReserveFactorMantissa) external onlyOwner {
+        accrueInterest();
+        // _setReserveFactorFresh emits reserve-factor-specific logs on errors, so we don't need to.
+        _setReserveFactorFresh(newReserveFactorMantissa);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function addReserves(uint256 addAmount) external nonReentrant {
+        accrueInterest();
+
+        // _addReservesFresh emits reserve-addition-specific logs on errors, so we don't need to.
+        _addReservesFresh(addAmount);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function reduceReserves(uint256 reduceAmount) external onlyOwner nonReentrant {
+        accrueInterest();
+        // _reduceReservesFresh emits reserve-reduction-specific logs on errors, so we don't need to.
+        _reduceReservesFresh(reduceAmount);
     }
 
     /**
@@ -987,6 +1014,82 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
         _getPTokenStorage().reserveFactorMantissa = newReserveFactorMantissa;
 
         emit NewReserveFactor(oldReserveFactorMantissa, newReserveFactorMantissa);
+    }
+
+    /**
+     * @notice Add reserves by transferring from caller
+     * @dev Requires fresh interest accrual
+     * @param addAmount Amount of addition to reserves
+     */
+    function _addReservesFresh(uint256 addAmount) internal {
+        // totalReserves + actualAddAmount
+        uint256 totalReservesNew;
+        uint256 actualAddAmount;
+
+        // Verify market's block timestamp equals current block timestamp
+        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
+            revert PTokenError.AddReservesFactorFreshCheck();
+        }
+
+        /////////////////////////
+        // EFFECTS & INTERACTIONS
+        // (No safe failures beyond this point)
+
+        /*
+         * We call doTransferIn for the caller and the addAmount
+         *  On success, the cToken holds an additional addAmount of cash.
+         *  doTransferIn reverts if anything goes wrong, since we can't be sure if side effects occurred.
+         *  it returns the amount actually transferred, in case of a fee.
+         */
+
+        actualAddAmount = doTransferIn(msg.sender, addAmount);
+
+        totalReservesNew = _getPTokenStorage().totalReserves + actualAddAmount;
+
+        // Store reserves[n+1] = reserves[n] + actualAddAmount
+        _getPTokenStorage().totalReserves = totalReservesNew;
+
+        /* Emit NewReserves(admin, actualAddAmount, reserves[n+1]) */
+        emit ReservesAdded(msg.sender, actualAddAmount, totalReservesNew);
+    }
+
+    /**
+     * @notice Reduces reserves by transferring to admin
+     * @dev Requires fresh interest accrual
+     * @param reduceAmount Amount of reduction to reserves
+     */
+    function _reduceReservesFresh(uint256 reduceAmount) internal {
+        // totalReserves - reduceAmount
+        uint256 totalReservesNew;
+
+        // Verify market's block timestamp equals current block timestamp
+        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
+            revert PTokenError.ReduceReservesFreshCheck();
+        }
+
+        // Fail gracefully if protocol has insufficient underlying cash
+        if (getCash() < reduceAmount) {
+            revert PTokenError.ReduceReservesCashNotAvailable();
+        }
+
+        // Check reduceAmount ≤ reserves[n] (totalReserves)
+        if (reduceAmount > _getPTokenStorage().totalReserves) {
+            revert PTokenError.ReduceReservesCashValidation();
+        }
+
+        /////////////////////////
+        // EFFECTS & INTERACTIONS
+        // (No safe failures beyond this point)
+
+        totalReservesNew = _getPTokenStorage().totalReserves - reduceAmount;
+
+        // Store reserves[n+1] = reserves[n] - reduceAmount
+        _getPTokenStorage().totalReserves = totalReservesNew;
+
+        // doTransferOut reverts if anything goes wrong, since we can't be sure if side effects occurred.
+        doTransferOut(msg.sender, reduceAmount);
+
+        emit ReservesReduced(msg.sender, reduceAmount, totalReservesNew);
     }
 
     function _setRiskEngine(IRiskEngine newRiskEngine) internal {

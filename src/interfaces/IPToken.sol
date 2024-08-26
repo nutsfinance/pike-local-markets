@@ -75,6 +75,11 @@ interface IPToken is IERC20 {
     event ReservesAdded(address benefactor, uint256 addAmount, uint256 newTotalReserves);
 
     /**
+     * @notice Event emitted when the reserves are reduced
+     */
+    event ReservesReduced(address admin, uint256 reduceAmount, uint256 newTotalReserves);
+
+    /**
      * @notice Sender supplies assets into the market and receives pTokens in exchange
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
      * @param mintAmount The amount of the underlying asset to supply
@@ -183,9 +188,8 @@ interface IPToken is IERC20 {
     /**
      * @notice The sender adds to reserves.
      * @param addAmount The amount fo underlying token to add as reserves
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function addReserves(uint256 addAmount) external returns (uint256);
+    function addReserves(uint256 addAmount) external;
 
     /// ***Admin Functions***
 
@@ -198,18 +202,14 @@ interface IPToken is IERC20 {
     /**
      * @notice accrues interest and sets a new reserve factor for the protocol
      * @dev Admin function to accrue interest and set a new reserve factor
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function setReserveFactor(uint256 newReserveFactorMantissa)
-        external
-        returns (uint256);
+    function setReserveFactor(uint256 newReserveFactorMantissa) external;
 
     /**
      * @notice Accrues interest and reduces reserves by transferring to reserve protocol contract
      * @param reduceAmount Amount of reduction to reserves
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function reduceReserves(uint256 reduceAmount) external returns (uint256);
+    function reduceReserves(uint256 reduceAmount) external;
 
     /**
      * @notice A public function to sweep accidental ERC-20 transfers to this contract.
