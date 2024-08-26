@@ -18,6 +18,27 @@ library PTokenError {
     error RedeemFreshnessCheck();
     error RedeemTransferOutNotPossible();
 
+    error BorrowRiskEngineRejection(uint256 errorCode);
+    error BorrowFreshnessCheck();
+    error BorrowCashNotAvailable();
+
+    error RepayBorrowRiskEngineRejection(uint256 errorCode);
+    error RepayBorrowFreshnessCheck();
+
+    error LiquidateAccrueCollateralInterestFailed();
+
+    error LiquidateRiskEngineRejection(uint256 errorCode);
+    error LiquidateFreshnessCheck();
+    error LiquidateCollateralFreshnessCheck();
+    error LiquidateLiquidatorIsBorrower();
+    error LiquidateCloseAmountIsZero();
+    error LiquidateCloseAmountIsUintMax();
+    error LiquidateCalculateAmountSeizeFailed(uint256 errorCode);
+    error LiquidateSeizeTooMuch();
+
+    error LiquidateSeizeRiskEngineRejection(uint256 errorCode);
+    error LiquidateSeizeLiquidatorIsBorrower();
+
     error TransferNotAllowed();
 
     error DelegateNotAllowed();
