@@ -125,6 +125,17 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
     }
 
     /**
+     * @inheritdoc IPToken
+     */
+    function sweepToken(IERC20 token) external onlyOwner {
+        if (address(token) == _getPTokenStorage().underlying) {
+            revert PTokenError.SweepNotAllowed();
+        }
+        uint256 balance = token.balanceOf(address(this));
+        token.safeTransfer(msg.sender, balance);
+    }
+
+    /**
      * @notice Transfer `amount` tokens from `msg.sender` to `dst`
      * @param dst The address of the destination account
      * @param amount The number of tokens to transfer
@@ -347,6 +358,34 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
      */
     function accrualBlockTimestamp() external view returns (uint256) {
         return _getPTokenStorage().accrualBlockTimestamp;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function riskEngine() external view returns (IRiskEngine) {
+        return _getPTokenStorage().riskEngine;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function reserveFactorMantissa() external view returns (uint256) {
+        return _getPTokenStorage().reserveFactorMantissa;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function borrowIndex() external view returns (uint256) {
+        return _getPTokenStorage().borrowIndex;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function totalBorrows() external view returns (uint256) {
+        return _getPTokenStorage().totalBorrows;
     }
 
     /**
@@ -1037,7 +1076,7 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
 
         /*
          * We call doTransferIn for the caller and the addAmount
-         *  On success, the cToken holds an additional addAmount of cash.
+         *  On success, the pToken holds an additional addAmount of cash.
          *  doTransferIn reverts if anything goes wrong, since we can't be sure if side effects occurred.
          *  it returns the amount actually transferred, in case of a fee.
          */

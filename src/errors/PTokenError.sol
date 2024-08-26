@@ -45,6 +45,7 @@ library PTokenError {
     error ReduceReservesCashValidation();
 
     error TransferNotAllowed();
+    error SweepNotAllowed();
 
     error DelegateNotAllowed();
 }

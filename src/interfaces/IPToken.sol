@@ -296,11 +296,6 @@ interface IPToken is IERC20 {
     function supplyRatePerSecond() external view returns (uint256);
 
     /**
-     * @notice Returns the last updated timestamp
-     */
-    function accrualTimestamp() external view returns (uint256);
-
-    /**
      * @notice Returns the last updated total borrow without pending interest
      */
     function totalBorrows() external view returns (uint256);
