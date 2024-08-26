@@ -21,6 +21,27 @@ interface IPToken is IERC20 {
     event Redeem(address redeemer, uint256 redeemAmount, uint256 redeemTokens);
 
     /**
+     * @notice Event emitted when underlying is borrowed
+     */
+    event Borrow(
+        address borrower,
+        uint256 borrowAmount,
+        uint256 accountBorrows,
+        uint256 totalBorrows
+    );
+
+    /**
+     * @notice Event emitted when a borrow is repaid
+     */
+    event RepayBorrow(
+        address payer,
+        address onBehalfOf,
+        uint256 repayAmount,
+        uint256 accountBorrows,
+        uint256 totalBorrows
+    );
+
+    /**
      * @notice Event emitted when the reserve factor is changed
      */
     event NewReserveFactor(
@@ -89,37 +110,29 @@ interface IPToken is IERC20 {
     /**
      * @notice Sender borrows assets from the protocol to their own address
      * @param borrowAmount The amount of the underlying asset to borrow
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function borrow(uint256 borrowAmount) external returns (uint256);
+    function borrow(uint256 borrowAmount) external;
 
     /**
      * @notice Sender borrows assets on behalf of some other address. This function is only available
      *   for senders, explicitly marked as delegates of the borrower using `riskEngine.updateDelegate`
-     * @param borrower The borrower, on behalf of whom to borrow
+     * @param onBehalfOf The borrower, on behalf of whom to borrow
      * @param borrowAmount The amount of the underlying asset to borrow
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function borrowBehalf(address borrower, uint256 borrowAmount)
-        external
-        returns (uint256);
+    function borrowOnBehalfOf(address onBehalfOf, uint256 borrowAmount) external;
 
     /**
      * @notice Sender repays their own borrow
      * @param repayAmount The amount to repay, or type(uint256).max for the full outstanding amount
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function repayBorrow(uint256 repayAmount) external returns (uint256);
+    function repayBorrow(uint256 repayAmount) external;
 
     /**
      * @notice Sender repays a borrow belonging to borrower
-     * @param borrower the account with the debt being payed off
+     * @param onBehalfOf the account with the debt being payed off
      * @param repayAmount The amount to repay, or type(uint256).max for the full outstanding amount
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
-    function repayBorrowBehalf(address borrower, uint256 repayAmount)
-        external
-        returns (uint256);
+    function repayBorrowOnBehalfOf(address onBehalfOf, uint256 repayAmount) external;
 
     /**
      * @notice The sender liquidates the borrowers collateral.
@@ -127,13 +140,12 @@ interface IPToken is IERC20 {
      * @param borrower The borrower of this pToken to be liquidated
      * @param repayAmount The amount of the underlying borrowed asset to repay
      * @param pTokenCollateral The market in which to seize collateral from the borrower
-     * @return uint 0=success, otherwise a failure (see Errors for details)
      */
     function liquidateBorrow(
         address borrower,
         uint256 repayAmount,
         IPToken pTokenCollateral
-    ) external returns (uint256);
+    ) external;
 
     /**
      * @notice Applies accrued interest to total borrows and reserves
@@ -194,6 +206,11 @@ interface IPToken is IERC20 {
     function sweepToken(IERC20 token) external;
 
     /// ***Getter Functions***
+
+    /**
+     * @notice Return the latest accrual timestamp of market
+     */
+    function accrualBlockTimestamp() external view returns (uint256);
 
     /**
      * @notice Return the up-to-date exchange rate with pending accrued interest

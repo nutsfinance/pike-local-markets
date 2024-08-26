@@ -34,6 +34,10 @@ contract PTokenStorage {
          */
         uint256 initialExchangeRateMantissa;
         /**
+         * @notice Share of seized collateral that is added to reserves
+         */
+        uint256 protocolSeizeShareMantissa;
+        /**
          * @notice Fraction of interest currently set aside for reserves
          */
         uint256 reserveFactorMantissa;

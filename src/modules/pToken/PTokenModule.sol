@@ -46,6 +46,7 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
         IRiskEngine riskEngine_,
         uint256 initialExchangeRateMantissa_,
         uint256 reserveFactorMantissa_,
+        uint256 protocolSeizeShareMantissa_,
         uint256 borrowRateMaxMantissa_,
         string memory name_,
         string memory symbol_,
@@ -62,6 +63,8 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
         }
         // Set initial exchange rate
         _getPTokenStorage().initialExchangeRateMantissa = initialExchangeRateMantissa_;
+
+        _getPTokenStorage().protocolSeizeShareMantissa = protocolSeizeShareMantissa_;
 
         _getPTokenStorage().borrowRateMaxMantissa = borrowRateMaxMantissa_;
 
@@ -197,6 +200,50 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
     }
 
     /**
+     * @inheritdoc IPToken
+     */
+    function borrow(uint256 borrowAmount) external nonReentrant {
+        accrueInterest();
+
+        borrowFresh(msg.sender, msg.sender, borrowAmount);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function borrowOnBehalfOf(address onBehalfOf, uint256 borrowAmount)
+        external
+        nonReentrant
+    {
+        _isDelegateeOf(onBehalfOf);
+        accrueInterest();
+
+        borrowFresh(msg.sender, onBehalfOf, borrowAmount);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function repayBorrow(uint256 repayAmount) external nonReentrant {
+        accrueInterest();
+
+        repayBorrowFresh(msg.sender, msg.sender, repayAmount);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function repayBorrowOnBehalfOf(address onBehalfOf, uint256 repayAmount)
+        external
+        nonReentrant
+    {
+        accrueInterest();
+
+        repayBorrowFresh(msg.sender, onBehalfOf, repayAmount);
+    }
+
+
+    /**
      * @notice Approve `spender` to transfer up to `amount` from `src`
      * @dev This will overwrite the approval amount for `spender`
      *  and is subject to issues noted [here](https://eips.ethereum.org/EIPS/eip-20#approve)
@@ -236,6 +283,13 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
      */
     function balanceOf(address owner) external view override returns (uint256) {
         return _getPTokenStorage().accountTokens[owner];
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function accrualBlockTimestamp() external view returns (uint256) {
+        return _getPTokenStorage().accrualBlockTimestamp;
     }
 
     /**
@@ -531,6 +585,133 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
     }
 
     /**
+     * @notice Users borrow assets from the protocol to their own address
+     * @param borrower The address of the account which is borrowing the tokens
+     * @param onBehalfOf The address on behalf of whom to borrow
+     * @param borrowAmount The amount of the underlying asset to borrow
+     */
+    function borrowFresh(address borrower, address onBehalfOf, uint256 borrowAmount)
+        internal
+    {
+        /* Fail if borrow not allowed */
+        uint256 allowed = _getPTokenStorage().riskEngine.borrowAllowed(
+            address(this), onBehalfOf, borrowAmount
+        );
+        if (allowed != 0) {
+            revert PTokenError.BorrowRiskEngineRejection(allowed);
+        }
+
+        /* Verify market's block timestamp equals current block timestamp */
+        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
+            revert PTokenError.BorrowFreshnessCheck();
+        }
+
+        /* Fail gracefully if protocol has insufficient underlying cash */
+        if (getCash() < borrowAmount) {
+            revert PTokenError.BorrowCashNotAvailable();
+        }
+
+        /*
+         * We calculate the new borrower and total borrow balances, failing on overflow:
+         *  accountBorrowNew = accountBorrow + borrowAmount
+         *  totalBorrowsNew = totalBorrows + borrowAmount
+         */
+        uint256 accountBorrowsPrev = borrowBalanceStoredInternal(onBehalfOf);
+        uint256 accountBorrowsNew = accountBorrowsPrev + borrowAmount;
+        uint256 totalBorrowsNew = _getPTokenStorage().totalBorrows + borrowAmount;
+
+        /////////////////////////
+        // EFFECTS & INTERACTIONS
+        // (No safe failures beyond this point)
+
+        /*
+         * We write the previously calculated values into storage.
+         *  Note: Avoid token reentrancy attacks by writing increased borrow before external transfer.
+        `*/
+        _getPTokenStorage().accountBorrows[onBehalfOf].principal = accountBorrowsNew;
+        _getPTokenStorage().accountBorrows[onBehalfOf].interestIndex =
+            _getPTokenStorage().borrowIndex;
+        _getPTokenStorage().totalBorrows = totalBorrowsNew;
+
+        /*
+         * We invoke doTransferOut for the borrower and the borrowAmount.
+         *  On success, the pToken borrowAmount less of cash.
+         *  doTransferOut reverts if anything goes wrong, since we can't be sure if side effects occurred.
+         */
+        doTransferOut(borrower, borrowAmount);
+
+        /* We emit a Borrow event */
+        emit Borrow(onBehalfOf, borrowAmount, accountBorrowsNew, totalBorrowsNew);
+    }
+
+    /**
+     * @notice Borrows are repaid by another user (possibly the borrower).
+     * @param payer the account paying off the borrow
+     * @param onBehalfOf the account with the debt being payed off
+     * @param repayAmount the amount of underlying tokens being returned,
+     * or type(uint256).max for the full outstanding amount
+     * @return the actual repayment amount.
+     */
+    function repayBorrowFresh(address payer, address onBehalfOf, uint256 repayAmount)
+        internal
+        returns (uint256)
+    {
+        /* Fail if repayBorrow not allowed */
+        uint256 allowed = _getPTokenStorage().riskEngine.repayBorrowAllowed(
+            address(this), payer, onBehalfOf, repayAmount
+        );
+        if (allowed != 0) {
+            revert PTokenError.RepayBorrowRiskEngineRejection(allowed);
+        }
+
+        /* Verify market's block timestamp equals current block timestamp */
+        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
+            revert PTokenError.RepayBorrowFreshnessCheck();
+        }
+
+        /* We fetch the amount the borrower owes, with accumulated interest */
+        uint256 accountBorrowsPrev = borrowBalanceStoredInternal(onBehalfOf);
+
+        /* If repayAmount == type(uint256).max, repayAmount = accountBorrows */
+        uint256 repayAmountFinal =
+            repayAmount == type(uint256).max ? accountBorrowsPrev : repayAmount;
+
+        /////////////////////////
+        // EFFECTS & INTERACTIONS
+        // (No safe failures beyond this point)
+
+        /*
+         * We call doTransferIn for the payer and the repayAmount
+         *  On success, the pToken holds an additional repayAmount of cash.
+         *  doTransferIn reverts if anything goes wrong, since we can't be sure if side effects occurred.
+         *   it returns the amount actually transferred, in case of a fee.
+         */
+        uint256 actualRepayAmount = doTransferIn(payer, repayAmountFinal);
+
+        /*
+         * We calculate the new borrower and total borrow balances, failing on underflow:
+         *  accountBorrowsNew = accountBorrows - actualRepayAmount
+         *  totalBorrowsNew = totalBorrows - actualRepayAmount
+         */
+        uint256 accountBorrowsNew = accountBorrowsPrev - actualRepayAmount;
+        uint256 totalBorrowsNew = _getPTokenStorage().totalBorrows - actualRepayAmount;
+
+        /* We write the previously calculated values into storage */
+        _getPTokenStorage().accountBorrows[onBehalfOf].principal = accountBorrowsNew;
+        _getPTokenStorage().accountBorrows[onBehalfOf].interestIndex =
+            _getPTokenStorage().borrowIndex;
+        _getPTokenStorage().totalBorrows = totalBorrowsNew;
+
+        /* We emit a RepayBorrow event */
+        emit RepayBorrow(
+            payer, onBehalfOf, actualRepayAmount, accountBorrowsNew, totalBorrowsNew
+        );
+
+        return actualRepayAmount;
+    }
+
+
+    /**
      * @dev Similar to ERC-20 transfer, but handles tokens that have transfer fees.
      *      This function returns the actual amount received,
      *      which may be less than `amount` if there is a fee attached to the transfer.
@@ -652,9 +833,9 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
         snapshot.totalReserve = _getPTokenStorage().totalReserves;
         snapshot.accBorrowIndex = _getPTokenStorage().borrowIndex;
 
-        uint256 accrualBlockTimestamp = _getPTokenStorage().accrualBlockTimestamp;
+        uint256 accruedBlockTimestamp = _getPTokenStorage().accrualBlockTimestamp;
 
-        if (_getBlockTimestamp() > accrualBlockTimestamp && snapshot.totalBorrow > 0) {
+        if (_getBlockTimestamp() > accruedBlockTimestamp && snapshot.totalBorrow > 0) {
             /* Calculate the current borrow interest rate */
             uint256 borrowRate = IInterestRateModel(address(this)).getBorrowRate(
                 getCash(), snapshot.totalBorrow, snapshot.totalReserve
@@ -671,7 +852,7 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
 
             ExponentialNoError.Exp memory interestFactor = ExponentialNoError.Exp({
                 mantissa: borrowRate
-            }).mul_(_getBlockTimestamp() - accrualBlockTimestamp);
+            }).mul_(_getBlockTimestamp() - accruedBlockTimestamp);
             uint256 interestAccumulated =
                 interestFactor.mul_ScalarTruncate(snapshot.totalBorrow);
 
