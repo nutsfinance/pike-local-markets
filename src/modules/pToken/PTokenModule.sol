@@ -14,7 +14,7 @@ import {CommonError} from "@errors/CommonError.sol";
 import {PTokenError} from "@errors/PTokenError.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
 
-abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
+contract PToken is IPToken, PTokenStorage, OwnableMixin {
     using ExponentialNoError for ExponentialNoError.Exp;
     using ExponentialNoError for uint256;
     using SafeERC20 for IERC20;
@@ -391,6 +391,13 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
+    function totalSupply() external view returns (uint256) {
+        return _getPTokenStorage().totalSupply;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function balanceOfUnderlying(address owner) external view returns (uint256) {
         ExponentialNoError.Exp memory exchangeRate =
             ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
@@ -538,9 +545,8 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
      */
     function mintFresh(address minter, address onBehalfOf, uint256 mintAmount) internal {
         /* Fail if mint not allowed */
-        uint256 allowed = _getPTokenStorage().riskEngine.mintAllowed(
-            address(this), onBehalfOf, mintAmount
-        );
+        uint256 allowed =
+            _getPTokenStorage().riskEngine.mintAllowed(address(this), mintAmount);
         if (allowed != 0) {
             revert PTokenError.MintRiskEngineRejection(allowed);
         }
@@ -675,9 +681,7 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
         emit Redeem(onBehalfOf, redeemAmount, redeemTokens);
 
         /* We call the defense hook */
-        _getPTokenStorage().riskEngine.redeemVerify(
-            address(this), onBehalfOf, redeemAmount, redeemTokens
-        );
+        _getPTokenStorage().riskEngine.redeemVerify(redeemAmount, redeemTokens);
     }
 
     /**
@@ -753,9 +757,7 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
         returns (uint256)
     {
         /* Fail if repayBorrow not allowed */
-        uint256 allowed = _getPTokenStorage().riskEngine.repayBorrowAllowed(
-            address(this), payer, onBehalfOf, repayAmount
-        );
+        uint256 allowed = _getPTokenStorage().riskEngine.repayBorrowAllowed(address(this));
         if (allowed != 0) {
             revert PTokenError.RepayBorrowRiskEngineRejection(allowed);
         }
@@ -822,7 +824,7 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
     ) internal {
         /* Fail if liquidate not allowed */
         uint256 allowed = _getPTokenStorage().riskEngine.liquidateBorrowAllowed(
-            address(this), address(pTokenCollateral), liquidator, borrower, repayAmount
+            address(this), address(pTokenCollateral), borrower, repayAmount
         );
         if (allowed != 0) {
             revert PTokenError.LiquidateRiskEngineRejection(allowed);
@@ -908,9 +910,8 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
         uint256 seizeTokens
     ) internal {
         /* Fail if seize not allowed */
-        uint256 allowed = _getPTokenStorage().riskEngine.seizeAllowed(
-            address(this), seizerToken, liquidator, borrower, seizeTokens
-        );
+        uint256 allowed =
+            _getPTokenStorage().riskEngine.seizeAllowed(address(this), seizerToken);
         if (allowed != 0) {
             revert PTokenError.LiquidateSeizeRiskEngineRejection(allowed);
         }
@@ -998,7 +999,7 @@ abstract contract PToken is IPToken, PTokenStorage, OwnableMixin {
         internal
     {
         /* Fail if transfer not allowed */
-        _getPTokenStorage().riskEngine.transferAllowed(address(this), src, dst, tokens);
+        _getPTokenStorage().riskEngine.transferAllowed(address(this), src, tokens);
 
         /* Do not allow self-transfers */
         if (src == dst) {
