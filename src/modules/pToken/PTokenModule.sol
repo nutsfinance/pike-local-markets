@@ -8,7 +8,6 @@ import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
 import {PTokenStorage} from "@storage/PTokenStorage.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
-import {AddressError} from "@errors/AddressError.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {PTokenError} from "@errors/PTokenError.sol";
@@ -184,7 +183,7 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
         nonReentrant
     {
         if (onBehalfOf == address(0)) {
-            revert AddressError.ZeroAddress();
+            revert CommonError.ZeroAddress();
         }
 
         accrueInterest();
@@ -321,7 +320,7 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
      */
     function approve(address spender, uint256 amount) external override returns (bool) {
         if (spender == address(0)) {
-            revert AddressError.ZeroAddress();
+            revert CommonError.ZeroAddress();
         }
         address src = msg.sender;
         _getPTokenStorage().transferAllowances[src][spender] = amount;
