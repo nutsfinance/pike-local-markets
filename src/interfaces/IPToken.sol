@@ -314,4 +314,9 @@ interface IPToken is IERC20 {
      * @notice Returns the risk engine contract
      */
     function riskEngine() external view returns (IRiskEngine);
+
+    /**
+     * @notice Returns the total supply
+     */
+    function totalSupply() external view returns (uint256);
 }
