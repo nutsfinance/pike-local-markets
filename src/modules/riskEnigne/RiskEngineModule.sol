@@ -341,6 +341,22 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
 
         emit MarketExited(pToken, msg.sender);
     }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function updateDelegate(address delegate, bool approved) external {
+        if (delegate == address(0)) {
+            revert CommonError.ZeroAddress();
+        }
+        if (_getRiskEngineStorage().approvedDelegates[msg.sender][delegate] == approved) {
+            revert RiskEngineError.DelegationStatusUnchanged();
+        }
+
+        _getRiskEngineStorage().approvedDelegates[msg.sender][delegate] = approved;
+        emit DelegateUpdated(msg.sender, delegate, approved);
+    }
+
     /// *** Hooks ***
 
     /**
@@ -448,6 +464,92 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         uint256 allowed = redeemAllowedInternal(pToken, redeemer, redeemTokens);
         if (allowed != uint256(RiskEngineError.Error.NO_ERROR)) {
             return allowed;
+        }
+
+        return uint256(RiskEngineError.Error.NO_ERROR);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function repayBorrowAllowed(address pToken) external view returns (uint256) {
+        if (!_getRiskEngineStorage().markets[pToken].isListed) {
+            return uint256(RiskEngineError.Error.MARKET_NOT_LISTED);
+        }
+
+        return uint256(RiskEngineError.Error.NO_ERROR);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function liquidateBorrowAllowed(
+        address pTokenBorrowed,
+        address pTokenCollateral,
+        address borrower,
+        uint256 repayAmount
+    ) external view returns (uint256) {
+        if (
+            !_getRiskEngineStorage().markets[pTokenBorrowed].isListed
+                || !_getRiskEngineStorage().markets[pTokenCollateral].isListed
+        ) {
+            return uint256(RiskEngineError.Error.MARKET_NOT_LISTED);
+        }
+
+        uint256 borrowBalance = IPToken(pTokenBorrowed).borrowBalanceStored(borrower);
+
+        /* allow accounts to be liquidated if the market is deprecated */
+        if (isDeprecated(IPToken(pTokenBorrowed))) {
+            if (borrowBalance < repayAmount) {
+                revert RiskEngineError.RepayMoreThanBorrowed();
+            }
+        } else {
+            /* The borrower must have shortfall in order to be liquidatable */
+            (RiskEngineError.Error err,, uint256 shortfall) =
+                getAccountLiquidityInternal(borrower);
+            if (err != RiskEngineError.Error.NO_ERROR) {
+                return uint256(err);
+            }
+
+            if (shortfall == 0) {
+                return uint256(RiskEngineError.Error.INSUFFICIENT_SHORTFALL);
+            }
+
+            /* The liquidator may not repay more than what is allowed by the closeFactor */
+            uint256 maxClose = ExponentialNoError.Exp({
+                mantissa: _getRiskEngineStorage().closeFactorMantissa
+            }).mul_ScalarTruncate(borrowBalance);
+            if (repayAmount > maxClose) {
+                return uint256(RiskEngineError.Error.TOO_MUCH_REPAY);
+            }
+        }
+        return uint256(RiskEngineError.Error.NO_ERROR);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function seizeAllowed(address pTokenCollateral, address pTokenBorrowed)
+        external
+        view
+        returns (uint256)
+    {
+        // Pausing is a very serious situation - we revert to sound the alarms
+        if (_getRiskEngineStorage().seizeGuardianPaused) {
+            revert RiskEngineError.SeizePaused();
+        }
+
+        if (
+            !_getRiskEngineStorage().markets[pTokenCollateral].isListed
+                || !_getRiskEngineStorage().markets[pTokenBorrowed].isListed
+        ) {
+            return uint256(RiskEngineError.Error.MARKET_NOT_LISTED);
+        }
+
+        if (
+            IPToken(pTokenCollateral).riskEngine() != IPToken(pTokenBorrowed).riskEngine()
+        ) {
+            return uint256(RiskEngineError.Error.RISKENGINE_MISMATCH);
         }
 
         return uint256(RiskEngineError.Error.NO_ERROR);
