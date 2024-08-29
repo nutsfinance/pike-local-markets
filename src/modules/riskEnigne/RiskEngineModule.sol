@@ -17,6 +17,97 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
     /**
      * @inheritdoc IRiskEngine
      */
+    function setCloseFactor(uint256 newCloseFactorMantissa) external onlyOwner {
+        uint256 oldCloseFactorMantissa = _getRiskEngineStorage().closeFactorMantissa;
+        _getRiskEngineStorage().closeFactorMantissa = newCloseFactorMantissa;
+        emit NewCloseFactor(oldCloseFactorMantissa, newCloseFactorMantissa);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function setCollateralFactor(
+        IPToken pToken,
+        uint256 newCollateralFactorMantissa,
+        uint256 newLiquidationThresholdMantissa
+    ) external onlyOwner {
+        // Verify market is listed
+        Market storage market = _getRiskEngineStorage().markets[address(pToken)];
+        if (!market.isListed) {
+            revert RiskEngineError.MarketNotListed();
+        }
+
+        ExponentialNoError.Exp memory newCollateralFactorExp =
+            ExponentialNoError.Exp({mantissa: newCollateralFactorMantissa});
+
+        // Check collateral factor <= 0.9
+        ExponentialNoError.Exp memory highLimit =
+            ExponentialNoError.Exp({mantissa: _COLLATERAL_FACTOR_MAX_MANTISSA});
+        if (highLimit.lessThanExp(newCollateralFactorExp)) {
+            revert RiskEngineError.InvalidCollateralFactor();
+        }
+
+        // Ensure that liquidation threshold <= 1
+        if (newLiquidationThresholdMantissa > _MANTISSA_ONE) {
+            revert RiskEngineError.InvalidLiquidationThreshold();
+        }
+
+        // Ensure that liquidation threshold >= CF
+        if (newLiquidationThresholdMantissa < newCollateralFactorMantissa) {
+            revert RiskEngineError.InvalidLiquidationThreshold();
+        }
+
+        // If collateral factor != 0, fail if price == 0
+        if (
+            newCollateralFactorMantissa != 0
+                && IOracleManager(address(this)).getUnderlyingPrice(pToken) == 0
+        ) {
+            revert RiskEngineError.InvalidPrice();
+        }
+
+        // Set market's collateral factor to new collateral factor, remember old value
+        uint256 oldCollateralFactorMantissa = market.collateralFactorMantissa;
+        market.collateralFactorMantissa = newCollateralFactorMantissa;
+
+        // Emit event with asset, old collateral factor, and new collateral factor
+        emit NewCollateralFactor(
+            pToken, oldCollateralFactorMantissa, newCollateralFactorMantissa
+        );
+
+        // Set market's liquidation threshold to new liquidation threshold, remember old value
+        uint256 oldLiquidationThresholdMantissa = market.liquidationThresholdMantissa;
+        market.liquidationThresholdMantissa = newLiquidationThresholdMantissa;
+
+        // Emit event with asset, old liquidation threshold, and new liquidation threshold
+        emit NewLiquidationThreshold(
+            pToken, oldLiquidationThresholdMantissa, newLiquidationThresholdMantissa
+        );
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function setLiquidationIncentive(uint256 newLiquidationIncentiveMantissa)
+        external
+        onlyOwner
+    {
+        // Save current value for use in log
+        uint256 oldLiquidationIncentiveMantissa =
+            _getRiskEngineStorage().liquidationIncentiveMantissa;
+
+        // Set liquidation incentive to new incentive
+        _getRiskEngineStorage().liquidationIncentiveMantissa =
+            newLiquidationIncentiveMantissa;
+
+        // Emit event with old incentive, new incentive
+        emit NewLiquidationIncentive(
+            oldLiquidationIncentiveMantissa, newLiquidationIncentiveMantissa
+        );
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
     function supportMarket(IPToken pToken) external onlyOwner {
         if (_getRiskEngineStorage().markets[address(pToken)].isListed) {
             revert RiskEngineError.AlreadyListed();
@@ -33,6 +124,154 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         _addMarketInternal(address(pToken));
 
         emit MarketListed(pToken);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function setMarketBorrowCaps(
+        IPToken[] calldata pTokens,
+        uint256[] calldata newBorrowCaps
+    ) external {
+        if (msg.sender != _getRiskEngineStorage().borrowCapGuardian) {
+            revert RiskEngineError.NotBorrowCapGaurdian();
+        }
+
+        uint256 numMarkets = pTokens.length;
+        uint256 numBorrowCap = newBorrowCaps.length;
+
+        if (numMarkets != numBorrowCap || numMarkets == 0) {
+            revert CommonError.NoArrayParity();
+        }
+
+        for (uint256 i = 0; i < numMarkets; ++i) {
+            _getRiskEngineStorage().borrowCaps[address(pTokens[i])] = newBorrowCaps[i];
+            emit NewBorrowCap(pTokens[i], newBorrowCaps[i]);
+        }
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function setMarketSupplyCaps(
+        IPToken[] calldata pTokens,
+        uint256[] calldata newSupplyCaps
+    ) external {
+        if (msg.sender != _getRiskEngineStorage().supplyCapGuardian) {
+            revert RiskEngineError.NotSupplyCapGaurdian();
+        }
+
+        uint256 numMarkets = pTokens.length;
+        uint256 newSupplyCap = newSupplyCaps.length;
+
+        if (numMarkets != newSupplyCap || numMarkets == 0) {
+            revert CommonError.NoArrayParity();
+        }
+
+        for (uint256 i; i < numMarkets; ++i) {
+            _getRiskEngineStorage().supplyCaps[address(pTokens[i])] = newSupplyCaps[i];
+            emit NewBorrowCap(pTokens[i], newSupplyCaps[i]);
+        }
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function setBorrowCapGuardian(address newBorrowCapGuardian) external onlyOwner {
+        // Save current value for inclusion in log
+        address oldBorrowCapGuardian = _getRiskEngineStorage().borrowCapGuardian;
+
+        // Store borrowCapGuardian with value newBorrowCapGuardian
+        _getRiskEngineStorage().borrowCapGuardian = newBorrowCapGuardian;
+
+        // Emit NewBorrowCapGuardian(OldBorrowCapGuardian, NewBorrowCapGuardian)
+        emit NewBorrowCapGuardian(oldBorrowCapGuardian, newBorrowCapGuardian);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function setSupplyCapGuardian(address newSupplyCapGuardian) external onlyOwner {
+        // Save current value for inclusion in log
+        address oldSupplyCapGuardian = _getRiskEngineStorage().supplyCapGuardian;
+
+        // Store supplyCapGuardian with value newSupplyCapGuardian
+        _getRiskEngineStorage().supplyCapGuardian = newSupplyCapGuardian;
+
+        // Emit NewSupplyCapGuardian(oldSupplyCapGuardian, newSupplyCapGuardian)
+        emit NewSupplyCapGuardian(oldSupplyCapGuardian, newSupplyCapGuardian);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function setPauseGuardian(address newPauseGuardian) external onlyOwner {
+        // Save current value for inclusion in log
+        address oldPauseGuardian = _getRiskEngineStorage().pauseGuardian;
+
+        // Store pauseGuardian with value newPauseGuardian
+        _getRiskEngineStorage().pauseGuardian = newPauseGuardian;
+
+        // Emit NewPauseGuardian(OldPauseGuardian, NewPauseGuardian)
+        emit NewPauseGuardian(oldPauseGuardian, newPauseGuardian);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function setMintPaused(IPToken pToken, bool state) external returns (bool) {
+        if (!_getRiskEngineStorage().markets[address(pToken)].isListed) {
+            revert RiskEngineError.MarketNotListed();
+        }
+        if (msg.sender != _getRiskEngineStorage().pauseGuardian) {
+            revert RiskEngineError.NotPauseGaurdian();
+        }
+
+        _getRiskEngineStorage().mintGuardianPaused[address(pToken)] = state;
+        emit ActionPaused(pToken, "Mint", state);
+        return state;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function setBorrowPaused(IPToken pToken, bool state) external returns (bool) {
+        if (!_getRiskEngineStorage().markets[address(pToken)].isListed) {
+            revert RiskEngineError.MarketNotListed();
+        }
+        if (msg.sender != _getRiskEngineStorage().pauseGuardian) {
+            revert RiskEngineError.NotPauseGaurdian();
+        }
+
+        _getRiskEngineStorage().borrowGuardianPaused[address(pToken)] = state;
+        emit ActionPaused(pToken, "Borrow", state);
+        return state;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function setTransferPaused(bool state) external returns (bool) {
+        if (msg.sender != _getRiskEngineStorage().pauseGuardian) {
+            revert RiskEngineError.NotPauseGaurdian();
+        }
+
+        _getRiskEngineStorage().transferGuardianPaused = state;
+        emit ActionPaused("Transfer", state);
+        return state;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function setSeizePaused(bool state) external returns (bool) {
+        if (msg.sender != _getRiskEngineStorage().pauseGuardian) {
+            revert RiskEngineError.NotPauseGaurdian();
+        }
+
+        _getRiskEngineStorage().seizeGuardianPaused = state;
+        emit ActionPaused("Seize", state);
+        return state;
     }
 
     /**
