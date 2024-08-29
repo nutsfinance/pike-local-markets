@@ -183,9 +183,8 @@ interface IRiskEngine {
     /**
      * @notice Admin function to change the Pause Guardian
      * @param newPauseGuardian The address of the new Pause Guardian
-     * @return uint 0=success, otherwise a failure. (See enum Error for details)
      */
-    function setPauseGuardian(address newPauseGuardian) external returns (uint256);
+    function setPauseGuardian(address newPauseGuardian) external;
 
     /**
      * @notice Admin function to pause mint

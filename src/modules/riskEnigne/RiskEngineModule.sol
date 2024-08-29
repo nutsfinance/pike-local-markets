@@ -581,6 +581,136 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
     /**
      * @inheritdoc IRiskEngine
      */
+    function getAssetsIn(address account) external view returns (IPToken[] memory) {
+        IPToken[] memory assetsIn = _getRiskEngineStorage().accountAssets[account];
+
+        return assetsIn;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function checkMembership(address account, IPToken pToken)
+        external
+        view
+        returns (bool)
+    {
+        return _getRiskEngineStorage().markets[address(pToken)].accountMembership[account];
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function getAccountLiquidity(address account)
+        external
+        view
+        returns (uint256, uint256, uint256)
+    {
+        (RiskEngineError.Error err, uint256 liquidity, uint256 shortfall) =
+            getAccountLiquidityInternal(account);
+
+        return (uint256(err), liquidity, shortfall);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function getAccountBorrowLiquidity(address account)
+        external
+        view
+        returns (uint256, uint256, uint256)
+    {
+        (RiskEngineError.Error err, uint256 liquidity, uint256 shortfall) =
+        getHypotheticalAccountLiquidityInternal(
+            account, IPToken(address(0)), 0, 0, _getCollateralFactor
+        );
+
+        return (uint256(err), liquidity, shortfall);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function getHypotheticalAccountLiquidity(
+        address account,
+        address pTokenModify,
+        uint256 redeemTokens,
+        uint256 borrowAmount
+    ) external view returns (uint256, uint256, uint256) {
+        (RiskEngineError.Error err, uint256 liquidity, uint256 shortfall) =
+        getHypotheticalAccountLiquidityInternal(
+            account,
+            IPToken(pTokenModify),
+            redeemTokens,
+            borrowAmount,
+            _getCollateralFactor
+        );
+        return (uint256(err), liquidity, shortfall);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function liquidateCalculateSeizeTokens(
+        address pTokenBorrowed,
+        address pTokenCollateral,
+        uint256 actualRepayAmount
+    ) external view returns (uint256, uint256) {
+        /* Read oracle prices for borrowed and collateral markets */
+        uint256 priceBorrowedMantissa =
+            IOracleManager(address(this)).getUnderlyingPrice(IPToken(pTokenBorrowed));
+        uint256 priceCollateralMantissa =
+            IOracleManager(address(this)).getUnderlyingPrice(IPToken(pTokenCollateral));
+        if (priceBorrowedMantissa == 0 || priceCollateralMantissa == 0) {
+            return (uint256(RiskEngineError.Error.PRICE_ERROR), 0);
+        }
+
+        /*
+         * Get the exchange rate and calculate the number of collateral tokens to seize:
+         *  seizeAmount = actualRepayAmount * liquidationIncentive * priceBorrowed / priceCollateral
+         *  seizeTokens = seizeAmount / exchangeRate
+         *   = actualRepayAmount * (liquidationIncentive * priceBorrowed) / (priceCollateral * exchangeRate)
+         */
+        uint256 exchangeRateMantissa = IPToken(pTokenCollateral).exchangeRateStored(); // Note: reverts on error
+        uint256 seizeTokens;
+        ExponentialNoError.Exp memory numerator;
+        ExponentialNoError.Exp memory denominator;
+        ExponentialNoError.Exp memory ratio;
+
+        numerator = ExponentialNoError.Exp({
+            mantissa: _getRiskEngineStorage().liquidationIncentiveMantissa
+        }).mul_(ExponentialNoError.Exp({mantissa: priceBorrowedMantissa}));
+        denominator = ExponentialNoError.Exp({mantissa: priceCollateralMantissa}).mul_(
+            ExponentialNoError.Exp({mantissa: exchangeRateMantissa})
+        );
+        ratio = numerator.div_(denominator);
+
+        seizeTokens = ratio.mul_ScalarTruncate(actualRepayAmount);
+
+        return (uint256(RiskEngineError.Error.NO_ERROR), seizeTokens);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function getAllMarkets() external view returns (IPToken[] memory) {
+        return _getRiskEngineStorage().allMarkets[0];
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function delegateAllowed(address user, address delegate)
+        external
+        view
+        returns (bool)
+    {
+        return _getRiskEngineStorage().approvedDelegates[user][delegate];
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
     function redeemVerify(uint256 redeemAmount, uint256 redeemTokens) external pure {
         // Require tokens is zero or amount is also zero
         if (redeemTokens == 0 && redeemAmount > 0) {
