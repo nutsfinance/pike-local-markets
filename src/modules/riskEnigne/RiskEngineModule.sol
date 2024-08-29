@@ -341,6 +341,101 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
 
         emit MarketExited(pToken, msg.sender);
     }
+    /// *** Hooks ***
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function borrowAllowed(address pToken, address borrower, uint256 borrowAmount)
+        external
+        returns (uint256)
+    {
+        // Pausing is a very serious situation - we revert to sound the alarms
+        if (_getRiskEngineStorage().borrowGuardianPaused[pToken]) {
+            revert RiskEngineError.BorrowPaused();
+        }
+
+        if (!_getRiskEngineStorage().markets[pToken].isListed) {
+            return uint256(RiskEngineError.Error.MARKET_NOT_LISTED);
+        }
+
+        if (!_getRiskEngineStorage().markets[pToken].accountMembership[borrower]) {
+            // only pTokens may call borrowAllowed if borrower not in market
+            if (msg.sender != pToken) {
+                revert RiskEngineError.SenderNotPToken();
+            }
+
+            // attempt to add borrower to the market
+            RiskEngineError.Error addErr =
+                addToMarketInternal(IPToken(msg.sender), borrower);
+            if (addErr != RiskEngineError.Error.NO_ERROR) {
+                return uint256(addErr);
+            }
+
+            // it should be impossible to break the important invariant
+            assert(_getRiskEngineStorage().markets[pToken].accountMembership[borrower]);
+        }
+
+        if (IOracleManager(address(this)).getUnderlyingPrice(IPToken(pToken)) == 0) {
+            return uint256(RiskEngineError.Error.PRICE_ERROR);
+        }
+
+        uint256 borrowCap = _getRiskEngineStorage().borrowCaps[pToken];
+        // Borrow cap of type(uint256).max corresponds to unlimited borrowing
+        if (borrowCap != type(uint256).max) {
+            uint256 totalBorrows = IPToken(pToken).totalBorrows();
+            uint256 nextTotalBorrows = totalBorrows.add_(borrowAmount);
+            if (nextTotalBorrows > borrowCap) {
+                revert RiskEngineError.BorrowCapExceeded();
+            }
+        }
+
+        (RiskEngineError.Error err,, uint256 shortfall) =
+        getHypotheticalAccountLiquidityInternal(
+            borrower, IPToken(pToken), 0, borrowAmount, _getCollateralFactor
+        );
+        if (err != RiskEngineError.Error.NO_ERROR) {
+            return uint256(err);
+        }
+        if (shortfall > 0) {
+            return uint256(RiskEngineError.Error.INSUFFICIENT_LIQUIDITY);
+        }
+
+        return uint256(RiskEngineError.Error.NO_ERROR);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function mintAllowed(address pToken, uint256 mintAmount)
+        external
+        view
+        returns (uint256)
+    {
+        // Pausing is a very serious situation - we revert to sound the alarms
+        if (_getRiskEngineStorage().mintGuardianPaused[pToken]) {
+            revert RiskEngineError.MintPaused();
+        }
+
+        if (!_getRiskEngineStorage().markets[pToken].isListed) {
+            return uint256(RiskEngineError.Error.MARKET_NOT_LISTED);
+        }
+
+        uint256 supplyCap = _getRiskEngineStorage().supplyCaps[pToken];
+        // Skipping the cap check for uncapped coins to save some gas
+        if (supplyCap != type(uint256).max) {
+            uint256 pTokenSupply = IPToken(pToken).totalSupply();
+            ExponentialNoError.Exp memory exchangeRate =
+                ExponentialNoError.Exp({mantissa: IPToken(pToken).exchangeRateStored()});
+            uint256 nextTotalSupply =
+                exchangeRate.mul_ScalarTruncateAddUInt(pTokenSupply, mintAmount);
+            if (nextTotalSupply > supplyCap) {
+                return uint256(RiskEngineError.Error.SUPPLY_CAP_EXCEEDED);
+            }
+        }
+
+        return uint256(RiskEngineError.Error.NO_ERROR);
+    }
 
     /**
      * @inheritdoc IRiskEngine
