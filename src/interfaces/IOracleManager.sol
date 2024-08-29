@@ -6,21 +6,20 @@ import {IPToken} from "@interfaces/IPToken.sol";
 interface IOracleManager {
     enum OracleType {
         Chainlink,
-        Pyth,
-        Custom
+        Pyth
     }
 
     /// *** Admin Functions ***
 
     /**
-     * @notice Admin function to add a new price feed for an asset
+     * @notice Admin function to add a new oracle contract
      */
-    function addPriceFeed(
-        IPToken pToken,
-        OracleType oracle,
-        address priceFeed,
-        bytes calldata data
-    ) external;
+    function addOracle(OracleType oracleType, address oracle) external;
+
+    /**
+     * @notice Admin function to add a new asset to the oracle manager
+     */
+    function addPToken(IPToken pToken, OracleType oracle, bytes calldata data) external;
 
     /**
      * @notice Admin function to assign oracle guardian access
@@ -36,7 +35,7 @@ interface IOracleManager {
     function getUnderlyingPrice(IPToken pToken) external view returns (uint256);
 
     /**
-     * @notice Get the added price feed for an asset
+     * @notice Get the added oracle for an asset
      */
-    function getPriceFeed(IPToken pToken) external view returns (address);
+    function getOracle(IPToken pToken) external view returns (address);
 }
