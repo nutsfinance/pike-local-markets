@@ -13,6 +13,96 @@ import {OwnableMixin} from "@utils/OwnableMixin.sol";
 contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
     using ExponentialNoError for ExponentialNoError.Exp;
     using ExponentialNoError for uint256;
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function supportMarket(IPToken pToken) external onlyOwner {
+        if (_getRiskEngineStorage().markets[address(pToken)].isListed) {
+            revert RiskEngineError.AlreadyListed();
+        }
+
+        /// TODO: ERC165 check compliance
+
+        // Note that isComped is not in active use anymore
+        Market storage newMarket = _getRiskEngineStorage().markets[address(pToken)];
+        newMarket.isListed = true;
+        newMarket.collateralFactorMantissa = 0;
+        newMarket.liquidationThresholdMantissa = 0;
+
+        _addMarketInternal(address(pToken));
+
+        emit MarketListed(pToken);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function enterMarkets(address[] memory pTokens) external returns (uint256[] memory) {
+        uint256 len = pTokens.length;
+
+        uint256[] memory results = new uint256[](len);
+        for (uint256 i = 0; i < len; i++) {
+            IPToken pToken = IPToken(pTokens[i]);
+
+            results[i] = uint256(addToMarketInternal(pToken, msg.sender));
+        }
+
+        return results;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function exitMarket(address pTokenAddress) external {
+        IPToken pToken = IPToken(pTokenAddress);
+        /* Get sender tokensHeld and amountOwed underlying from the pToken */
+        (uint256 tokensHeld, uint256 amountOwed,) = pToken.getAccountSnapshot(msg.sender);
+
+        /* Fail if the sender has a borrow balance */
+        if (amountOwed != 0) {
+            revert RiskEngineError.NonZeroBorrowBalance();
+        }
+
+        /* Fail if the sender is not permitted to redeem all of their tokens */
+        uint256 allowed = redeemAllowedInternal(pTokenAddress, msg.sender, tokensHeld);
+        if (allowed != 0) {
+            revert RiskEngineError.ExitMarketRedeemRejection(allowed);
+        }
+
+        Market storage marketToExit = _getRiskEngineStorage().markets[pTokenAddress];
+
+        /* Return true if the sender is not already ‘in’ the market */
+        if (!marketToExit.accountMembership[msg.sender]) {
+            return;
+        }
+
+        /* Set pToken account membership to false */
+        delete marketToExit.accountMembership[msg.sender];
+
+        /* Delete pToken from the account’s list of assets */
+        // load into memory for faster iteration
+        IPToken[] memory userAssetList = _getRiskEngineStorage().accountAssets[msg.sender];
+        uint256 len = userAssetList.length;
+        uint256 assetIndex = len;
+        for (uint256 i = 0; i < len; i++) {
+            if (userAssetList[i] == pToken) {
+                assetIndex = i;
+                break;
+            }
+        }
+
+        // We *must* have found the asset in the list or our redundant data structure is broken
+        assert(assetIndex < len);
+
+        // copy last item in list to location of item to be removed, reduce length by 1
+        IPToken[] storage storedList = _getRiskEngineStorage().accountAssets[msg.sender];
+        storedList[assetIndex] = storedList[storedList.length - 1];
+        storedList.pop();
+
+        emit MarketExited(pToken, msg.sender);
+    }
+
     /**
      * @inheritdoc IRiskEngine
      */
@@ -50,6 +140,34 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         }
 
         return uint256(RiskEngineError.Error.NO_ERROR);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function redeemVerify(uint256 redeemAmount, uint256 redeemTokens) external pure {
+        // Require tokens is zero or amount is also zero
+        if (redeemTokens == 0 && redeemAmount > 0) {
+            revert RiskEngineError.InvalidRedeemTokens();
+        }
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function isDeprecated(IPToken pToken) public view returns (bool) {
+        return _getRiskEngineStorage().markets[address(pToken)].collateralFactorMantissa
+            == 0 && _getRiskEngineStorage().borrowGuardianPaused[address(pToken)] == true
+            && pToken.reserveFactorMantissa() == 1e18;
+    }
+
+    function _addMarketInternal(address pToken) internal {
+        for (uint256 i = 0; i < _getRiskEngineStorage().allMarkets[0].length; i++) {
+            if (_getRiskEngineStorage().allMarkets[0][i] == IPToken(pToken)) {
+                revert RiskEngineError.AlreadyListed();
+            }
+        }
+        _getRiskEngineStorage().allMarkets[0].push(IPToken(pToken));
     }
 
     /**
