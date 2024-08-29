@@ -170,7 +170,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
 
         for (uint256 i; i < numMarkets; ++i) {
             _getRiskEngineStorage().supplyCaps[address(pTokens[i])] = newSupplyCaps[i];
-            emit NewBorrowCap(pTokens[i], newSupplyCaps[i]);
+            emit NewSupplyCap(pTokens[i], newSupplyCaps[i]);
         }
     }
 
@@ -402,7 +402,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
             uint256 totalBorrows = IPToken(pToken).totalBorrows();
             uint256 nextTotalBorrows = totalBorrows.add_(borrowAmount);
             if (nextTotalBorrows > borrowCap) {
-                revert RiskEngineError.BorrowCapExceeded();
+                return uint256(RiskEngineError.Error.BORROW_CAP_EXCEEDED);
             }
         }
 
