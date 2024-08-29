@@ -19,11 +19,11 @@ contract InterestRateModule is IInterestRateModel, InterestRateStorage, OwnableM
         uint256 jumpMultiplierPerYear,
         uint256 kink
     ) external onlyOwner {
-        _getIRMStorage().baseRatePerSecond = baseRatePerYear / SECONDS_PER_YEAR;
-        _getIRMStorage().multiplierPerSecond = multiplierPerYear / SECONDS_PER_YEAR;
-        _getIRMStorage().jumpMultiplierPerSecond =
-            jumpMultiplierPerYear / SECONDS_PER_YEAR;
-        _getIRMStorage().kink = kink;
+        InterestRateData storage data = _getIRMStorage();
+        data.baseRatePerSecond = baseRatePerYear / SECONDS_PER_YEAR;
+        data.multiplierPerSecond = multiplierPerYear / SECONDS_PER_YEAR;
+        data.jumpMultiplierPerSecond = jumpMultiplierPerYear / SECONDS_PER_YEAR;
+        data.kink = kink;
 
         emit NewInterestParams(
             baseRatePerYear, multiplierPerYear, jumpMultiplierPerYear, kink
@@ -39,17 +39,15 @@ contract InterestRateModule is IInterestRateModel, InterestRateStorage, OwnableM
         returns (uint256)
     {
         uint256 util = getUtilization(cash, borrows, reserves);
-        uint256 kink = _getIRMStorage().kink;
+        InterestRateData memory data = _getIRMStorage();
 
-        if (util <= kink) {
-            return (util * _getIRMStorage().multiplierPerSecond / BASE)
-                + _getIRMStorage().baseRatePerSecond;
+        if (util <= data.kink) {
+            return (util * data.multiplierPerSecond / BASE) + data.baseRatePerSecond;
         } else {
-            uint256 normalRate = (kink * _getIRMStorage().multiplierPerSecond / BASE)
-                + _getIRMStorage().baseRatePerSecond;
-            uint256 excessUtil = util - kink;
-            return (excessUtil * _getIRMStorage().jumpMultiplierPerSecond / BASE)
-                + normalRate;
+            uint256 normalRate =
+                (data.kink * data.multiplierPerSecond / BASE) + data.baseRatePerSecond;
+            uint256 excessUtil = util - data.kink;
+            return (excessUtil * data.jumpMultiplierPerSecond / BASE) + normalRate;
         }
     }
 
