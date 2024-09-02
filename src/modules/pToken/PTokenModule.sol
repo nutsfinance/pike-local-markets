@@ -13,7 +13,7 @@ import {CommonError} from "@errors/CommonError.sol";
 import {PTokenError} from "@errors/PTokenError.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
 
-contract PToken is IPToken, PTokenStorage, OwnableMixin {
+contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     using ExponentialNoError for ExponentialNoError.Exp;
     using ExponentialNoError for uint256;
     using SafeERC20 for IERC20;
@@ -70,11 +70,12 @@ contract PToken is IPToken, PTokenStorage, OwnableMixin {
         // set risk engine
         _setRiskEngine(riskEngine_);
 
-        _setReserveFactorFresh(reserveFactorMantissa_);
 
         // Initialize block timestamp and borrow index (block timestamp is set to current block timestamp)
         _getPTokenStorage().accrualBlockTimestamp = _getBlockTimestamp();
         _getPTokenStorage().borrowIndex = _MANTISSA_ONE;
+        
+        _setReserveFactorFresh(reserveFactorMantissa_);
 
         _getPTokenStorage().name = name_;
         _getPTokenStorage().symbol = symbol_;
