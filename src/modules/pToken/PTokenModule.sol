@@ -70,11 +70,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
         // set risk engine
         _setRiskEngine(riskEngine_);
 
-
         // Initialize block timestamp and borrow index (block timestamp is set to current block timestamp)
         _getPTokenStorage().accrualBlockTimestamp = _getBlockTimestamp();
         _getPTokenStorage().borrowIndex = _MANTISSA_ONE;
-        
+
         _setReserveFactorFresh(reserveFactorMantissa_);
 
         _getPTokenStorage().name = name_;
