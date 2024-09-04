@@ -15,6 +15,8 @@
   "scripts": {
     "build": "forge build",
     "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
+    "fork-coverage": "npx cannon test script/cannon/pike-fork.toml --rpc-url https://base-mainnet.public.blastapi.io --forge-cmd coverage -- -vv --no-match-coverage \"(script|test|node_modules)\"",
+    "fork-test": "npx cannon test script/cannon/pike-fork.toml --rpc-url https://base-mainnet.public.blastapi.io -- -vv",
     "postinstall": "forge install",
     "lint:check": "yarn lint:sol-tests && yarn lint:sol-logic && forge fmt --check",
     "lint:fix": "yarn sort-package-json && forge fmt && yarn solhint 'src/**/*.sol' 'test/**/*.sol' --fix",
@@ -27,6 +29,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.2",
     "@openzeppelin/contracts-upgradeable": "^5.0.2",
+    "cannon-std": "git+https://github.com/usecannon/cannon-std.git",
     "forge-std": "git+https://github.com/foundry-rs/forge-std.git"
   },
   "devDependencies": {
