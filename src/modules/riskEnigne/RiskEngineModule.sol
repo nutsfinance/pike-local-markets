@@ -67,7 +67,8 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         // If collateral factor != 0, fail if price == 0
         if (
             newCollateralFactorMantissa != 0
-                && IOracleEngine(address(this)).getUnderlyingPrice(pToken) == 0
+                && IOracleEngine(_getRiskEngineStorage().oracle).getUnderlyingPrice(pToken)
+                    == 0
         ) {
             revert RiskEngineError.InvalidPrice();
         }
@@ -399,7 +400,11 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
             assert(_getRiskEngineStorage().markets[pToken].accountMembership[borrower]);
         }
 
-        if (IOracleEngine(address(this)).getUnderlyingPrice(IPToken(pToken)) == 0) {
+        if (
+            IOracleEngine(_getRiskEngineStorage().oracle).getUnderlyingPrice(
+                IPToken(pToken)
+            ) == 0
+        ) {
             return uint256(RiskEngineError.Error.PRICE_ERROR);
         }
 
@@ -664,10 +669,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         uint256 actualRepayAmount
     ) external view returns (uint256, uint256) {
         /* Read oracle prices for borrowed and collateral markets */
-        uint256 priceBorrowedMantissa =
-            IOracleEngine(address(this)).getUnderlyingPrice(IPToken(pTokenBorrowed));
-        uint256 priceCollateralMantissa =
-            IOracleEngine(address(this)).getUnderlyingPrice(IPToken(pTokenCollateral));
+        uint256 priceBorrowedMantissa = IOracleEngine(_getRiskEngineStorage().oracle)
+            .getUnderlyingPrice(IPToken(pTokenBorrowed));
+        uint256 priceCollateralMantissa = IOracleEngine(_getRiskEngineStorage().oracle)
+            .getUnderlyingPrice(IPToken(pTokenCollateral));
         if (priceBorrowedMantissa == 0 || priceCollateralMantissa == 0) {
             return (uint256(RiskEngineError.Error.PRICE_ERROR), 0);
         }
@@ -866,7 +871,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
 
             // Get the normalized price of the asset
             vars.oraclePriceMantissa =
-                IOracleEngine(address(this)).getUnderlyingPrice(asset);
+                IOracleEngine(_getRiskEngineStorage().oracle).getUnderlyingPrice(asset);
             if (vars.oraclePriceMantissa == 0) {
                 return (RiskEngineError.Error.PRICE_ERROR, 0, 0);
             }

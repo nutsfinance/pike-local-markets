@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import {IOracleManager} from "@interfaces/IOracleManager.sol";
+import {IOracleEngine} from "@interfaces/IOracleEngine.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
 
 contract MockOracle {
