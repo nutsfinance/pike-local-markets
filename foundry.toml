@@ -12,6 +12,7 @@ remappings = [
   "forge-std/=node_modules/forge-std/src/",
   "cannon-std/=node_modules/cannon-std/src/",
   "@interfaces/=src/interfaces/",
+  "@helpers/=test/helpers/",
   "@storage/=src/storage/",
   "@modules/=src/modules/",
   "@errors/=src/errors/",
