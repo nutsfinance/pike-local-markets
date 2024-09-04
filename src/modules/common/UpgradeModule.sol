@@ -61,10 +61,6 @@ contract UpgradeModule is IUpgrade, UpgradeStorage, OwnableStorage {
 
         ProxyData storage data = _getImplementationStorage();
 
-        if (newImplementation == data.implementation) {
-            revert AlreadyUpgraded();
-        }
-
         if (!data.simulatingUpgrade && _implementationIsSterile(newImplementation)) {
             revert ImplementationIsSterile(newImplementation);
         }
