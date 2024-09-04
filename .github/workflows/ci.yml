@@ -49,7 +49,7 @@ jobs:
           forge build --sizes
         id: build
 
-      - name: Run Forge tests
+      - name: Run Cannon tests
         run: |
-          forge clean && forge test -vv --fuzz-seed ${{ steps.fuzz_seed.outputs.FOUNDRY_FUZZ_SEED }}
+          yarn fork-test
         id: test

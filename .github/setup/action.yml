@@ -18,3 +18,7 @@ runs:
     - name: Install dependencies
       shell: bash
       run: yarn install --frozen-lockfile --audit
+
+    - name: Install cannon
+      shell: bash
+      run: npm install -g @usecannon/cli
