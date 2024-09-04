@@ -37,6 +37,7 @@ contract RiskEngineStorage {
         address borrowCapGuardian;
         // @notice The supplyCapGuardian can set supplyCaps to any number for any market.
         address supplyCapGuardian;
+        address oracle;
         bool _mintGuardianPaused;
         bool _borrowGuardianPaused;
         bool transferGuardianPaused;

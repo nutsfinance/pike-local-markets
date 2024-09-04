@@ -17,6 +17,13 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
     /**
      * @inheritdoc IRiskEngine
      */
+    function setOracle(address newOracle) external onlyOwner {
+        _getRiskEngineStorage().oracle = newOracle;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
     function setCloseFactor(uint256 newCloseFactorMantissa) external onlyOwner {
         uint256 oldCloseFactorMantissa = _getRiskEngineStorage().closeFactorMantissa;
         _getRiskEngineStorage().closeFactorMantissa = newCloseFactorMantissa;
@@ -706,6 +713,13 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         returns (bool)
     {
         return _getRiskEngineStorage().approvedDelegates[user][delegate];
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function oracle() external view returns (address) {
+        return _getRiskEngineStorage().oracle;
     }
 
     /**

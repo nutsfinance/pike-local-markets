@@ -108,6 +108,13 @@ interface IRiskEngine {
     /// *** Admin Functions ***
 
     /**
+     * @notice Sets the oracle engine for a the risk engine
+     * @dev Admin function to set oracle
+     * @param newOracle The address of the new oracle
+     */
+    function setOracle(address newOracle) external;
+
+    /**
      * @notice Sets the closeFactor for a market used when liquidating borrows
      * @dev Admin function to set closeFactor
      * @param newCloseFactorMantissa New close factor, scaled by 1e18
@@ -371,6 +378,11 @@ interface IRiskEngine {
         external
         view
         returns (uint256);
+
+    /**
+     * @return the oracle engine address
+     */
+    function oracle() external view returns (address);
 
     /**
      * @notice Validates redeem and reverts on rejection.
