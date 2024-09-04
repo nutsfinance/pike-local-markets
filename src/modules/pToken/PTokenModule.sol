@@ -390,8 +390,36 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
+    function totalReserves() external view returns (uint256) {
+        return _getPTokenStorage().totalReserves;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function totalSupply() external view returns (uint256) {
         return _getPTokenStorage().totalSupply;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function name() external view returns (string memory) {
+        return _getPTokenStorage().name;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function symbol() external view returns (string memory) {
+        return _getPTokenStorage().symbol;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function decimals() external view returns (uint8) {
+        return _getPTokenStorage().decimals;
     }
 
     /**
@@ -464,6 +492,14 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
+    function totalReservesCurrent() external view returns (uint256) {
+        PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+        return snapshot.totalReserve;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function borrowBalanceCurrent(address account) external view returns (uint256) {
         PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
         BorrowSnapshot memory borrowSnapshot = _getPTokenStorage().accountBorrows[account];
@@ -472,6 +508,13 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
 
         uint256 principalTimesIndex = borrowSnapshot.principal * snapshot.accBorrowIndex;
         return principalTimesIndex / borrowSnapshot.interestIndex;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function underlying() external view returns (address) {
+        return _getPTokenStorage().underlying;
     }
 
     /**
@@ -488,8 +531,11 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
 
         /// Get accrued snapshot
         PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+        uint256 borrowRateMantissa = IInterestRateModel(address(this)).getBorrowRate(
+            getCash(), snapshot.totalBorrow, snapshot.totalReserve
+        );
 
-        if (snapshot.accBorrowIndex > _getPTokenStorage().borrowRateMaxMantissa) {
+        if (borrowRateMantissa > _getPTokenStorage().borrowRateMaxMantissa) {
             revert PTokenError.BorrowRateBoundsCheck();
         }
 

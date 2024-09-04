@@ -257,6 +257,12 @@ interface IPToken is IERC20 {
     function totalBorrowsCurrent() external view returns (uint256);
 
     /**
+     * @notice Returns the current total reserves plus pending accrued interest
+     * @return The total reserves with interest
+     */
+    function totalReservesCurrent() external view returns (uint256);
+
+    /**
      * @notice Calculate account's borrow balance using the pending updated borrowIndex
      * @param account The address whose balance should be calculated
      * @return The calculated balance
@@ -301,6 +307,11 @@ interface IPToken is IERC20 {
     function totalBorrows() external view returns (uint256);
 
     /**
+     * @notice Returns the last updated total reserve without pending interest
+     */
+    function totalReserves() external view returns (uint256);
+
+    /**
      * @notice Returns the last stored borrow index
      */
     function borrowIndex() external view returns (uint256);
@@ -319,4 +330,24 @@ interface IPToken is IERC20 {
      * @notice Returns the total supply
      */
     function totalSupply() external view returns (uint256);
+
+    /**
+     * @notice Returns the pToken name
+     */
+    function name() external view returns (string memory);
+
+    /**
+     * @notice Returns the pToken symbol
+     */
+    function symbol() external view returns (string memory);
+
+    /**
+     * @notice Returns the pToken decimals
+     */
+    function decimals() external view returns (uint8);
+
+    /**
+     * @notice Returns the pToken underlying token address
+     */
+    function underlying() external view returns (address);
 }
