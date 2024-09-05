@@ -9,11 +9,12 @@ remappings = [
   "@openzeppelin/contracts-upgradeable/=node_modules/@openzeppelin/contracts-upgradeable/",
   "@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/",
   "forge-std/=node_modules/forge-std/src/",
-  "@interfaces/=src/interfaces/",
-  "@storage/=src/storage/",
-  "@modules/=src/modules/",
-  "@errors/=src/errors/",
-  "@utils/=src/utils/"
+  "@interfaces/=src/local-market/interfaces/",
+  "@storage/=src/local-market/storage/",
+  "@modules/=src/local-market/modules/",
+  "@errors/=src/local-market/errors/",
+  "@utils/=src/local-market/utils/",
+  "@oracles/=src/oracles"
 ]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
