@@ -319,4 +319,9 @@ interface IPToken is IERC20 {
      * @notice Returns the total supply
      */
     function totalSupply() external view returns (uint256);
+
+    /**
+     * @notice Returns the underlying asset
+     */
+    function getUnderlying() external view returns (address);
 }

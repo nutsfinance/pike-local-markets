@@ -57,14 +57,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
             revert RiskEngineError.InvalidLiquidationThreshold();
         }
 
-        // If collateral factor != 0, fail if price == 0
-        if (
-            newCollateralFactorMantissa != 0
-                && IOracleEngine(address(this)).getUnderlyingPrice(pToken) == 0
-        ) {
-            revert RiskEngineError.InvalidPrice();
-        }
-
         // Set market's collateral factor to new collateral factor, remember old value
         uint256 oldCollateralFactorMantissa = market.collateralFactorMantissa;
         market.collateralFactorMantissa = newCollateralFactorMantissa;
@@ -392,10 +384,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
             assert(_getRiskEngineStorage().markets[pToken].accountMembership[borrower]);
         }
 
-        if (IOracleEngine(address(this)).getUnderlyingPrice(IPToken(pToken)) == 0) {
-            return uint256(RiskEngineError.Error.PRICE_ERROR);
-        }
-
         uint256 borrowCap = _getRiskEngineStorage().borrowCaps[pToken];
         // Borrow cap of type(uint256).max corresponds to unlimited borrowing
         if (borrowCap != type(uint256).max) {
@@ -661,9 +649,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
             IOracleEngine(address(this)).getUnderlyingPrice(IPToken(pTokenBorrowed));
         uint256 priceCollateralMantissa =
             IOracleEngine(address(this)).getUnderlyingPrice(IPToken(pTokenCollateral));
-        if (priceBorrowedMantissa == 0 || priceCollateralMantissa == 0) {
-            return (uint256(RiskEngineError.Error.PRICE_ERROR), 0);
-        }
 
         /*
          * Get the exchange rate and calculate the number of collateral tokens to seize:
@@ -853,9 +838,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
             // Get the normalized price of the asset
             vars.oraclePriceMantissa =
                 IOracleEngine(address(this)).getUnderlyingPrice(asset);
-            if (vars.oraclePriceMantissa == 0) {
-                return (RiskEngineError.Error.PRICE_ERROR, 0, 0);
-            }
+
             vars.oraclePrice =
                 ExponentialNoError.Exp({mantissa: vars.oraclePriceMantissa});
 
