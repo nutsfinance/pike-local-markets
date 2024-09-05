@@ -34,6 +34,7 @@ contract TestStructs {
     enum Action {
         SUPPLY,
         WITHDRAW,
+        WITHDRAW_UNDERLYING,
         BORROW,
         REPAY,
         LIQUIDATE

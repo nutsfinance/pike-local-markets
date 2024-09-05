@@ -100,7 +100,7 @@ target = [ "pWETH.Proxy" ]
 abi = "<%= JSON.stringify(contracts.PTokenModule.abi) %>"
 from = "<%= settings.owner %>"
 func = "initialize"
-args = ["<%= settings.weth %>", "<%= core.Proxy.address %>", "<%= settings.initial_exchange_rate %>", "<%= settings.reserve_factor %>", "<%= settings.protocol_seize_factor %>", "<%= settings.max_borrow_rate %>", "pike-weth", "pWETH", "18"]
+args = ["<%= settings.weth %>", "<%= core.Proxy.address %>", "<%= settings.initial_exchange_rate %>", "<%= settings.reserve_factor %>", "<%= settings.protocol_seize_factor %>", "<%= settings.max_borrow_rate %>", "pike-weth", "pWETH", "<%= settings.decimals %>"]
 depends = [ "provision.pWETH", "provision.core" ]
 
 [invoke.initialize_pUSDC_IRM]

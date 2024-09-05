@@ -54,8 +54,97 @@ contract TestHelpers is TestUtilities {
                 }
                 IPToken(params.pToken).mint(params.amount);
             }
-        } else if (action == Action.REPAY) {} else if (action == Action.BORROW) {} else
-        if (action == Action.WITHDRAW) {}
+        } else if (action == Action.REPAY) {
+            if (getDebug()) {
+                console.log(
+                    "Repaying %s of %s",
+                    params.amount,
+                    IPToken(params.tokenAddress).name()
+                );
+            }
+
+            if (onBehalfOf) {
+                vm.prank(user);
+                if (params.expectRevert) {
+                    vm.expectRevert(params.error);
+                }
+                IPToken(params.pToken).repayBorrowOnBehalfOf(
+                    params.onBehalfOf, params.amount
+                );
+            } else {
+                vm.prank(user);
+                if (params.expectRevert) {
+                    vm.expectRevert(params.error);
+                }
+                IPToken(params.pToken).repayBorrow(params.amount);
+            }
+        } else if (action == Action.BORROW) {
+            if (getDebug()) {
+                console.log(
+                    "Borrowing %s of %s",
+                    params.amount,
+                    IPToken(params.tokenAddress).name()
+                );
+            }
+
+            if (onBehalfOf) {
+                vm.prank(user);
+                if (params.expectRevert) {
+                    vm.expectRevert(params.error);
+                }
+                IPToken(params.pToken).borrowOnBehalfOf(params.onBehalfOf, params.amount);
+            } else {
+                vm.prank(user);
+                if (params.expectRevert) {
+                    vm.expectRevert(params.error);
+                }
+                IPToken(params.pToken).borrow(params.amount);
+            }
+        } else if (action == Action.WITHDRAW_UNDERLYING) {
+            if (getDebug()) {
+                console.log(
+                    "Withdrawing %s of %s",
+                    params.amount,
+                    IPToken(params.tokenAddress).name()
+                );
+            }
+
+            if (onBehalfOf) {
+                vm.prank(user);
+                if (params.expectRevert) {
+                    vm.expectRevert(params.error);
+                }
+                IPToken(params.pToken).redeemUnderlyingOnBehalfOf(
+                    params.onBehalfOf, params.amount
+                );
+            } else {
+                vm.prank(user);
+                if (params.expectRevert) {
+                    vm.expectRevert(params.error);
+                }
+                IPToken(params.pToken).redeemUnderlying(params.amount);
+            }
+        } else if (action == Action.WITHDRAW) {
+            if (getDebug()) {
+                console.log(
+                    "Withdrawing %s of %s", params.amount, IPToken(params.pToken).name()
+                );
+            }
+
+            if (onBehalfOf) {
+                vm.prank(user);
+                if (params.expectRevert) {
+                    vm.expectRevert(params.error);
+                }
+                IPToken(params.pToken).redeemOnBehalfOf(params.onBehalfOf, params.amount);
+            } else {
+                vm.prank(user);
+                if (params.expectRevert) {
+                    vm.expectRevert(params.error);
+                }
+                IPToken(params.pToken).redeem(params.amount);
+            }
+        }
 
         if (params.expectRevert) {
             if (getDebug()) {
@@ -103,5 +192,116 @@ contract TestHelpers is TestUtilities {
                 onBehalfOf: onBehalfOf
             })
         );
+    }
+
+    function doDepositAndEnter(
+        address re,
+        address prankAddress,
+        address onBehalfOf,
+        address pToken,
+        uint256 amount
+    ) public {
+        doAction(
+            ActionParameters({
+                action: Action.SUPPLY,
+                pToken: pToken,
+                tokenAddress: IPToken(pToken).underlying(),
+                amount: amount,
+                expectRevert: false,
+                error: bytes4(0),
+                prankAddress: prankAddress,
+                onBehalfOf: onBehalfOf
+            })
+        );
+        enterMarket(re, prankAddress, pToken);
+    }
+
+    function doBorrow(
+        address prankAddress,
+        address onBehalfOf,
+        address pToken,
+        uint256 amount
+    ) public {
+        doAction(
+            ActionParameters({
+                action: Action.BORROW,
+                pToken: pToken,
+                tokenAddress: IPToken(pToken).underlying(),
+                amount: amount,
+                expectRevert: false,
+                error: bytes4(0),
+                prankAddress: prankAddress,
+                onBehalfOf: onBehalfOf
+            })
+        );
+    }
+
+    function doRepay(
+        address prankAddress,
+        address onBehalfOf,
+        address pToken,
+        uint256 amount
+    ) public {
+        doAction(
+            ActionParameters({
+                action: Action.REPAY,
+                pToken: pToken,
+                tokenAddress: IPToken(pToken).underlying(),
+                amount: amount,
+                expectRevert: false,
+                error: bytes4(0),
+                prankAddress: prankAddress,
+                onBehalfOf: onBehalfOf
+            })
+        );
+    }
+
+    function doWithdraw(
+        address prankAddress,
+        address onBehalfOf,
+        address pToken,
+        uint256 amount
+    ) public {
+        doAction(
+            ActionParameters({
+                action: Action.WITHDRAW,
+                pToken: pToken,
+                tokenAddress: IPToken(pToken).underlying(),
+                amount: amount,
+                expectRevert: false,
+                error: bytes4(0),
+                prankAddress: prankAddress,
+                onBehalfOf: onBehalfOf
+            })
+        );
+    }
+
+    function doWithdrawUnderlying(
+        address prankAddress,
+        address onBehalfOf,
+        address pToken,
+        uint256 amount
+    ) public {
+        doAction(
+            ActionParameters({
+                action: Action.WITHDRAW_UNDERLYING,
+                pToken: pToken,
+                tokenAddress: IPToken(pToken).underlying(),
+                amount: amount,
+                expectRevert: false,
+                error: bytes4(0),
+                prankAddress: prankAddress,
+                onBehalfOf: onBehalfOf
+            })
+        );
+    }
+
+    function enterMarket(address riskEngine, address prankAddress, address pToken)
+        public
+    {
+        vm.prank(prankAddress);
+        address[] memory markets = new address[](1);
+        markets[0] = pToken;
+        IRiskEngine(riskEngine).enterMarkets(markets);
     }
 }
