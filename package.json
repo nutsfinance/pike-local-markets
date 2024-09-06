@@ -25,6 +25,7 @@
     "test": "forge clean && forge test -vv"
   },
   "dependencies": {
+    "@chainlink/contracts": "^1.2.0",
     "@openzeppelin/contracts": "^5.0.2",
     "@openzeppelin/contracts-upgradeable": "^5.0.2",
     "forge-std": "git+https://github.com/foundry-rs/forge-std.git"

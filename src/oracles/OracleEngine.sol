@@ -2,7 +2,6 @@
 pragma solidity 0.8.20;
 
 import {IPToken} from "@interfaces/IPToken.sol";
-import {CommonError} from "@errors/CommonError.sol";
 import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
 import {OwnableUpgradeable} from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
