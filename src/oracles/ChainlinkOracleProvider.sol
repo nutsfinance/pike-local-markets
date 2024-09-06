@@ -36,6 +36,13 @@ contract ChainlinkOracleProvider is IOracleProvider, OwnableUpgradeable {
     mapping(address => AssetConfig) public configs;
 
     /**
+     * @notice Event emitted when asset configuration is set
+     */
+    event AssetConfigSet(
+        address asset, AggregatorV3Interface feed, uint256 maxStalePeriod
+    );
+
+    /**
      * @notice Error emitted when asset is invalid
      */
     error InvalidAsset();
@@ -64,13 +71,6 @@ contract ChainlinkOracleProvider is IOracleProvider, OwnableUpgradeable {
      * @notice Error emitted when grace period is not over
      */
     error GracePeriodNotOver();
-
-    /**
-     * @notice Event emitted when asset configuration is set
-     */
-    event AssetConfigSet(
-        address asset, AggregatorV3Interface feed, uint256 maxStalePeriod
-    );
 
     /**
      * @notice Contract constructor

@@ -34,6 +34,17 @@ contract OracleEngine is IOracleEngine, OwnableUpgradeable {
     mapping(address => AssetConfig) public configs;
 
     /**
+     * @notice Event emitted when asset configuration is set
+     */
+    event AssetConfigSet(
+        address indexed asset,
+        address mainOracle,
+        address fallbackOracle,
+        uint256 lowerBoundRatio,
+        uint256 upperBoundRatio
+    );
+
+    /**
      * @notice Error emitted when bounds are invalid
      */
     error InvalidBounds();
@@ -62,17 +73,6 @@ contract OracleEngine is IOracleEngine, OwnableUpgradeable {
      * @notice Error emitted when main oracle price is invalid
      */
     error InvalidMainOraclePrice();
-
-    /**
-     * @notice Event emitted when asset configuration is set
-     */
-    event AssetConfigSet(
-        address indexed asset,
-        address mainOracle,
-        address fallbackOracle,
-        uint256 lowerBoundRatio,
-        uint256 upperBoundRatio
-    );
 
     constructor() {
         _disableInitializers();
