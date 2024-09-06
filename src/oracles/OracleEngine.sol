@@ -74,6 +74,10 @@ contract OracleEngine is IOracleEngine, OwnableUpgradeable {
         uint256 upperBoundRatio
     );
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Initialize the contract
      * @param owner Address of the owner
