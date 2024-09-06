@@ -9,6 +9,7 @@ remappings = [
   "@openzeppelin/contracts-upgradeable/=node_modules/@openzeppelin/contracts-upgradeable/",
   "@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/",
   "@chainlink/contracts/=node_modules/@chainlink/contracts/src/v0.8/",
+  "@pythnetwork/=node_modules/@pythnetwork/pyth-sdk-solidity/",
   "forge-std/=node_modules/forge-std/src/",
   "@interfaces/=src/local-market/interfaces/",
   "@storage/=src/local-market/storage/",

@@ -74,7 +74,7 @@ contract ChainlinkOracleProvider is IOracleProvider, OwnableUpgradeable {
 
     /**
      * @notice Contract constructor
-     *     @param _sequencerUptimeFeed L2 Sequencer uptime feed
+     * @param _sequencerUptimeFeed L2 Sequencer uptime feed
      */
     constructor(AggregatorV3Interface _sequencerUptimeFeed) {
         sequencerUptimeFeed = _sequencerUptimeFeed;
