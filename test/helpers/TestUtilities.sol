@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {IPToken, IERC20} from "@interfaces/IPToken.sol";
+import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {TestSetters} from "@helpers/TestSetters.sol";
 
 contract TestUtilities is TestSetters {
@@ -47,6 +48,80 @@ contract TestUtilities is TestSetters {
                 pToken.name(),
                 userData.collateral,
                 userData.borrowed
+            );
+        }
+    }
+
+    function getLiquidationStateData(LiquidationStateParams memory data)
+        public
+        view
+        returns (LiquidationStateData memory lsd)
+    {
+        IPToken collateralPToken = IPToken(data.collateralPToken);
+        IPToken borrowedPToken = IPToken(data.borrowedPToken);
+
+        PTokenData memory collateralPTokenData = PTokenData({
+            totalCash: collateralPToken.getCash(),
+            totalBorrow: collateralPToken.totalBorrowsCurrent(),
+            totalReserve: collateralPToken.totalReservesCurrent(),
+            totalSupply: collateralPToken.totalSupply()
+        });
+
+        PTokenData memory borrowedPTokenData = PTokenData({
+            totalCash: borrowedPToken.getCash(),
+            totalBorrow: borrowedPToken.totalBorrowsCurrent(),
+            totalReserve: borrowedPToken.totalReservesCurrent(),
+            totalSupply: borrowedPToken.totalSupply()
+        });
+
+        uint256 prankAddressUnderlyingBalance =
+            IERC20(data.underlyingRepayToken).balanceOf(data.prankAddress);
+
+        uint256 userToLiquidateUnderlyingBalance =
+            IERC20(data.underlyingRepayToken).balanceOf(data.userToLiquidate);
+
+        uint256 prankAddressCollateral = collateralPToken.balanceOf(data.prankAddress);
+
+        uint256 userToLiquidateCollateral =
+            collateralPToken.balanceOf(data.userToLiquidate);
+
+        UserData memory prankAddressData = UserData({
+            underlyingBalance: prankAddressUnderlyingBalance,
+            collateral: prankAddressCollateral,
+            borrowed: borrowedPToken.borrowBalanceCurrent(data.prankAddress)
+        });
+
+        UserData memory userToLiquidateData = UserData({
+            underlyingBalance: userToLiquidateUnderlyingBalance,
+            collateral: userToLiquidateCollateral,
+            borrowed: borrowedPToken.borrowBalanceCurrent(data.userToLiquidate)
+        });
+
+        lsd = LiquidationStateData(
+            prankAddressData,
+            userToLiquidateData,
+            collateralPTokenData,
+            borrowedPTokenData
+        );
+
+        (,, uint256 shortfall) =
+            collateralPToken.riskEngine().getAccountLiquidity(data.userToLiquidate);
+
+        if (getDebug()) {
+            console.log(
+                "Balance of borrowed %s is %s",
+                borrowedPToken.name(),
+                lsd.userToLiquidateData.borrowed
+            );
+            console.log(
+                "Balance of collateral %s is %s",
+                collateralPToken.name(),
+                lsd.userToLiquidateData.collateral
+            );
+            console.log(
+                "Account is %s (shortfall: %s)",
+                shortfall == 0 ? "healthy" : "underwater",
+                shortfall
             );
         }
     }
@@ -151,5 +226,67 @@ contract TestUtilities is TestSetters {
                 "Did not transfer token to user"
             );
         }
+    }
+
+    function requireLiquidationDataValid(
+        LiquidationParams memory lp,
+        LiquidationStateData memory beforeData,
+        LiquidationStateData memory afterData
+    ) public view {
+        IRiskEngine riskEngine = IPToken(lp.collateralPToken).riskEngine();
+
+        // we assume repay amount is equal to what is transferred
+        (, uint256 seizeTokens) = riskEngine.liquidateCalculateSeizeTokens(
+            lp.borrowedPToken, lp.collateralPToken, lp.repayAmount
+        );
+
+        uint256 protocolSeizeToken = seizeTokens
+            * IPToken(lp.collateralPToken).protocolSeizeShareMantissa() / ONE_MANTISSA;
+
+        uint256 protocolSeizeAmount = protocolSeizeToken
+            * IPToken(lp.collateralPToken).exchangeRateCurrent() / ONE_MANTISSA;
+
+        uint256 liquidatorSeizeShare = seizeTokens - protocolSeizeToken;
+
+        require(
+            beforeData.prankAddressData.underlyingBalance
+                == afterData.prankAddressData.underlyingBalance + lp.repayAmount,
+            "Money did not transfer from liquidator"
+        );
+        require(
+            beforeData.borrowedPTokenData.totalCash + lp.repayAmount
+                == afterData.borrowedPTokenData.totalCash,
+            "Did not deposit to ptoken"
+        );
+        require(
+            beforeData.prankAddressData.collateral + liquidatorSeizeShare
+                == afterData.prankAddressData.collateral,
+            "Collateral did not transfer to liquidator"
+        );
+        require(
+            beforeData.userToLiquidateData.collateral
+                == afterData.userToLiquidateData.collateral + seizeTokens,
+            "Collateral did not transfer from borrower"
+        );
+        require(
+            beforeData.collateralPTokenData.totalSupply
+                == afterData.collateralPTokenData.totalSupply + protocolSeizeToken,
+            "Collateral ptoken did not transfer to protocol"
+        );
+        require(
+            beforeData.collateralPTokenData.totalReserve + protocolSeizeAmount
+                == afterData.collateralPTokenData.totalReserve,
+            "Collateral underlying ptoken did not transfer to protocol reserve"
+        );
+        require(
+            beforeData.userToLiquidateData.borrowed
+                == afterData.userToLiquidateData.borrowed + lp.repayAmount,
+            "Borrow did not subtract from borrower"
+        );
+        require(
+            beforeData.borrowedPTokenData.totalBorrow
+                == afterData.borrowedPTokenData.totalBorrow + lp.repayAmount,
+            "Borrow did not subtract from total borrow of ptoken"
+        );
     }
 }

@@ -195,7 +195,6 @@ contract TestHelpers is TestUtilities {
     }
 
     function doDepositAndEnter(
-        address re,
         address prankAddress,
         address onBehalfOf,
         address pToken,
@@ -213,7 +212,7 @@ contract TestHelpers is TestUtilities {
                 onBehalfOf: onBehalfOf
             })
         );
-        enterMarket(re, prankAddress, pToken);
+        enterMarket(prankAddress, pToken);
     }
 
     function doBorrow(
@@ -296,12 +295,57 @@ contract TestHelpers is TestUtilities {
         );
     }
 
-    function enterMarket(address riskEngine, address prankAddress, address pToken)
-        public
-    {
-        vm.prank(prankAddress);
+    function enterMarket(address prankAddress, address pToken) public {
+        address re = address(IPToken(pToken).riskEngine());
         address[] memory markets = new address[](1);
         markets[0] = pToken;
-        IRiskEngine(riskEngine).enterMarkets(markets);
+        vm.prank(prankAddress);
+        IRiskEngine(re).enterMarkets(markets);
+    }
+
+    function doLiquidate(LiquidationParams memory lp) public {
+        if (getDebug()) {
+            console.log("-[Liquidator %s]--------------", lp.prankAddress);
+        }
+
+        address underlyingRepayToken = IPToken(lp.borrowedPToken).underlying();
+
+        deal(underlyingRepayToken, lp.prankAddress, lp.repayAmount);
+        vm.prank(lp.prankAddress);
+        IERC20(underlyingRepayToken).approve(lp.borrowedPToken, lp.repayAmount);
+
+        LiquidationStateParams memory data = LiquidationStateParams({
+            prankAddress: lp.prankAddress,
+            userToLiquidate: lp.userToLiquidate,
+            collateralPToken: lp.collateralPToken,
+            borrowedPToken: lp.borrowedPToken,
+            underlyingRepayToken: underlyingRepayToken
+        });
+
+        LiquidationStateData memory beforeData = getLiquidationStateData(data);
+
+        if (getDebug()) {
+            console.log(
+                "Liquidating with repaying %s of %s",
+                lp.repayAmount,
+                IPToken(underlyingRepayToken).name()
+            );
+        }
+        vm.prank(lp.prankAddress);
+        if (lp.expectRevert) {
+            vm.expectRevert(lp.error);
+        }
+        IPToken(lp.borrowedPToken).liquidateBorrow(
+            lp.userToLiquidate, lp.repayAmount, IPToken(lp.collateralPToken)
+        );
+
+        LiquidationStateData memory afterData = getLiquidationStateData(data);
+
+        requireLiquidationDataValid(lp, beforeData, afterData);
+
+        if (getDebug()) {
+            console.log("----------------------------------------");
+            console.log("");
+        }
     }
 }

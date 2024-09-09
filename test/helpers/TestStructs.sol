@@ -31,6 +31,31 @@ contract TestStructs {
         uint256 borrowed;
     }
 
+    struct LiquidationStateParams {
+        address prankAddress;
+        address userToLiquidate;
+        address collateralPToken;
+        address borrowedPToken;
+        address underlyingRepayToken;
+    }
+
+    struct LiquidationParams {
+        address prankAddress;
+        address userToLiquidate;
+        address collateralPToken;
+        address borrowedPToken;
+        uint256 repayAmount;
+        bool expectRevert;
+        bytes4 error;
+    }
+
+    struct LiquidationStateData {
+        UserData prankAddressData;
+        UserData userToLiquidateData;
+        PTokenData collateralPTokenData;
+        PTokenData borrowedPTokenData;
+    }
+
     enum Action {
         SUPPLY,
         WITHDRAW,
