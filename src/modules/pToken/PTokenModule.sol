@@ -520,6 +520,13 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
+    function protocolSeizeShareMantissa() external view returns (uint256) {
+        return _getPTokenStorage().protocolSeizeShareMantissa;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function accrueInterest() public {
         /* Remember the initial block timestamp */
         uint256 currentBlockTimestamp = _getBlockTimestamp();

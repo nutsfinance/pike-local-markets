@@ -350,4 +350,9 @@ interface IPToken is IERC20 {
      * @notice Returns the pToken underlying token address
      */
     function underlying() external view returns (address);
+
+    /**
+     * @notice Returns the protocol seize share
+     */
+    function protocolSeizeShareMantissa() external view returns (uint256);
 }
