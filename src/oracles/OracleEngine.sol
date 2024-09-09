@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 import {IPToken} from "@interfaces/IPToken.sol";
 import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
+import {IOracleProvider} from "@oracles/interfaces/IOracleProvider.sol";
 import {OwnableUpgradeable} from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -150,14 +151,14 @@ contract OracleEngine is IOracleEngine, OwnableUpgradeable {
     function getPrice(address asset) public view override returns (uint256 price) {
         AssetConfig storage config = configs[asset];
 
-        try IOracleEngine(config.mainOracle).getPrice(asset) returns (
+        try IOracleProvider(config.mainOracle).getPrice(asset) returns (
             uint256 mainOraclePrice
         ) {
             if (config.fallbackOracle == address(0)) {
                 return mainOraclePrice;
             }
 
-            try IOracleEngine(config.fallbackOracle).getPrice(asset) returns (
+            try IOracleProvider(config.fallbackOracle).getPrice(asset) returns (
                 uint256 fallbackOraclePrice
             ) {
                 if (config.lowerBoundRatio != 0 && config.upperBoundRatio != 0) {
@@ -177,7 +178,7 @@ contract OracleEngine is IOracleEngine, OwnableUpgradeable {
             }
         } catch {
             if (config.fallbackOracle != address(0)) {
-                try IOracleEngine(config.fallbackOracle).getPrice(asset) returns (
+                try IOracleProvider(config.fallbackOracle).getPrice(asset) returns (
                     uint256 fallbackOraclePrice
                 ) {
                     return fallbackOraclePrice;
