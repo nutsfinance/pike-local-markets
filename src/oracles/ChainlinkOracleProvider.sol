@@ -7,8 +7,14 @@ import {OwnableUpgradeable} from
 import {IERC20Metadata} from
     "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@chainlink/contracts/shared/interfaces/AggregatorV3Interface.sol";
+import {UUPSUpgradeable} from
+    "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract ChainlinkOracleProvider is IOracleProvider, OwnableUpgradeable {
+contract ChainlinkOracleProvider is
+    IOracleProvider,
+    UUPSUpgradeable,
+    OwnableUpgradeable
+{
     struct AssetConfig {
         /**
          * @notice Chainlink feed for the asset
@@ -135,6 +141,12 @@ contract ChainlinkOracleProvider is IOracleProvider, OwnableUpgradeable {
         uint8 assetDecimals = IERC20Metadata(asset).decimals();
         return uint256(price) * (10 ** (36 - assetDecimals - priceDecimals));
     }
+
+    /**
+     * @notice Authorize upgrade
+     * @param newImplementation Address of the new implementation
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /**
      * @notice Validate the sequencer status

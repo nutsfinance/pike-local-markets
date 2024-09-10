@@ -64,15 +64,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
             revert RiskEngineError.InvalidLiquidationThreshold();
         }
 
-        // If collateral factor != 0, fail if price == 0
-        if (
-            newCollateralFactorMantissa != 0
-                && IOracleEngine(_getRiskEngineStorage().oracle).getUnderlyingPrice(pToken)
-                    == 0
-        ) {
-            revert RiskEngineError.InvalidPrice();
-        }
-
         // Set market's collateral factor to new collateral factor, remember old value
         uint256 oldCollateralFactorMantissa = market.collateralFactorMantissa;
         market.collateralFactorMantissa = newCollateralFactorMantissa;
@@ -875,6 +866,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
             if (vars.oraclePriceMantissa == 0) {
                 return (RiskEngineError.Error.PRICE_ERROR, 0, 0);
             }
+
             vars.oraclePrice =
                 ExponentialNoError.Exp({mantissa: vars.oraclePriceMantissa});
 

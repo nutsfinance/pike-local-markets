@@ -6,8 +6,10 @@ import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
 import {IOracleProvider} from "@oracles/interfaces/IOracleProvider.sol";
 import {OwnableUpgradeable} from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {UUPSUpgradeable} from
+    "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract OracleEngine is IOracleEngine, OwnableUpgradeable {
+contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
     struct AssetConfig {
         /**
          * @notice Main oracle address for the asset
@@ -190,4 +192,10 @@ contract OracleEngine is IOracleEngine, OwnableUpgradeable {
             }
         }
     }
+
+    /**
+     * @notice Authorize upgrade
+     * @param newImplementation Address of the new implementation
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }

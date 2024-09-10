@@ -30,8 +30,8 @@
     "@chainlink/contracts": "^1.2.0",
     "@openzeppelin/contracts": "^5.0.2",
     "@openzeppelin/contracts-upgradeable": "^5.0.2",
-    "cannon-std": "git+https://github.com/usecannon/cannon-std.git#master",
     "@pythnetwork/pyth-sdk-solidity": "^4.0.0",
+    "cannon-std": "git+https://github.com/usecannon/cannon-std.git#master",
     "forge-std": "git+https://github.com/foundry-rs/forge-std.git"
   },
   "devDependencies": {
