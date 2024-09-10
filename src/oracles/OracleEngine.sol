@@ -90,12 +90,6 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @notice Authorize upgrade
-     * @param newImplementation Address of the new implementation
-     */
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
-
-    /**
      * @notice Set asset configuration
      * @param asset Address of the asset
      * @param mainOracle Address of the main oracle
@@ -198,4 +192,10 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
             }
         }
     }
+
+    /**
+     * @notice Authorize upgrade
+     * @param newImplementation Address of the new implementation
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }

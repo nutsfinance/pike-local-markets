@@ -96,12 +96,6 @@ contract ChainlinkOracleProvider is
     }
 
     /**
-     * @notice Authorize upgrade
-     * @param newImplementation Address of the new implementation
-     */
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
-
-    /**
      * @notice Set the asset configuration
      * @param asset Address of the asset
      * @param feed Chainlink feed for the asset
@@ -147,6 +141,12 @@ contract ChainlinkOracleProvider is
         uint8 assetDecimals = IERC20Metadata(asset).decimals();
         return uint256(price) * (10 ** (36 - assetDecimals - priceDecimals));
     }
+
+    /**
+     * @notice Authorize upgrade
+     * @param newImplementation Address of the new implementation
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /**
      * @notice Validate the sequencer status

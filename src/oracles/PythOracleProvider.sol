@@ -70,12 +70,6 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
     }
 
     /**
-     * @notice Authorize upgrade
-     * @param newImplementation Address of the new implementation
-     */
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
-
-    /**
      * @notice Set the asset configuration
      * @param asset Address of the asset
      * @param feed Pyth feed for the asset
@@ -116,4 +110,10 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
 
         return priceIn18Decimals * (10 ** (18 - decimals));
     }
+
+    /**
+     * @notice Authorize upgrade
+     * @param newImplementation Address of the new implementation
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
