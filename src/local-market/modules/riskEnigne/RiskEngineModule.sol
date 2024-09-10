@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
-import {IOracleManager} from "@interfaces/IOracleManager.sol";
+import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
 import {RiskEngineStorage} from "@storage/RiskEngineStorage.sol";
 import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
 import {RiskEngineError} from "@errors/RiskEngineError.sol";
@@ -55,14 +55,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         // Ensure that liquidation threshold >= CF
         if (newLiquidationThresholdMantissa < newCollateralFactorMantissa) {
             revert RiskEngineError.InvalidLiquidationThreshold();
-        }
-
-        // If collateral factor != 0, fail if price == 0
-        if (
-            newCollateralFactorMantissa != 0
-                && IOracleManager(address(this)).getUnderlyingPrice(pToken) == 0
-        ) {
-            revert RiskEngineError.InvalidPrice();
         }
 
         // Set market's collateral factor to new collateral factor, remember old value
@@ -392,7 +384,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
             assert(_getRiskEngineStorage().markets[pToken].accountMembership[borrower]);
         }
 
-        if (IOracleManager(address(this)).getUnderlyingPrice(IPToken(pToken)) == 0) {
+        if (IOracleEngine(address(this)).getUnderlyingPrice(IPToken(pToken)) == 0) {
             return uint256(RiskEngineError.Error.PRICE_ERROR);
         }
 
@@ -658,9 +650,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
     ) external view returns (uint256, uint256) {
         /* Read oracle prices for borrowed and collateral markets */
         uint256 priceBorrowedMantissa =
-            IOracleManager(address(this)).getUnderlyingPrice(IPToken(pTokenBorrowed));
+            IOracleEngine(address(this)).getUnderlyingPrice(IPToken(pTokenBorrowed));
         uint256 priceCollateralMantissa =
-            IOracleManager(address(this)).getUnderlyingPrice(IPToken(pTokenCollateral));
+            IOracleEngine(address(this)).getUnderlyingPrice(IPToken(pTokenCollateral));
+
         if (priceBorrowedMantissa == 0 || priceCollateralMantissa == 0) {
             return (uint256(RiskEngineError.Error.PRICE_ERROR), 0);
         }
@@ -852,10 +845,12 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
 
             // Get the normalized price of the asset
             vars.oraclePriceMantissa =
-                IOracleManager(address(this)).getUnderlyingPrice(asset);
+                IOracleEngine(address(this)).getUnderlyingPrice(asset);
+
             if (vars.oraclePriceMantissa == 0) {
                 return (RiskEngineError.Error.PRICE_ERROR, 0, 0);
             }
+
             vars.oraclePrice =
                 ExponentialNoError.Exp({mantissa: vars.oraclePriceMantissa});
 
