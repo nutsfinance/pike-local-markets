@@ -18,6 +18,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
      * @inheritdoc IRiskEngine
      */
     function setOracle(address newOracle) external onlyOwner {
+        emit NewOracleEngine(_getRiskEngineStorage().oracle, newOracle);
         _getRiskEngineStorage().oracle = newOracle;
     }
 

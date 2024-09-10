@@ -344,14 +344,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     }
 
     /**
-     * @notice Get the address of the underlying asset
-     * @return The address of the underlying asset
-     */
-    function getUnderlying() external view override returns (address) {
-        return _getPTokenStorage().underlying;
-    }
-
-    /**
      * @notice Get the token balance of the `owner`
      * @param owner The address of the account to query
      * @return The number of tokens owned by `owner`

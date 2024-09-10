@@ -4,6 +4,9 @@ pragma solidity 0.8.20;
 import {IPToken} from "@interfaces/IPToken.sol";
 
 interface IRiskEngine {
+    /// @notice Emitted when a new oracle engine is set
+    event NewOracleEngine(address oldOracleEngine, address newOracleEngine);
+
     /// @notice Emitted when an admin supports a market
     event MarketListed(IPToken pToken);
 
