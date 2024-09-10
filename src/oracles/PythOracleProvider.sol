@@ -7,8 +7,10 @@ import {OwnableUpgradeable} from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IERC20Metadata} from
     "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {UUPSUpgradeable} from
+    "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract PythOracleProvider is IOracleProvider, OwnableUpgradeable {
+contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradeable {
     struct AssetConfig {
         /**
          * @notice Pyth feed for the asset
@@ -66,6 +68,12 @@ contract PythOracleProvider is IOracleProvider, OwnableUpgradeable {
     function initialize(address owner) public initializer {
         __Ownable_init(owner);
     }
+
+    /**
+     * @notice Authorize upgrade
+     * @param newImplementation Address of the new implementation
+     */
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /**
      * @notice Set the asset configuration
