@@ -9,15 +9,18 @@ optimizer_runs = 10000
 remappings = [
   "@openzeppelin/contracts-upgradeable/=node_modules/@openzeppelin/contracts-upgradeable/",
   "@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/",
+  "@chainlink/contracts/=node_modules/@chainlink/contracts/src/v0.8/",
+  "@pythnetwork/=node_modules/@pythnetwork/pyth-sdk-solidity/",
   "forge-std/=node_modules/forge-std/src/",
   "cannon-std/=node_modules/cannon-std/src/",
-  "@interfaces/=src/interfaces/",
   "@helpers/=test/helpers/",
-  "@storage/=src/storage/",
-  "@modules/=src/modules/",
-  "@errors/=src/errors/",
-  "@utils/=src/utils/",
-  "@mocks/=test/mocks/"
+  "@mocks/=test/mocks/",
+  "@interfaces/=src/local-market/interfaces/",
+  "@storage/=src/local-market/storage/",
+  "@modules/=src/local-market/modules/",
+  "@errors/=src/local-market/errors/",
+  "@utils/=src/local-market/utils/",
+  "@oracles/=src/oracles/"
 ]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

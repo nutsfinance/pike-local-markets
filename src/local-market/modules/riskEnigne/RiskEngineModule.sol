@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
-import {IOracleEngine} from "@interfaces/IOracleEngine.sol";
+import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
 import {RiskEngineStorage} from "@storage/RiskEngineStorage.sol";
 import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
 import {RiskEngineError} from "@errors/RiskEngineError.sol";
