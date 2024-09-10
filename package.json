@@ -15,8 +15,8 @@
   "scripts": {
     "build": "forge build",
     "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
-    "fork-coverage": "npx cannon test script/cannon/pike-fork.toml --rpc-url https://base-mainnet.public.blastapi.io --forge-cmd coverage -- -vv --no-match-coverage \"(script|test|node_modules)\"",
-    "fork-test": "npx cannon test script/cannon/pike-fork.toml --rpc-url https://base-mainnet.public.blastapi.io -- -vv",
+    "fork-coverage": "npx cannon test script/cannon/fork.test.toml --rpc-url https://base-mainnet.public.blastapi.io --forge-cmd coverage -- -vv --no-match-coverage \"(script|test|node_modules)\"",
+    "fork-test": "npx cannon test script/cannon/fork.test.toml --rpc-url https://base-mainnet.public.blastapi.io -- -vv",
     "postinstall": "forge install",
     "lint:check": "yarn lint:sol-logic && forge fmt --check",
     "lint:fix": "yarn sort-package-json && forge fmt && yarn solhint 'src/**/*.sol' 'test/**/*.sol' --fix",
