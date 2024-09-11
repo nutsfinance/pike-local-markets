@@ -15,8 +15,8 @@
   "scripts": {
     "build": "forge build",
     "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
-    "fork-coverage": "npx cannon test script/cannon/fork.test.toml --rpc-url https://base-mainnet.public.blastapi.io --forge-cmd coverage -- -vv --no-match-coverage \"(script|test|node_modules)\"",
-    "fork-test": "npx cannon test script/cannon/fork.test.toml --rpc-url https://base-mainnet.public.blastapi.io -- -vv",
+    "deploy:testnet": "npx cannon build script/cannon/testnet.toml --rpc-url https://sepolia.base.org",
+    "deploy:testnet:dryrun": "npx cannon build script/cannon/testnet.toml --rpc-url https://sepolia.base.org --dry-run",
     "postinstall": "forge install",
     "lint:check": "yarn lint:sol-logic && forge fmt --check",
     "lint:fix": "yarn sort-package-json && forge fmt && yarn solhint 'src/**/*.sol' 'test/**/*.sol' --fix",
@@ -24,7 +24,10 @@
     "lint:sol-tests": "solhint -c .solhint.json 'test/**/*.sol'",
     "prepare": "husky",
     "sort-package-json": "sort-package-json",
-    "test": "forge clean && forge test -vv"
+    "test": "npx cannon test script/cannon/local.test.toml -- -vv",
+    "test:coverage": "npx cannon test script/cannon/local.test.toml --forge-cmd coverage -- -vv --no-match-coverage \"(script|test|node_modules)\"",
+    "test:fork": "npx cannon test script/cannon/fork.test.toml --rpc-url https://base-mainnet.public.blastapi.io -- -vv",
+    "test:fork:coverage": "npx cannon test script/cannon/fork.test.toml --rpc-url https://base-mainnet.public.blastapi.io --forge-cmd coverage -- -vv --no-match-coverage \"(script|test|node_modules)\""
   },
   "dependencies": {
     "@chainlink/contracts": "^1.2.0",
