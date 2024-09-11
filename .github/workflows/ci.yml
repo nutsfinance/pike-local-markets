@@ -51,5 +51,5 @@ jobs:
 
       - name: Run Cannon tests
         run: |
-          yarn fork-test
+          yarn test
         id: test
