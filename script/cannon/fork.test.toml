@@ -1,15 +1,8 @@
 name = "pike-market"
 version = "0.1.0"
-description = "Local markets for Pike testnet deployment"
-
-# `salt` here only affects proxy contract
-[setting.salt]
-description = "Change this to a unique string when deploying multiple instances of the ptoken. Note that only the proxy contract will be unique."
-defaultValue = "main"
-
-[setting.owner]
-description = "Admin user for the system"
-defaultValue = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+description = "Local markets for Pike mainnet fork deployment"
+include = ["testnet.toml"]
+# override with mainnet values and mock oracle for test
 
 [setting.usdc]
 defaultValue = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
@@ -17,104 +10,8 @@ defaultValue = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 [setting.weth]
 defaultValue = "0x4200000000000000000000000000000000000006"
 
-[setting.initial_exchange_rate]
-defaultValue = "1000000000000000000" # 1e18
-
-[setting.reserve_factor]
-defaultValue = "50000000000000000" # 5e16 = 5%
-
-[setting.protocol_seize_factor]
-defaultValue = "10000000000000000" # 1e16 = 1%
-
-[setting.max_borrow_rate]
-defaultValue = "5000000000000" # 5e12
-
-[setting.decimals]
-defaultValue = "18"
-
 [contract.MockOracle]
 artifact = "MockOracle"
-
-[contract.InitialModuleBundle]
-artifact = "InitialModuleBundle"
-salt = "<%= settings.salt %>"
-create2 = true
-
-[contract.InterestRateModule]
-artifact = "InterestRateModule"
-
-[contract.PTokenModule]
-artifact = "PTokenModule"
-
-[contract.RiskEngineModule]
-artifact = "RiskEngineModule"
-
-#PToken
-[router.PTokenRouter]
-contracts = [
-    "InitialModuleBundle",
-    "InterestRateModule",
-    "PTokenModule",
-]
-
-#Core
-[router.CoreRouter]
-contracts = [
-    "InitialModuleBundle",
-    "RiskEngineModule",
-]
-
-[clone.pUSDC]
-source = "universal-upgradeable-proxy:0.1.0@pike"
-options.implementation = "<%= contracts.PTokenRouter.address %>"
-options.owner = "<%= settings.owner %>"
-options.abi = "<%= JSON.stringify(contracts.PTokenRouter.abi) %>"
-options.salt = "pUSDC"
-
-[clone.pWETH]
-source = "universal-upgradeable-proxy:0.1.0@pike"
-options.implementation = "<%= contracts.PTokenRouter.address %>"
-options.owner = "<%= settings.owner %>"
-options.abi = "<%= JSON.stringify(contracts.PTokenRouter.abi) %>"
-options.salt = "pWETH"
-
-[clone.core]
-source = "universal-upgradeable-proxy:0.1.0@pike"
-options.implementation = "<%= contracts.CoreRouter.address %>"
-options.owner = "<%= settings.owner %>"
-options.abi = "<%= JSON.stringify(contracts.CoreRouter.abi) %>"
-
-[invoke.initialize_pUSDC]
-target = [ "pUSDC.Proxy" ]
-abi = "<%= JSON.stringify(contracts.PTokenModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "initialize"
-args = ["<%= settings.usdc %>", "<%= core.Proxy.address %>", "<%= settings.initial_exchange_rate %>", "<%= settings.reserve_factor %>", "<%= settings.protocol_seize_factor %>", "<%= settings.max_borrow_rate %>", "pike-usdc", "pUSDC", "<%= settings.decimals %>"]
-depends = [ "clone.pUSDC",  "clone.core"]
-
-[invoke.initialize_pWETH]
-target = [ "pWETH.Proxy" ]
-abi = "<%= JSON.stringify(contracts.PTokenModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "initialize"
-args = ["<%= settings.weth %>", "<%= core.Proxy.address %>", "<%= settings.initial_exchange_rate %>", "<%= settings.reserve_factor %>", "<%= settings.protocol_seize_factor %>", "<%= settings.max_borrow_rate %>", "pike-weth", "pWETH", "<%= settings.decimals %>"]
-depends = [ "clone.pWETH", "clone.core" ]
-
-[invoke.initialize_pUSDC_IRM]
-target = [ "pUSDC.Proxy" ]
-abi = "<%= JSON.stringify(contracts.InterestRateModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "initialize"
-args = ["<%= parseUnits('1.5', 16) %>", "<%= parseUnits('8.33', 16) %>", "<%= parseUnits('4.3', 18) %>", "<%= parseUnits('80', 16) %>"]
-depends = [ "clone.pUSDC" ]
-
-[invoke.initialize_pWETH_IRM]
-target = [ "pWETH.Proxy" ]
-abi = "<%= JSON.stringify(contracts.InterestRateModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "initialize"
-args = ["<%= parseUnits('1.5', 16) %>", "<%= parseUnits('8.33', 16) %>", "<%= parseUnits('4.3', 18) %>", "<%= parseUnits('80', 16) %>"]
-depends = [ "clone.pWETH" ]
 
 [invoke.set_oracle]
 target = [ "core.Proxy" ]
@@ -133,13 +30,6 @@ target = [ "MockOracle" ]
 func = "setPrice"
 args = ["<%= pUSDC.Proxy.address %>", "<%= parseUnits('1', 6) %>", "6"]
 
-[invoke.set_close_factor]
-target = [ "core.Proxy" ]
-abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "setCloseFactor"
-args = ["<%= parseUnits('50', 16) %>"]
-
 [invoke.support_pWETH]
 target = [ "core.Proxy" ]
 abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
@@ -155,65 +45,3 @@ from = "<%= settings.owner %>"
 func = "supportMarket"
 args = ["<%= pUSDC.Proxy.address %>"]
 depends = [ "invoke.set_usdc_price" ]
-
-[invoke.set_pWETH_collateral_factor]
-target = [ "core.Proxy" ]
-abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "setCollateralFactor"
-args = ["<%= pWETH.Proxy.address %>", "<%= parseUnits('72.5', 16) %>", "<%= parseUnits('82.5', 16) %>"]
-depends = [ "invoke.support_pWETH" ]
-
-[invoke.set_pUSDC_collateral_factor]
-target = [ "core.Proxy" ]
-abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "setCollateralFactor"
-args = ["<%= pUSDC.Proxy.address %>", "<%= parseUnits('74.5', 16) %>", "<%= parseUnits('84.5', 16) %>"]
-depends = [ "invoke.support_pUSDC" ]
-
-[invoke.set_liquidation_incentive]
-target = [ "core.Proxy" ]
-abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "setLiquidationIncentive"
-args = ["<%= parseUnits('1.08', 18) %>"]
-
-[invoke.set_borrow_cap_guardian]
-target = [ "core.Proxy" ]
-abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "setBorrowCapGuardian"
-args = ["<%= settings.owner %>"]
-
-[invoke.set_supply_cap_guardian]
-target = [ "core.Proxy" ]
-abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "setSupplyCapGuardian"
-args = ["<%= settings.owner %>"]
-
-[invoke.set_pause_cap_guardian]
-target = [ "core.Proxy" ]
-abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "setPauseGuardian"
-args = ["<%= settings.owner %>"]
-
-[invoke.set_borrow_cap]
-target = [ "core.Proxy" ]
-abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "setMarketBorrowCaps"
-args = [["<%= pWETH.Proxy.address %>", "<%= pUSDC.Proxy.address %>"], ["<%= MaxUint256 %>", "<%= MaxUint256 %>"]]
-depends = [ "invoke.set_borrow_cap_guardian" ]
-
-[invoke.set_supply_cap]
-target = [ "core.Proxy" ]
-abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "setMarketSupplyCaps"
-args = [["<%= pWETH.Proxy.address %>", "<%= pUSDC.Proxy.address %>"], ["<%= MaxUint256 %>", "<%= MaxUint256 %>"]]
-depends = [ "invoke.set_supply_cap_guardian" ]
-
-

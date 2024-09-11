@@ -72,90 +72,90 @@ contracts = [
     "RiskEngineModule",
 ]
 
-[clone.oracleProxy]
-source = "universal-upgradeable-proxy:1.0.0@oz"
+[clone.oracleEngine]
+source = "universal-upgradeable-proxy:0.1.0@erc1967-upgrade"
 options.implementation = "<%= contracts.OracleEngine.address %>"
 options.owner = "<%= settings.owner %>"
 options.abi = "<%= JSON.stringify(contracts.OracleEngine.abi) %>"
+options.salt = "oracleEngine"
 
 [clone.chainlinkOracleProvider]
-source = "universal-upgradeable-proxy:1.0.0@oz"
+source = "universal-upgradeable-proxy:0.1.0@erc1967-upgrade"
 options.implementation = "<%= contracts.ChainlinkOracleProvider.address %>"
 options.owner = "<%= settings.owner %>"
 options.abi = "<%= JSON.stringify(contracts.ChainlinkOracleProvider.abi) %>"
+options.salt = "chainlinkOracleProvider"
 
 [clone.pythOracleProvider]
-source = "universal-upgradeable-proxy:1.0.0@oz"
+source = "universal-upgradeable-proxy:0.1.0@erc1967-upgrade"
 options.implementation = "<%= contracts.PythOracleProvider.address %>"
 options.owner = "<%= settings.owner %>"
 options.abi = "<%= JSON.stringify(contracts.PythOracleProvider.abi) %>"
+options.salt = "pythOracleProvider"
 
 [clone.pUSDC]
-source = "universal-upgradeable-proxy:0.1.0@pike"
+source = "universal-upgradeable-proxy:0.1.0@module-upgrade"
 options.implementation = "<%= contracts.PTokenRouter.address %>"
 options.owner = "<%= settings.owner %>"
 options.abi = "<%= JSON.stringify(contracts.PTokenRouter.abi) %>"
 options.salt = "pUSDC"
 
 [clone.pWETH]
-source = "universal-upgradeable-proxy:0.1.0@pike"
+source = "universal-upgradeable-proxy:0.1.0@module-upgrade"
 options.implementation = "<%= contracts.PTokenRouter.address %>"
 options.owner = "<%= settings.owner %>"
 options.abi = "<%= JSON.stringify(contracts.PTokenRouter.abi) %>"
 options.salt = "pWETH"
 
 [clone.core]
-source = "universal-upgradeable-proxy:0.1.0@pike"
+source = "universal-upgradeable-proxy:0.1.0@module-upgrade"
 options.implementation = "<%= contracts.CoreRouter.address %>"
 options.owner = "<%= settings.owner %>"
 options.abi = "<%= JSON.stringify(contracts.CoreRouter.abi) %>"
 
 [invoke.initialize_oe]
-target = ["oracleProxy.InitialProxy"]
-abi = "OracleEngine"
+target = ["oracleEngine.Proxy"]
 func = "initialize"
 args = ["<%= settings.owner %>"]
-depends = [ "clone.oracleProxy"]
+depends = [ "clone.oracleEngine"]
 
 [invoke.initialize_chainlink]
-target = ["chainlinkOracleProvider.InitialProxy"]
-abi = "ChainlinkOracleProvider"
+target = ["chainlinkOracleProvider.Proxy"]
 func = "initialize"
 args = ["<%= settings.owner %>"]
 depends = [ "clone.chainlinkOracleProvider"]
 
 [invoke.initialize_pyth]
-target = ["pythOracleProvider.InitialProxy"]
-abi = "PythOracleProvider"
+target = ["pythOracleProvider.Proxy"]
 func = "initialize"
 args = ["<%= settings.owner %>"]
 depends = [ "clone.pythOracleProvider"]
 
 [invoke.chainlink_set_weth]
-target = ["chainlinkOracleProvider.InitialProxy"]
-abi = "ChainlinkOracleProvider"
+target = ["chainlinkOracleProvider.Proxy"]
 func = "setAssetConfig"
+from = "<%= settings.owner %>"
 args = ["<%= settings.weth %>", "0x4aDC67696bA383F43DD60A9e78F2C97Fbbfc7cb1", "<%= MaxUint256 %>"]
 depends = [ "invoke.initialize_chainlink"]
 
 [invoke.chainlink_set_usdc]
-target = ["chainlinkOracleProvider.InitialProxy"]
-abi = "ChainlinkOracleProvider"
+target = ["chainlinkOracleProvider.Proxy"]
 func = "setAssetConfig"
+from = "<%= settings.owner %>"
 args = ["<%= settings.usdc %>", "0xd30e2101a97dcbAeBCBC04F14C3f624E67A35165", "<%= MaxUint256 %>"]
 depends = [ "invoke.initialize_chainlink"]
 
 [invoke.pyth_set_weth]
-target = ["pythOracleProvider.InitialProxy"]
-abi = "PythOracleProvider"
+target = ["pythOracleProvider.Proxy"]
 func = "setAssetConfig"
+from = "<%= settings.owner %>"
 args = ["<%= settings.weth %>", "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", "<%= MaxUint256 %>"]
 depends = [ "invoke.initialize_pyth"]
 
 [invoke.pyth_set_usdc]
-target = ["pythOracleProvider.InitialProxy"]
-abi = "PythOracleProvider"
+target = ["pythOracleProvider.Proxy"]
 func = "setAssetConfig"
+from = "<%= settings.owner %>"
 args = ["<%= settings.usdc %>", "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a", "<%= MaxUint256 %>"]
 depends = [ "invoke.initialize_pyth"]
 
@@ -196,17 +196,7 @@ target = [ "core.Proxy" ]
 abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
 from = "<%= settings.owner %>"
 func = "setOracle"
-args = ["<%= contracts.MockOracle.address %>"]
-
-[invoke.set_eth_price]
-target = [ "MockOracle" ]
-func = "setPrice"
-args = ["<%= pWETH.Proxy.address %>", "<%= parseUnits('2000', 6) %>", "18"]
-
-[invoke.set_usdc_price]
-target = [ "MockOracle" ]
-func = "setPrice"
-args = ["<%= pUSDC.Proxy.address %>", "<%= parseUnits('1', 6) %>", "6"]
+args = ["<%= oracleEngine.Proxy.address %>"]
 
 [invoke.set_close_factor]
 target = [ "core.Proxy" ]
@@ -221,7 +211,6 @@ abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
 from = "<%= settings.owner %>"
 func = "supportMarket"
 args = ["<%= pWETH.Proxy.address %>"]
-depends = [ "invoke.set_eth_price" ]
 
 [invoke.support_pUSDC]
 target = [ "core.Proxy" ]
@@ -229,7 +218,6 @@ abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
 from = "<%= settings.owner %>"
 func = "supportMarket"
 args = ["<%= pUSDC.Proxy.address %>"]
-depends = [ "invoke.set_usdc_price" ]
 
 [invoke.set_pWETH_collateral_factor]
 target = [ "core.Proxy" ]
