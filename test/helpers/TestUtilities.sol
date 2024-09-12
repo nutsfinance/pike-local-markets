@@ -21,16 +21,12 @@ contract TestUtilities is TestSetters {
         address pTokenAddress,
         address tokenAddress
     ) public view returns (ActionStateData memory data) {
-        uint256 collateral;
         IPToken pToken = IPToken(pTokenAddress);
-
-        uint256 userPTokenBalance = pToken.balanceOf(onBehalfOf);
 
         uint256 userUnderlyingBalance = IERC20(tokenAddress).balanceOf(user);
 
-        if (userPTokenBalance > 0) {
-            collateral = (pToken.exchangeRateCurrent() * userPTokenBalance) / ONE_MANTISSA;
-        }
+        uint256 collateral = pToken.balanceOfUnderlying(onBehalfOf);
+
         uint256 borrowed = pToken.borrowBalanceCurrent(onBehalfOf);
         UserData memory userData = UserData(userUnderlyingBalance, collateral, borrowed);
         PTokenData memory pTokenData = PTokenData({

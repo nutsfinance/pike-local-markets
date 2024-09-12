@@ -464,8 +464,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
      * @inheritdoc IPToken
      */
     function borrowRatePerSecond() external view returns (uint256) {
+        PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+
         return IInterestRateModel(address(this)).getBorrowRate(
-            getCash(), _getPTokenStorage().totalBorrows, _getPTokenStorage().totalReserves
+            getCash(), snapshot.totalBorrow, snapshot.totalReserve
         );
     }
 
@@ -473,10 +475,12 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
      * @inheritdoc IPToken
      */
     function supplyRatePerSecond() external view returns (uint256) {
+        PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+
         return IInterestRateModel(address(this)).getSupplyRate(
             getCash(),
-            _getPTokenStorage().totalBorrows,
-            _getPTokenStorage().totalReserves,
+            snapshot.totalBorrow,
+            snapshot.totalReserve,
             _getPTokenStorage().reserveFactorMantissa
         );
     }

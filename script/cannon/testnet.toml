@@ -159,6 +159,20 @@ from = "<%= settings.owner %>"
 args = ["<%= settings.usdc %>", "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a", "<%= MaxUint256 %>"]
 depends = [ "invoke.initialize_pyth"]
 
+[invoke.oe_set_weth]
+target = ["oracleEngine.Proxy"]
+func = "setAssetConfig"
+from = "<%= settings.owner %>"
+args = ["<%= settings.weth %>", "<%= chainlinkOracleProvider.Proxy.address %>", "<%= pythOracleProvider.Proxy.address %>", "0", "0"]
+depends = [ "invoke.pyth_set_weth", "invoke.chainlink_set_weth"]
+
+[invoke.oe_set_usdc]
+target = ["oracleEngine.Proxy"]
+func = "setAssetConfig"
+from = "<%= settings.owner %>"
+args = ["<%= settings.usdc %>", "<%= chainlinkOracleProvider.Proxy.address %>", "<%= pythOracleProvider.Proxy.address %>", "0", "0"]
+depends = [ "invoke.pyth_set_usdc", "invoke.chainlink_set_usdc"]
+
 [invoke.initialize_pUSDC]
 target = [ "pUSDC.Proxy" ]
 abi = "<%= JSON.stringify(contracts.PTokenModule.abi) %>"
