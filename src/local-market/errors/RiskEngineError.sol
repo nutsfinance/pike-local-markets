@@ -36,9 +36,5 @@ library RiskEngineError {
 
     error AlreadyListed();
 
-    error NotBorrowCapGaurdian();
-    error NotSupplyCapGaurdian();
-    error NotPauseGaurdian();
-
     error DelegationStatusUnchanged();
 }

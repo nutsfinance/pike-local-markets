@@ -28,6 +28,7 @@
     "sort-package-json": "sort-package-json",
     "test": "npx cannon test script/cannon/local.test.toml -- -vv",
     "test:coverage": "npx cannon test script/cannon/local.test.toml --forge-cmd coverage -- -vv --no-match-coverage \"(script|test|node_modules)\"",
+    "test:coverage:output": "npx cannon test script/cannon/local.test.toml --forge-cmd coverage -- -vv --no-match-coverage \"(script|test|node_modules)\" --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage --ignore-errors inconsistent",
     "test:fork": "npx cannon test script/cannon/mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io -- -vv",
     "test:fork:coverage": "npx cannon test script/cannon/mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io --forge-cmd coverage -- -vv --no-match-coverage \"(script|test|node_modules)\""
   },

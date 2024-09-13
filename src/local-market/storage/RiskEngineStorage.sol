@@ -27,19 +27,7 @@ contract RiskEngineStorage {
          * @dev Used e.g. to determine if a market is supported
          */
         mapping(address => Market) markets;
-        /**
-         * @notice The Pause Guardian can pause certain actions as a safety mechanism.
-         *  Actions which allow users to remove their own assets cannot be paused.
-         *  Liquidation / seizing / transfer can only be paused globally, not by market.
-         */
-        address pauseGuardian;
-        // @notice The borrowCapGuardian can set borrowCaps to any number for any market.
-        address borrowCapGuardian;
-        // @notice The supplyCapGuardian can set supplyCaps to any number for any market.
-        address supplyCapGuardian;
         address oracle;
-        bool _mintGuardianPaused;
-        bool _borrowGuardianPaused;
         bool transferGuardianPaused;
         bool seizeGuardianPaused;
         mapping(address => bool) mintGuardianPaused;
