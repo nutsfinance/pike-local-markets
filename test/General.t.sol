@@ -158,33 +158,4 @@ contract TestContract is TestHelpers {
 
         doLiquidate(lp);
     }
-
-    function testDBL() public {
-        address user1 = makeAddr("user1");
-        address depositor = makeAddr("depositor");
-        address liquidator = makeAddr("liquidator");
-        setDebug(true);
-
-        ///porivde liquidity
-        doDeposit(depositor, depositor, address(pUSDC), 2000e6);
-
-        doDepositAndEnter(user1, user1, address(pWETH), 1e18);
-        doBorrow(user1, user1, address(pUSDC), 1450e6);
-
-        // 1450 / 0.825(weth liq threshold) = 1757.57 is liquidation threshold price for collateral
-
-        mockOracle.setPrice(address(pWETH), 1757e6, 18);
-
-        LiquidationParams memory lp = LiquidationParams({
-            prankAddress: liquidator,
-            userToLiquidate: user1,
-            collateralPToken: address(pWETH),
-            borrowedPToken: address(pUSDC),
-            repayAmount: 725e6,
-            expectRevert: false,
-            error: bytes4(0)
-        });
-
-        doLiquidate(lp);
-    }
 }
