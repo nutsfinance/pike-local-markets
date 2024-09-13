@@ -215,6 +215,27 @@ contract TestHelpers is TestUtilities {
         enterMarket(prankAddress, pToken);
     }
 
+    function doDepositRevert(
+        address prankAddress,
+        address onBehalfOf,
+        address pToken,
+        uint256 amount,
+        bytes4 err
+    ) public {
+        doAction(
+            ActionParameters({
+                action: Action.SUPPLY,
+                pToken: pToken,
+                tokenAddress: IPToken(pToken).underlying(),
+                amount: amount,
+                expectRevert: true,
+                error: err,
+                prankAddress: prankAddress,
+                onBehalfOf: onBehalfOf
+            })
+        );
+    }
+
     function doBorrow(
         address prankAddress,
         address onBehalfOf,
@@ -229,6 +250,27 @@ contract TestHelpers is TestUtilities {
                 amount: amount,
                 expectRevert: false,
                 error: bytes4(0),
+                prankAddress: prankAddress,
+                onBehalfOf: onBehalfOf
+            })
+        );
+    }
+
+    function doBorrowRevert(
+        address prankAddress,
+        address onBehalfOf,
+        address pToken,
+        uint256 amount,
+        bytes4 err
+    ) public {
+        doAction(
+            ActionParameters({
+                action: Action.BORROW,
+                pToken: pToken,
+                tokenAddress: IPToken(pToken).underlying(),
+                amount: amount,
+                expectRevert: true,
+                error: err,
                 prankAddress: prankAddress,
                 onBehalfOf: onBehalfOf
             })
@@ -255,6 +297,27 @@ contract TestHelpers is TestUtilities {
         );
     }
 
+    function doRepayRevert(
+        address prankAddress,
+        address onBehalfOf,
+        address pToken,
+        uint256 amount,
+        bytes4 err
+    ) public {
+        doAction(
+            ActionParameters({
+                action: Action.REPAY,
+                pToken: pToken,
+                tokenAddress: IPToken(pToken).underlying(),
+                amount: amount,
+                expectRevert: true,
+                error: err,
+                prankAddress: prankAddress,
+                onBehalfOf: onBehalfOf
+            })
+        );
+    }
+
     function doWithdraw(
         address prankAddress,
         address onBehalfOf,
@@ -269,6 +332,27 @@ contract TestHelpers is TestUtilities {
                 amount: amount,
                 expectRevert: false,
                 error: bytes4(0),
+                prankAddress: prankAddress,
+                onBehalfOf: onBehalfOf
+            })
+        );
+    }
+
+    function doWithdrawRevert(
+        address prankAddress,
+        address onBehalfOf,
+        address pToken,
+        uint256 amount,
+        bytes4 err
+    ) public {
+        doAction(
+            ActionParameters({
+                action: Action.WITHDRAW,
+                pToken: pToken,
+                tokenAddress: IPToken(pToken).underlying(),
+                amount: amount,
+                expectRevert: true,
+                error: err,
                 prankAddress: prankAddress,
                 onBehalfOf: onBehalfOf
             })
@@ -293,6 +377,38 @@ contract TestHelpers is TestUtilities {
                 onBehalfOf: onBehalfOf
             })
         );
+    }
+
+    function doWithdrawUnderlyingRevert(
+        address prankAddress,
+        address onBehalfOf,
+        address pToken,
+        uint256 amount,
+        bytes4 err
+    ) public {
+        doAction(
+            ActionParameters({
+                action: Action.WITHDRAW_UNDERLYING,
+                pToken: pToken,
+                tokenAddress: IPToken(pToken).underlying(),
+                amount: amount,
+                expectRevert: true,
+                error: err,
+                prankAddress: prankAddress,
+                onBehalfOf: onBehalfOf
+            })
+        );
+    }
+
+    function doDelegate(
+        address prankAddress,
+        address delegate,
+        IPToken pToken,
+        bool approved
+    ) public {
+        IRiskEngine re = pToken.riskEngine();
+        vm.prank(prankAddress);
+        re.updateDelegate(delegate, approved);
     }
 
     function enterMarket(address prankAddress, address pToken) public {
