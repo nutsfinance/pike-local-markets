@@ -9,29 +9,61 @@ import {IPToken} from "@interfaces/IPToken.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 
-import {TestState} from "@helpers/TestState.sol";
+import {TestDeploy} from "./TestDeploy.sol";
 
-contract TestGetters is Test, TestState {
+contract TestGetters is TestDeploy {
     using Cannon for Vm;
 
     function getPToken(string memory pToken) public view returns (IPToken) {
-        return IPToken(vm.getAddress(string.concat(pToken, ".Proxy")));
+        if (local == true) {
+            if (keccak256(abi.encodePacked(pToken)) == keccak256(abi.encodePacked("pUSDC"))) {
+                return IPToken(usdcMarket);
+            } else if (keccak256(abi.encodePacked(pToken)) == keccak256(abi.encodePacked("pWETH"))) {
+                return IPToken(wethMarket);
+            }
+        } else {
+            return IPToken(vm.getAddress(string.concat(pToken, ".Proxy")));
+        }
     }
 
     function getIRM(string memory pToken) public view returns (IInterestRateModel) {
-        return IInterestRateModel(vm.getAddress(string.concat(pToken, ".Proxy")));
+        if (local == true) {
+            if (keccak256(abi.encodePacked(pToken)) == keccak256(abi.encodePacked("pUSDC"))) {
+                return IInterestRateModel(usdcMarket);
+            } else if (keccak256(abi.encodePacked(pToken)) == keccak256(abi.encodePacked("pWETH"))) {
+                return IInterestRateModel(wethMarket);
+            }
+        } else {
+            return IInterestRateModel(vm.getAddress(string.concat(pToken, ".Proxy")));
+        }
     }
 
     function getRiskEngine() public view returns (IRiskEngine) {
-        return IRiskEngine(vm.getAddress("core.Proxy"));
+        if (local == true) {
+            return IRiskEngine(riskEngine);
+        } else {
+            return IRiskEngine(vm.getAddress("core.Proxy"));
+        }
     }
 
     function getPTokenOwner(string memory pToken) public view returns (address) {
-        return IOwnable(vm.getAddress(string.concat(pToken, ".Proxy"))).owner();
+        if (local == true) {
+            if (keccak256(abi.encodePacked(pToken)) == keccak256(abi.encodePacked("pUSDC"))) {
+                return IOwnable(usdcMarket).owner();
+            } else if (keccak256(abi.encodePacked(pToken)) == keccak256(abi.encodePacked("pWETH"))) {
+                return IOwnable(wethMarket).owner();
+            }
+        } else {
+            return IOwnable(vm.getAddress(string.concat(pToken, ".Proxy"))).owner();
+        }
     }
 
     function getCoreOwner() public view returns (address) {
-        return IOwnable(vm.getAddress("core.Proxy")).owner();
+        if (local == true) {
+            return IOwnable(riskEngine).owner();
+        } else {
+            return IOwnable(vm.getAddress("core.Proxy")).owner();
+        }
     }
 
     function getDebug() public view returns (bool) {

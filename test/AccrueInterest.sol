@@ -10,7 +10,7 @@ import {TestHelpers} from "@helpers/TestHelpers.sol";
 
 import {MockOracle} from "@mocks/MockOracle.sol";
 
-contract TestContract is TestHelpers {
+contract Fork_AccrueInterest is TestHelpers {
     IPToken pUSDC;
     IPToken pWETH;
 

@@ -10,7 +10,7 @@ import {TestHelpers} from "@helpers/TestHelpers.sol";
 
 import {MockOracle} from "@mocks/MockOracle.sol";
 
-contract TestContract is TestHelpers {
+contract Local_General is TestHelpers {
     IPToken pUSDC;
     IPToken pWETH;
 
@@ -19,12 +19,15 @@ contract TestContract is TestHelpers {
     IRiskEngine re;
 
     function setUp() public {
-        /// eth price = 2000$, usdc price = 1$
+        deployProtocol();
+
+        // eth price = 2000$, usdc price = 1$
         pUSDC = getPToken("pUSDC");
         pWETH = getPToken("pWETH");
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
     }
+
 
     function testD() public {
         address user1 = makeAddr("user1");
