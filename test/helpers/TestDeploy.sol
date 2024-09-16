@@ -6,7 +6,7 @@ import {TestState} from "@helpers/TestState.sol";
 import {DiamondCutFacet} from "@mocks/Diamond/facets/DiamondCutFacet.sol";
 import {Diamond} from "@mocks/Diamond/Diamond.sol";
 import {DiamondLoupeFacet} from "@mocks/Diamond/facets/DiamondLoupeFacet.sol";
-import {strings} from "@mocks/Diamond/libraries/strings.sol";
+import {strings} from "@mocks/Diamond/libraries/Strings.sol";
 import {IDiamondCut} from "@mocks/Diamond/IDiamondCut.sol";
 import {InitialModuleBundle} from "@modules/InitialModuleBundle.sol";
 import {RBACModule} from "@modules/common/RBACModule.sol";
@@ -228,7 +228,7 @@ contract TestDeploy is Test, TestState {
             // split at colon, extract string up to next doublequote for methodname
             strings.slice memory method = s.split(colon).until(dbquote);
             selectors[i] = bytes4(method.keccak());
-            strings.slice memory selectr = s.split(comma).until(dbquote); // advance s to the next comma
+            s.split(comma).until(dbquote); // advance s to the next comma
         }
         return selectors;
     }

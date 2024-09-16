@@ -5,6 +5,6 @@ import {TestHelpers} from "@helpers/TestHelpers.sol";
 
 contract TestFork is TestHelpers {
     function init() public {
-        local = false;
+        setLocalState(false);
     }
 }

@@ -14,8 +14,8 @@ import {TestDeploy} from "./TestDeploy.sol";
 contract TestGetters is TestDeploy {
     using Cannon for Vm;
 
-    function getPToken(string memory pToken) public view returns (IPToken) {
-        if (local == true) {
+    function getPToken(string memory pToken) public view returns (IPToken token) {
+        if (getLocatState()) {
             if (
                 keccak256(abi.encodePacked(pToken))
                     == keccak256(abi.encodePacked("pUSDC"))
@@ -32,8 +32,8 @@ contract TestGetters is TestDeploy {
         }
     }
 
-    function getIRM(string memory pToken) public view returns (IInterestRateModel) {
-        if (local == true) {
+    function getIRM(string memory pToken) public view returns (IInterestRateModel irm) {
+        if (getLocatState()) {
             if (
                 keccak256(abi.encodePacked(pToken))
                     == keccak256(abi.encodePacked("pUSDC"))
@@ -50,16 +50,16 @@ contract TestGetters is TestDeploy {
         }
     }
 
-    function getRiskEngine() public view returns (IRiskEngine) {
-        if (local == true) {
+    function getRiskEngine() public view returns (IRiskEngine re) {
+        if (getLocatState()) {
             return IRiskEngine(riskEngine);
         } else {
             return IRiskEngine(vm.getAddress("core.Proxy"));
         }
     }
 
-    function getPTokenOwner(string memory pToken) public view returns (address) {
-        if (local == true) {
+    function getPTokenOwner(string memory pToken) public view returns (address owner) {
+        if (getLocatState()) {
             if (
                 keccak256(abi.encodePacked(pToken))
                     == keccak256(abi.encodePacked("pUSDC"))
@@ -76,8 +76,8 @@ contract TestGetters is TestDeploy {
         }
     }
 
-    function getCoreOwner() public view returns (address) {
-        if (local == true) {
+    function getCoreOwner() public view returns (address owner) {
+        if (getLocatState()) {
             return IOwnable(riskEngine).owner();
         } else {
             return IOwnable(vm.getAddress("core.Proxy")).owner();
@@ -86,5 +86,9 @@ contract TestGetters is TestDeploy {
 
     function getDebug() public view returns (bool) {
         return _testState.debug;
+    }
+
+    function getLocatState() public view returns (bool) {
+        return _testState.localState;
     }
 }

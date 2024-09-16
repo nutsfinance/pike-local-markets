@@ -15,4 +15,8 @@ contract TestSetters is TestStructs, TestGetters {
     function setDebug(bool debug) public {
         _testState.debug = debug;
     }
+
+    function setLocalState(bool state) public {
+        _testState.localState = state;
+    }
 }

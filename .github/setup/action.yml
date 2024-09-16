@@ -19,6 +19,6 @@ runs:
       shell: bash
       run: yarn install --frozen-lockfile --audit
 
-    - name: Install cannon
-      shell: bash
-      run: npm install -g @usecannon/cli
+    # - name: Install cannon
+    #   shell: bash
+    #   run: npm install -g @usecannon/cli

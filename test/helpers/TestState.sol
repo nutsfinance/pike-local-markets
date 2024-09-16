@@ -7,6 +7,7 @@ contract TestState {
     struct State {
         Vm vm;
         bool debug;
+        bool localState;
     }
 
     State _testState;

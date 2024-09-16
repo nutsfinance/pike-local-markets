@@ -5,7 +5,7 @@ import {TestHelpers} from "@helpers/TestHelpers.sol";
 
 contract TestLocal is TestHelpers {
     function init() public {
-        local = true;
+        setLocalState(true);
         deployProtocol();
     }
 }
