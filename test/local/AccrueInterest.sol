@@ -19,7 +19,13 @@ contract LocalAccrueInterest is TestLocal {
     IRiskEngine re;
 
     function setUp() public {
+        setDebug(true);
+        setAdmin(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
         init();
+
+        // eth price = 2000$, usdc price = 1$
+        deployPToken("pike-usdc", "pUSDC", 6, 1e6, 74.5e16, 84.5e16);
+        deployPToken("pike-weth", "pWETH", 18, 2000e6, 72.5e16, 82.5e16);
 
         /// eth price = 2000$, usdc price = 1$
         pUSDC = getPToken("pUSDC");
@@ -31,7 +37,6 @@ contract LocalAccrueInterest is TestLocal {
     function testDBwithInterest() public {
         address user1 = makeAddr("user1");
         address depositor = makeAddr("depositor");
-        setDebug(true);
 
         ///porivde liquidity
         doDeposit(depositor, depositor, address(pWETH), 1e18);
@@ -70,7 +75,6 @@ contract LocalAccrueInterest is TestLocal {
     function testRealTimeVariables() public {
         address user1 = makeAddr("user1");
         address depositor = makeAddr("depositor");
-        setDebug(true);
 
         ///porivde liquidity
         doDeposit(depositor, depositor, address(pWETH), 1e18);

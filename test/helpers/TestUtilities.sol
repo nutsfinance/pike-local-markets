@@ -7,9 +7,9 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {IPToken, IERC20} from "@interfaces/IPToken.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
-import {TestSetters} from "@helpers/TestSetters.sol";
+import {TestDeploy} from "@helpers/TestDeploy.sol";
 
-contract TestUtilities is TestSetters {
+contract TestUtilities is TestDeploy {
     uint256 constant ONE_MANTISSA = 1e18;
     uint256 constant SECONDS_PER_YEAR = 31_536_000;
     uint256 constant liquidationPenalty = 5e16; //5%

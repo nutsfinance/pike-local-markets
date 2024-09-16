@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
+import {RiskEngineModule, IRiskEngine} from "@modules/riskEngine/RiskEngineModule.sol";
+
 contract TestStructs {
     struct ActionParameters {
         Action action;
@@ -54,6 +56,18 @@ contract TestStructs {
         UserData userToLiquidateData;
         PTokenData collateralPTokenData;
         PTokenData borrowedPTokenData;
+    }
+
+    struct PTokenInitialization {
+        address underlying;
+        IRiskEngine riskEngine;
+        uint256 initialExchangeRate;
+        uint256 reserveFactor;
+        uint256 protocolSeizeShare;
+        uint256 borrowRateMax;
+        string name;
+        string symbol;
+        uint8 pTokenDecimals;
     }
 
     enum Action {

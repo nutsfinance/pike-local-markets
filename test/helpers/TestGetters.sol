@@ -4,29 +4,22 @@ pragma solidity 0.8.20;
 import "cannon-std/Cannon.sol";
 import "forge-std/Test.sol";
 
+import {TestState} from "@helpers/TestState.sol";
 import {IOwnable} from "@interfaces/IOwnable.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 
-import {TestDeploy} from "./TestDeploy.sol";
-
-contract TestGetters is TestDeploy {
+contract TestGetters is Test, TestState {
     using Cannon for Vm;
+
+    function getAdmin() public view returns (address) {
+        return _testState.admin;
+    }
 
     function getPToken(string memory pToken) public view returns (IPToken token) {
         if (getLocatState()) {
-            if (
-                keccak256(abi.encodePacked(pToken))
-                    == keccak256(abi.encodePacked("pUSDC"))
-            ) {
-                return IPToken(usdcMarket);
-            } else if (
-                keccak256(abi.encodePacked(pToken))
-                    == keccak256(abi.encodePacked("pWETH"))
-            ) {
-                return IPToken(wethMarket);
-            }
+            return IPToken(_testState.pTokens[keccak256(abi.encodePacked(pToken))]);
         } else {
             return IPToken(vm.getAddress(string.concat(pToken, ".Proxy")));
         }
@@ -34,17 +27,9 @@ contract TestGetters is TestDeploy {
 
     function getIRM(string memory pToken) public view returns (IInterestRateModel irm) {
         if (getLocatState()) {
-            if (
-                keccak256(abi.encodePacked(pToken))
-                    == keccak256(abi.encodePacked("pUSDC"))
-            ) {
-                return IInterestRateModel(usdcMarket);
-            } else if (
-                keccak256(abi.encodePacked(pToken))
-                    == keccak256(abi.encodePacked("pWETH"))
-            ) {
-                return IInterestRateModel(wethMarket);
-            }
+            return IInterestRateModel(
+                _testState.pTokens[keccak256(abi.encodePacked(pToken))]
+            );
         } else {
             return IInterestRateModel(vm.getAddress(string.concat(pToken, ".Proxy")));
         }
@@ -52,7 +37,7 @@ contract TestGetters is TestDeploy {
 
     function getRiskEngine() public view returns (IRiskEngine re) {
         if (getLocatState()) {
-            return IRiskEngine(riskEngine);
+            return IRiskEngine(_testState.riskEngine);
         } else {
             return IRiskEngine(vm.getAddress("core.Proxy"));
         }
@@ -60,17 +45,7 @@ contract TestGetters is TestDeploy {
 
     function getPTokenOwner(string memory pToken) public view returns (address owner) {
         if (getLocatState()) {
-            if (
-                keccak256(abi.encodePacked(pToken))
-                    == keccak256(abi.encodePacked("pUSDC"))
-            ) {
-                return IOwnable(usdcMarket).owner();
-            } else if (
-                keccak256(abi.encodePacked(pToken))
-                    == keccak256(abi.encodePacked("pWETH"))
-            ) {
-                return IOwnable(wethMarket).owner();
-            }
+            return IOwnable(address(getPToken(pToken))).owner();
         } else {
             return IOwnable(vm.getAddress(string.concat(pToken, ".Proxy"))).owner();
         }
@@ -78,7 +53,7 @@ contract TestGetters is TestDeploy {
 
     function getCoreOwner() public view returns (address owner) {
         if (getLocatState()) {
-            return IOwnable(riskEngine).owner();
+            return IOwnable(address(getRiskEngine())).owner();
         } else {
             return IOwnable(vm.getAddress("core.Proxy")).owner();
         }
@@ -90,5 +65,9 @@ contract TestGetters is TestDeploy {
 
     function getLocatState() public view returns (bool) {
         return _testState.localState;
+    }
+
+    function getOracle() public view returns (address) {
+        return _testState.oracle;
     }
 }

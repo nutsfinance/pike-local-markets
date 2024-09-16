@@ -8,6 +8,10 @@ contract TestState {
         Vm vm;
         bool debug;
         bool localState;
+        address riskEngine;
+        address oracle;
+        mapping(bytes32 => address) pTokens;
+        address admin;
     }
 
     State _testState;

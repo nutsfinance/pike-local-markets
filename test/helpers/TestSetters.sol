@@ -16,7 +16,23 @@ contract TestSetters is TestStructs, TestGetters {
         _testState.debug = debug;
     }
 
+    function setRiskEngine(address re) public {
+        _testState.riskEngine = re;
+    }
+
+    function setOracle(address oracle_) public {
+        _testState.oracle = oracle_;
+    }
+
+    function setPToken(string memory name, address pToken) public {
+        _testState.pTokens[keccak256(abi.encodePacked(name))] = pToken;
+    }
+
     function setLocalState(bool state) public {
         _testState.localState = state;
+    }
+
+    function setAdmin(address admin) public {
+        _testState.admin = admin;
     }
 }

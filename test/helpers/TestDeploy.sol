@@ -1,32 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import "forge-std/Test.sol";
-import {TestState} from "@helpers/TestState.sol";
+import {TestSetters} from "@helpers/TestSetters.sol";
 import {DiamondCutFacet} from "@mocks/Diamond/facets/DiamondCutFacet.sol";
 import {Diamond} from "@mocks/Diamond/Diamond.sol";
 import {DiamondLoupeFacet} from "@mocks/Diamond/facets/DiamondLoupeFacet.sol";
 import {strings} from "@mocks/Diamond/libraries/Strings.sol";
 import {IDiamondCut} from "@mocks/Diamond/IDiamondCut.sol";
 import {InitialModuleBundle} from "@modules/InitialModuleBundle.sol";
-import {RBACModule} from "@modules/common/RBACModule.sol";
+import {RBACModule, IRBAC} from "@modules/common/RBACModule.sol";
 import {RiskEngineModule, IRiskEngine} from "@modules/riskEngine/RiskEngineModule.sol";
 import {InterestRateModule} from "@modules/pToken/InterestRateModule.sol";
 import {PTokenModule, IPToken} from "@modules/pToken/PTokenModule.sol";
 import {MockToken} from "@mocks/MockToken.sol";
 import {MockOracle} from "@mocks/MockOracle.sol";
 
-contract TestDeploy is Test, TestState {
+contract TestDeploy is TestSetters {
     using strings for *;
-
-    bool local;
-
-    address admin = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-    address riskEngine;
-    address usdc;
-    address weth;
-    address usdcMarket;
-    address wethMarket;
 
     uint256 initialExchangeRate = 1e18;
     uint256 reserveFactor = 5e16;
@@ -39,67 +29,58 @@ contract TestDeploy is Test, TestState {
     uint256 jumpMultiplierPerYear = 4.3e18;
     uint256 kink = 80e16;
 
-    address oracle;
-
     function deployProtocol() public {
-        usdc = address(new MockToken("USD Coin", "USDC"));
-        weth = address(new MockToken("Wrapped Ether", "WETH"));
-        oracle = address(new MockOracle());
+        address oracle = address(new MockOracle());
+        setOracle(oracle);
 
-        riskEngine = deployRiskEngine();
+        address riskEngine = deployRiskEngine();
 
-        usdcMarket = deployPToken(usdc, "pike-usdc", "pUSDC");
+        vm.startPrank(getAdmin());
 
-        wethMarket = deployPToken(weth, "pike-weth", "pWETH");
-
-        vm.startPrank(admin);
-
-        RBACModule(riskEngine).grantPermission(
-            admin, 0x434f4e464947555241544f520000000000000000000000000000000000000000
+        IRBAC(riskEngine).grantPermission(
+            getAdmin(), 0x434f4e464947555241544f520000000000000000000000000000000000000000
         );
-        RBACModule(riskEngine).grantPermission(
-            admin, 0x535550504c595f4341505f475541524449414e00000000000000000000000000
+        IRBAC(riskEngine).grantPermission(
+            getAdmin(), 0x535550504c595f4341505f475541524449414e00000000000000000000000000
         );
-        RBACModule(riskEngine).grantPermission(
-            admin, 0x424f52524f575f4341505f475541524449414e00000000000000000000000000
+        IRBAC(riskEngine).grantPermission(
+            getAdmin(), 0x424f52524f575f4341505f475541524449414e00000000000000000000000000
         );
-        RBACModule(riskEngine).grantPermission(
-            admin, 0x50415553455f475541524449414e000000000000000000000000000000000000
+        IRBAC(riskEngine).grantPermission(
+            getAdmin(), 0x50415553455f475541524449414e000000000000000000000000000000000000
         );
 
-        MockOracle(oracle).setPrice(usdcMarket, 1e6, 6);
-        MockOracle(oracle).setPrice(wethMarket, 2000e6, 18);
-
-        RiskEngineModule(riskEngine).setOracle(oracle);
-        RiskEngineModule(riskEngine).setCloseFactor(50e16);
-        RiskEngineModule(riskEngine).supportMarket(IPToken(usdcMarket));
-        RiskEngineModule(riskEngine).supportMarket(IPToken(wethMarket));
-        RiskEngineModule(riskEngine).setCollateralFactor(
-            IPToken(usdcMarket), 74.5e16, 84.5e16
-        );
-        RiskEngineModule(riskEngine).setCollateralFactor(
-            IPToken(wethMarket), 72.5e16, 82.5e16
-        );
-        RiskEngineModule(riskEngine).setLiquidationIncentive(1.08e18);
-
-        IPToken[] memory markets = new IPToken[](2);
-        markets[0] = IPToken(usdcMarket);
-        markets[1] = IPToken(wethMarket);
-
-        uint256[] memory caps = new uint256[](2);
-        caps[0] = type(uint256).max;
-        caps[1] = type(uint256).max;
-
-        RiskEngineModule(riskEngine).setMarketBorrowCaps(markets, caps);
-        RiskEngineModule(riskEngine).setMarketSupplyCaps(markets, caps);
+        IRiskEngine(riskEngine).setOracle(oracle);
+        IRiskEngine(riskEngine).setCloseFactor(50e16);
+        IRiskEngine(riskEngine).setLiquidationIncentive(1.08e18);
 
         vm.stopPrank();
     }
 
-    function deployPToken(address underlying_, string memory name_, string memory symbol_)
-        internal
-        returns (address)
-    {
+    function deployPToken(
+        string memory name_,
+        string memory symbol_,
+        uint8 underlyingDecimals,
+        uint256 price,
+        uint256 colFactor,
+        uint256 liqThreshold
+    ) internal returns (address) {
+        address underlying = address(new MockToken(name_, symbol_, underlyingDecimals));
+
+        IRiskEngine re = IRiskEngine(getRiskEngine());
+
+        PTokenInitialization memory initData = PTokenInitialization({
+            underlying: underlying,
+            riskEngine: re,
+            initialExchangeRate: initialExchangeRate,
+            reserveFactor: reserveFactor,
+            protocolSeizeShare: protocolSeizeShare,
+            borrowRateMax: borrowRateMax,
+            name: name_,
+            symbol: symbol_,
+            pTokenDecimals: pTokenDecimals
+        });
+
         string[] memory pTokenFacets = new string[](3);
         pTokenFacets[0] = "InitialModuleBundle";
         pTokenFacets[1] = "InterestRateModule";
@@ -111,28 +92,44 @@ contract TestDeploy is Test, TestState {
         pTokenModulesAddresses[2] = address(new PTokenModule());
 
         address _pToken = deployDiamond(pTokenFacets, pTokenModulesAddresses);
+        setPToken(symbol_, _pToken);
+
+        MockOracle(getOracle()).setPrice(_pToken, price, MockToken(underlying).decimals());
 
         InitialModuleBundle initialModuleBundle = InitialModuleBundle(_pToken);
-        initialModuleBundle.initialize(admin);
+        initialModuleBundle.initialize(getAdmin());
 
-        vm.startPrank(admin);
+        vm.startPrank(getAdmin());
         PTokenModule pToken = PTokenModule(_pToken);
         pToken.initialize(
-            underlying_,
-            IRiskEngine(riskEngine),
-            initialExchangeRate,
-            reserveFactor,
-            protocolSeizeShare,
-            borrowRateMax,
-            name_,
-            symbol_,
-            pTokenDecimals
+            initData.underlying,
+            initData.riskEngine,
+            initData.initialExchangeRate,
+            initData.reserveFactor,
+            initData.protocolSeizeShare,
+            initData.borrowRateMax,
+            initData.name,
+            initData.symbol,
+            initData.pTokenDecimals
         );
 
         InterestRateModule interestRateModule = InterestRateModule(_pToken);
         interestRateModule.initialize(
             baseRatePerYear, multiplierPerYear, jumpMultiplierPerYear, kink
         );
+
+        re.supportMarket(IPToken(_pToken));
+        re.setCollateralFactor(IPToken(_pToken), colFactor, liqThreshold);
+
+        IPToken[] memory markets = new IPToken[](1);
+        markets[0] = IPToken(_pToken);
+
+        uint256[] memory caps = new uint256[](1);
+        caps[0] = type(uint256).max;
+
+        re.setMarketBorrowCaps(markets, caps);
+        re.setMarketSupplyCaps(markets, caps);
+
         vm.stopPrank();
 
         return _pToken;
@@ -149,10 +146,12 @@ contract TestDeploy is Test, TestState {
         riskEngineModulesAddresses[1] = address(new RBACModule());
         riskEngineModulesAddresses[2] = address(new RiskEngineModule());
 
-        riskEngine = deployDiamond(riskEngineModulesFacets, riskEngineModulesAddresses);
+        address riskEngine =
+            deployDiamond(riskEngineModulesFacets, riskEngineModulesAddresses);
+        setRiskEngine(riskEngine);
 
         InitialModuleBundle initialModuleBundle = InitialModuleBundle(riskEngine);
-        initialModuleBundle.initialize(admin);
+        initialModuleBundle.initialize(getAdmin());
 
         return riskEngine;
     }
@@ -161,11 +160,11 @@ contract TestDeploy is Test, TestState {
         internal
         returns (address)
     {
-        vm.startPrank(admin);
+        vm.startPrank(getAdmin());
         DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
 
         DiamondCutFacet diamond =
-            DiamondCutFacet(address(new Diamond(admin, address(diamondCutFacet))));
+            DiamondCutFacet(address(new Diamond(getAdmin(), address(diamondCutFacet))));
 
         DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet();
 
