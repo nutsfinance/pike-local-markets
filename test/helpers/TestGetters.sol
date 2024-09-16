@@ -16,9 +16,15 @@ contract TestGetters is TestDeploy {
 
     function getPToken(string memory pToken) public view returns (IPToken) {
         if (local == true) {
-            if (keccak256(abi.encodePacked(pToken)) == keccak256(abi.encodePacked("pUSDC"))) {
+            if (
+                keccak256(abi.encodePacked(pToken))
+                    == keccak256(abi.encodePacked("pUSDC"))
+            ) {
                 return IPToken(usdcMarket);
-            } else if (keccak256(abi.encodePacked(pToken)) == keccak256(abi.encodePacked("pWETH"))) {
+            } else if (
+                keccak256(abi.encodePacked(pToken))
+                    == keccak256(abi.encodePacked("pWETH"))
+            ) {
                 return IPToken(wethMarket);
             }
         } else {
@@ -28,9 +34,15 @@ contract TestGetters is TestDeploy {
 
     function getIRM(string memory pToken) public view returns (IInterestRateModel) {
         if (local == true) {
-            if (keccak256(abi.encodePacked(pToken)) == keccak256(abi.encodePacked("pUSDC"))) {
+            if (
+                keccak256(abi.encodePacked(pToken))
+                    == keccak256(abi.encodePacked("pUSDC"))
+            ) {
                 return IInterestRateModel(usdcMarket);
-            } else if (keccak256(abi.encodePacked(pToken)) == keccak256(abi.encodePacked("pWETH"))) {
+            } else if (
+                keccak256(abi.encodePacked(pToken))
+                    == keccak256(abi.encodePacked("pWETH"))
+            ) {
                 return IInterestRateModel(wethMarket);
             }
         } else {
@@ -48,9 +60,15 @@ contract TestGetters is TestDeploy {
 
     function getPTokenOwner(string memory pToken) public view returns (address) {
         if (local == true) {
-            if (keccak256(abi.encodePacked(pToken)) == keccak256(abi.encodePacked("pUSDC"))) {
+            if (
+                keccak256(abi.encodePacked(pToken))
+                    == keccak256(abi.encodePacked("pUSDC"))
+            ) {
                 return IOwnable(usdcMarket).owner();
-            } else if (keccak256(abi.encodePacked(pToken)) == keccak256(abi.encodePacked("pWETH"))) {
+            } else if (
+                keccak256(abi.encodePacked(pToken))
+                    == keccak256(abi.encodePacked("pWETH"))
+            ) {
                 return IOwnable(wethMarket).owner();
             }
         } else {

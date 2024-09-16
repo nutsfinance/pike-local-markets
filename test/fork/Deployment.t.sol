@@ -6,11 +6,11 @@ import "forge-std/Test.sol";
 import {IPToken, IERC20} from "@interfaces/IPToken.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
-import {TestHelpers} from "@helpers/TestHelpers.sol";
+import {TestFork} from "@helpers/TestFork.sol";
 
 import {MockOracle} from "@mocks/MockOracle.sol";
 
-contract Local_General is TestHelpers {
+contract ForkDeployment is TestFork {
     IPToken pUSDC;
     IPToken pWETH;
 
@@ -19,15 +19,12 @@ contract Local_General is TestHelpers {
     IRiskEngine re;
 
     function setUp() public {
-        deployProtocol();
-
         // eth price = 2000$, usdc price = 1$
         pUSDC = getPToken("pUSDC");
         pWETH = getPToken("pWETH");
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
     }
-
 
     function testD() public {
         address user1 = makeAddr("user1");

@@ -19,7 +19,7 @@ import {MockOracle} from "@mocks/MockOracle.sol";
 contract TestDeploy is Test, TestState {
     using strings for *;
 
-    bool local = true;
+    bool local;
 
     address admin = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
     address riskEngine;
@@ -48,24 +48,24 @@ contract TestDeploy is Test, TestState {
 
         riskEngine = deployRiskEngine();
 
-        usdcMarket = deployPToken(
-            usdc,
-            "pike-usdc", 
-            "pUSDC"
-        );
+        usdcMarket = deployPToken(usdc, "pike-usdc", "pUSDC");
 
-        wethMarket = deployPToken(
-            weth,
-            "pike-weth",
-            "pWETH"
-        );
+        wethMarket = deployPToken(weth, "pike-weth", "pWETH");
 
         vm.startPrank(admin);
 
-        RBACModule(riskEngine).grantPermission(admin, 0x434f4e464947555241544f520000000000000000000000000000000000000000);
-        RBACModule(riskEngine).grantPermission(admin, 0x535550504c595f4341505f475541524449414e00000000000000000000000000);
-        RBACModule(riskEngine).grantPermission(admin, 0x424f52524f575f4341505f475541524449414e00000000000000000000000000);
-        RBACModule(riskEngine).grantPermission(admin, 0x50415553455f475541524449414e000000000000000000000000000000000000);
+        RBACModule(riskEngine).grantPermission(
+            admin, 0x434f4e464947555241544f520000000000000000000000000000000000000000
+        );
+        RBACModule(riskEngine).grantPermission(
+            admin, 0x535550504c595f4341505f475541524449414e00000000000000000000000000
+        );
+        RBACModule(riskEngine).grantPermission(
+            admin, 0x424f52524f575f4341505f475541524449414e00000000000000000000000000
+        );
+        RBACModule(riskEngine).grantPermission(
+            admin, 0x50415553455f475541524449414e000000000000000000000000000000000000
+        );
 
         MockOracle(oracle).setPrice(usdcMarket, 1e6, 6);
         MockOracle(oracle).setPrice(wethMarket, 2000e6, 18);
@@ -74,8 +74,12 @@ contract TestDeploy is Test, TestState {
         RiskEngineModule(riskEngine).setCloseFactor(50e16);
         RiskEngineModule(riskEngine).supportMarket(IPToken(usdcMarket));
         RiskEngineModule(riskEngine).supportMarket(IPToken(wethMarket));
-        RiskEngineModule(riskEngine).setCollateralFactor(IPToken(usdcMarket), 74.5e16, 84.5e16);
-        RiskEngineModule(riskEngine).setCollateralFactor(IPToken(wethMarket), 72.5e16, 82.5e16);
+        RiskEngineModule(riskEngine).setCollateralFactor(
+            IPToken(usdcMarket), 74.5e16, 84.5e16
+        );
+        RiskEngineModule(riskEngine).setCollateralFactor(
+            IPToken(wethMarket), 72.5e16, 82.5e16
+        );
         RiskEngineModule(riskEngine).setLiquidationIncentive(1.08e18);
 
         IPToken[] memory markets = new IPToken[](2);
@@ -92,11 +96,10 @@ contract TestDeploy is Test, TestState {
         vm.stopPrank();
     }
 
-    function deployPToken(
-        address underlying_,
-        string memory name_,
-        string memory symbol_
-    ) internal returns (address) {
+    function deployPToken(address underlying_, string memory name_, string memory symbol_)
+        internal
+        returns (address)
+    {
         string[] memory pTokenFacets = new string[](3);
         pTokenFacets[0] = "InitialModuleBundle";
         pTokenFacets[1] = "InterestRateModule";
@@ -128,10 +131,7 @@ contract TestDeploy is Test, TestState {
 
         InterestRateModule interestRateModule = InterestRateModule(_pToken);
         interestRateModule.initialize(
-            baseRatePerYear,
-            multiplierPerYear,
-            jumpMultiplierPerYear,
-            kink
+            baseRatePerYear, multiplierPerYear, jumpMultiplierPerYear, kink
         );
         vm.stopPrank();
 
@@ -157,18 +157,23 @@ contract TestDeploy is Test, TestState {
         return riskEngine;
     }
 
-    function deployDiamond(string[] memory facets, address[] memory facetAddresses) internal returns (address) {
+    function deployDiamond(string[] memory facets, address[] memory facetAddresses)
+        internal
+        returns (address)
+    {
         vm.startPrank(admin);
         DiamondCutFacet diamondCutFacet = new DiamondCutFacet();
 
-        DiamondCutFacet diamond = DiamondCutFacet(address(new Diamond(admin, address(diamondCutFacet))));
+        DiamondCutFacet diamond =
+            DiamondCutFacet(address(new Diamond(admin, address(diamondCutFacet))));
 
         DiamondLoupeFacet diamondLoupeFacet = new DiamondLoupeFacet();
 
         bytes4[] memory diamondLoupeFacetSelectors =
             generateSelectors("DiamondLoupeFacet");
 
-        DiamondCutFacet.FacetCut[] memory diamondLoupeFacetCut = new DiamondCutFacet.FacetCut[](facets.length + 1);
+        DiamondCutFacet.FacetCut[] memory diamondLoupeFacetCut =
+            new DiamondCutFacet.FacetCut[](facets.length + 1);
         diamondLoupeFacetCut[0] = IDiamondCut.FacetCut({
             facetAddress: address(diamondLoupeFacet),
             action: IDiamondCut.FacetCutAction.Add,

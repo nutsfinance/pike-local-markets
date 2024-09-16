@@ -6,11 +6,11 @@ import "forge-std/Test.sol";
 import {IPToken, IERC20} from "@interfaces/IPToken.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
-import {TestHelpers} from "@helpers/TestHelpers.sol";
+import {TestLocal} from "@helpers/TestLocal.sol";
 
 import {MockOracle} from "@mocks/MockOracle.sol";
 
-contract Fork_AccrueInterest is TestHelpers {
+contract LocalAccrueInterest is TestLocal {
     IPToken pUSDC;
     IPToken pWETH;
 
@@ -19,6 +19,8 @@ contract Fork_AccrueInterest is TestHelpers {
     IRiskEngine re;
 
     function setUp() public {
+        init();
+
         /// eth price = 2000$, usdc price = 1$
         pUSDC = getPToken("pUSDC");
         pWETH = getPToken("pWETH");
