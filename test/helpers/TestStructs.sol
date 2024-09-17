@@ -15,6 +15,16 @@ contract TestStructs {
         address onBehalfOf;
     }
 
+    struct TransferParameters {
+        address pToken;
+        address receiver;
+        uint256 amount;
+        bool expectRevert;
+        bytes error;
+        address prankAddress;
+        address onBehalfOf;
+    }
+
     struct ActionStateData {
         PTokenData pTokenData;
         UserData userData;

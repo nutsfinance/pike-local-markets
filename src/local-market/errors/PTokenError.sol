@@ -45,6 +45,7 @@ library PTokenError {
     error ReduceReservesCashValidation();
 
     error TransferNotAllowed();
+    error TransferRiskEngineRejection(uint256 errorCode);
     error SweepNotAllowed();
 
     error DelegateNotAllowed();

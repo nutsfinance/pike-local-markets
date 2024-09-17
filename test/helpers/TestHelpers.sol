@@ -174,6 +174,72 @@ contract TestHelpers is TestUtilities {
         }
     }
 
+    function _doTransfer(TransferParameters memory params) public {
+        address user = params.prankAddress;
+        bool onBehalfOf = params.onBehalfOf != params.prankAddress;
+
+        vm.deal(user, 1 ether);
+
+        if (getDebug()) {
+            console.log("-[User %s]--------------", user);
+        }
+
+        uint256 senderBalanceBefore = IPToken(params.pToken).balanceOf(params.onBehalfOf);
+        uint256 receiverBalanceBefore = IPToken(params.pToken).balanceOf(params.receiver);
+
+        vm.recordLogs();
+        if (getDebug()) {
+            console.log(
+                "Transferring %s of %s to %s",
+                params.amount,
+                IPToken(params.pToken).name(),
+                params.receiver
+            );
+        }
+
+        if (onBehalfOf) {
+            vm.prank(user);
+            if (params.expectRevert) {
+                vm.expectRevert(params.error);
+            }
+            IPToken(params.pToken).transferFrom(
+                params.onBehalfOf, params.receiver, params.amount
+            );
+        } else {
+            vm.prank(user);
+            if (params.expectRevert) {
+                vm.expectRevert(params.error);
+            }
+            IPToken(params.pToken).transfer(params.receiver, params.amount);
+        }
+
+        if (params.expectRevert) {
+            if (getDebug()) {
+                console.log("should revert");
+                console.log("----------------------------------------");
+                console.log("");
+            }
+            return;
+        }
+
+        uint256 senderBalanceAfter = IPToken(params.pToken).balanceOf(params.onBehalfOf);
+        uint256 receiverBalanceAfter = IPToken(params.pToken).balanceOf(params.receiver);
+
+        require(
+            senderBalanceAfter + params.amount == senderBalanceBefore,
+            "Did not transfer ptoken from sender"
+        );
+        require(
+            receiverBalanceBefore + params.amount == receiverBalanceAfter,
+            "Did not transfer ptoken to receiver"
+        );
+
+        if (getDebug()) {
+            console.log("----------------------------------------");
+            console.log("");
+        }
+    }
+
     function doDeposit(
         address prankAddress,
         address onBehalfOf,
@@ -409,6 +475,47 @@ contract TestHelpers is TestUtilities {
         IRiskEngine re = pToken.riskEngine();
         vm.prank(prankAddress);
         re.updateDelegate(delegate, approved);
+    }
+
+    function doTransfer(
+        address prankAddress,
+        address onBehalfOf,
+        address receiver,
+        address pToken,
+        uint256 amount
+    ) public {
+        _doTransfer(
+            TransferParameters({
+                pToken: pToken,
+                receiver: receiver,
+                amount: amount,
+                expectRevert: false,
+                error: "",
+                prankAddress: prankAddress,
+                onBehalfOf: onBehalfOf
+            })
+        );
+    }
+
+    function doTransferRevert(
+        address prankAddress,
+        address onBehalfOf,
+        address receiver,
+        address pToken,
+        uint256 amount,
+        bytes memory err
+    ) public {
+        _doTransfer(
+            TransferParameters({
+                pToken: pToken,
+                receiver: receiver,
+                amount: amount,
+                expectRevert: true,
+                error: err,
+                prankAddress: prankAddress,
+                onBehalfOf: onBehalfOf
+            })
+        );
     }
 
     function enterMarket(address prankAddress, address pToken) public {

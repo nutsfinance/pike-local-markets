@@ -1055,7 +1055,11 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
         internal
     {
         /* Fail if transfer not allowed */
-        _getPTokenStorage().riskEngine.transferAllowed(address(this), src, tokens);
+        uint256 allowed =
+            _getPTokenStorage().riskEngine.transferAllowed(address(this), src, tokens);
+        if (allowed != 0) {
+            revert PTokenError.TransferRiskEngineRejection(allowed);
+        }
 
         /* Do not allow self-transfers */
         if (src == dst) {

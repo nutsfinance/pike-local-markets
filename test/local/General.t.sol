@@ -33,6 +33,13 @@ contract LocalGeneral is TestLocal {
         mockOracle = MockOracle(re.oracle());
     }
 
+    // D: Deposit
+    // B: Borrow
+    // R: Repay
+    // W: Withdraw
+    // L: Liquidate
+    // T: Transfer
+
     function testD() public {
         address user1 = makeAddr("user1");
         doDeposit(user1, user1, address(pUSDC), 100e6);
@@ -155,5 +162,54 @@ contract LocalGeneral is TestLocal {
         });
 
         doLiquidate(lp);
+    }
+
+    function testDT() public {
+        address sender = makeAddr("sender");
+        address receiver = makeAddr("receiver");
+        doDeposit(sender, sender, address(pUSDC), 100e6);
+
+        doTransfer(sender, sender, receiver, address(pUSDC), 50e6);
+        // "TransferNotAllowed()" selector
+        doTransferRevert(
+            sender,
+            sender,
+            sender,
+            address(pUSDC),
+            50e6,
+            abi.encodePacked(bytes4(0x8cd22d19))
+        );
+        // not enough allowances "overflow/underflow" error
+        doTransferRevert(
+            receiver, sender, receiver, address(pUSDC), 50e6, stdError.arithmeticError
+        );
+
+        // approve
+        vm.prank(sender);
+        pUSDC.approve(receiver, 50e6);
+        assertEq(pUSDC.allowance(sender, receiver), 50e6);
+
+        doTransfer(receiver, sender, receiver, address(pUSDC), 50e6);
+    }
+
+    function testDBT() public {
+        address user1 = makeAddr("user1");
+        address depositor = makeAddr("depositor");
+
+        ///porivde liquidity
+        doDeposit(depositor, depositor, address(pWETH), 1e18);
+
+        doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
+        doBorrow(user1, user1, address(pWETH), 0.745e18);
+
+        // TransferRiskEngineRejection(3) selector
+        doTransferRevert(
+            user1,
+            user1,
+            depositor,
+            address(pUSDC),
+            50e6,
+            abi.encodePacked(bytes4(0x90420254), uint256(3))
+        );
     }
 }
