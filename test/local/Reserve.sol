@@ -1,0 +1,108 @@
+pragma solidity 0.8.20;
+
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "forge-std/Test.sol";
+
+import {IPToken, IERC20} from "@interfaces/IPToken.sol";
+import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
+import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
+import {TestLocal} from "@helpers/TestLocal.sol";
+
+import {MockOracle} from "@mocks/MockOracle.sol";
+
+contract LocalReserve is TestLocal {
+    IPToken pUSDC;
+    IPToken pWETH;
+
+    MockOracle mockOracle;
+
+    IRiskEngine re;
+
+    function setUp() public {
+        setDebug(true);
+        setAdmin(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+        init();
+
+        // eth price = 2000$, usdc price = 1$
+        deployPToken("pike-usdc", "pUSDC", 6, 1e6, 74.5e16, 84.5e16);
+        deployPToken("pike-weth", "pWETH", 18, 2000e6, 72.5e16, 82.5e16);
+
+        /// eth price = 2000$, usdc price = 1$
+        pUSDC = getPToken("pUSDC");
+        pWETH = getPToken("pWETH");
+        re = getRiskEngine();
+        mockOracle = MockOracle(re.oracle());
+    }
+
+    function testAddReserve_Success() public {
+        address user1 = makeAddr("user1");
+        uint256 value = 1e18;
+
+        deal(pWETH.underlying(), user1, value);
+
+        uint256 reserveBefore = pWETH.totalReserves();
+
+        vm.startPrank(user1);
+        IERC20(pWETH.underlying()).approve(address(pWETH), value);
+        pWETH.addReserves(value);
+
+        uint256 reserveAfter = pWETH.totalReserves();
+
+        assertEq(reserveBefore + value, reserveAfter);
+    }
+
+    function testReduceReserve_Success() public {
+        address user1 = makeAddr("user1");
+        uint256 value = 1e18;
+
+        deal(pWETH.underlying(), user1, value);
+
+        vm.startPrank(user1);
+        IERC20(pWETH.underlying()).approve(address(pWETH), value);
+        pWETH.addReserves(value);
+
+        vm.startPrank(getAdmin());
+        uint256 reserveBefore = pWETH.totalReserves();
+
+        pWETH.reduceReserves(value);
+
+        uint256 reserveAfter = pWETH.totalReserves();
+
+        assertEq(reserveBefore, reserveAfter + value);
+    }
+
+    function testSweepERC20_Success() public {
+        address user1 = makeAddr("user1");
+        uint256 value = 1e18;
+
+        deal(pWETH.underlying(), user1, value);
+
+        vm.startPrank(user1);
+        IERC20(pWETH.underlying()).transfer(address(pUSDC), value);
+
+        vm.startPrank(getAdmin());
+
+        uint256 balanceBefore = IERC20(pWETH.underlying()).balanceOf(address(pUSDC));
+        uint256 adminBalanceBefore = IERC20(pWETH.underlying()).balanceOf(getAdmin());
+
+        pUSDC.sweepToken(IERC20(pWETH.underlying()));
+
+        uint256 balanceAfter = IERC20(pWETH.underlying()).balanceOf(address(pUSDC));
+        uint256 adminBalanceAfter = IERC20(pWETH.underlying()).balanceOf(getAdmin());
+
+        assertEq(balanceBefore, balanceAfter + value);
+        assertEq(adminBalanceAfter, adminBalanceBefore + value);
+    }
+
+    function testSetReserveFactor() public {
+        // 10%
+        uint256 newReserveFactor = 10e16;
+
+        assertNotEq(pWETH.reserveFactorMantissa(), newReserveFactor);
+
+        vm.prank(getAdmin());
+        pWETH.setReserveFactor(10e16);
+
+        assertEq(pWETH.reserveFactorMantissa(), newReserveFactor);
+    }
+}

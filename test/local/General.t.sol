@@ -104,7 +104,7 @@ contract LocalGeneral is TestLocal {
         doRepay(user1, onBehalf, address(pWETH), 0.745e18);
     }
 
-    function testDBRW() public {
+    function testDBRW_Underlying() public {
         address user1 = makeAddr("user1");
         address depositor = makeAddr("depositor");
 
@@ -117,7 +117,20 @@ contract LocalGeneral is TestLocal {
         doWithdrawUnderlying(user1, user1, address(pUSDC), 2000e6);
     }
 
-    function testDBRWBehalf() public {
+    function testDBRW() public {
+        address user1 = makeAddr("user1");
+        address depositor = makeAddr("depositor");
+
+        ///porivde liquidity
+        doDeposit(depositor, depositor, address(pWETH), 1e18);
+
+        doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
+        doBorrow(user1, user1, address(pWETH), 0.745e18);
+        doRepay(user1, user1, address(pWETH), 0.745e18);
+        doWithdraw(user1, user1, address(pUSDC), 2000e6);
+    }
+
+    function testDBRWBehalf_Underlying() public {
         address user1 = makeAddr("user1");
         address depositor = makeAddr("depositor");
         address onBehalf = makeAddr("onBehalf");
@@ -134,6 +147,25 @@ contract LocalGeneral is TestLocal {
         doDelegate(onBehalf, user1, pUSDC, true);
 
         doWithdrawUnderlying(user1, onBehalf, address(pUSDC), 2000e6);
+    }
+
+    function testDBRWBehalf() public {
+        address user1 = makeAddr("user1");
+        address depositor = makeAddr("depositor");
+        address onBehalf = makeAddr("onBehalf");
+
+        ///porivde liquidity
+        doDeposit(depositor, depositor, address(pWETH), 1e18);
+
+        doDepositAndEnter(onBehalf, onBehalf, address(pUSDC), 2000e6);
+        doBorrow(onBehalf, onBehalf, address(pWETH), 0.745e18);
+        doRepay(onBehalf, onBehalf, address(pWETH), 0.745e18);
+        // "DelegateNotAllowed()" selector
+        doWithdrawRevert(user1, onBehalf, address(pUSDC), 2000e6, 0xf0f402cc);
+
+        doDelegate(onBehalf, user1, pUSDC, true);
+
+        doWithdraw(user1, onBehalf, address(pUSDC), 2000e6);
     }
 
     function testDBL() public {

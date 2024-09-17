@@ -132,6 +132,13 @@ contract TestDeploy is TestSetters {
 
         vm.stopPrank();
 
+        assertEq(IPToken(_pToken).decimals(), pTokenDecimals);
+        assertEq(
+            keccak256(abi.encodePacked(IPToken(_pToken).symbol())),
+            keccak256(abi.encodePacked(initData.symbol))
+        );
+        assertEq(IPToken(_pToken).borrowIndex(), initData.initialExchangeRate);
+
         return _pToken;
     }
 
