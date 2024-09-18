@@ -10,7 +10,7 @@ contract TestStructs {
         address tokenAddress;
         uint256 amount;
         bool expectRevert;
-        bytes4 error;
+        bytes error;
         address prankAddress;
         address onBehalfOf;
     }
@@ -58,7 +58,7 @@ contract TestStructs {
         address borrowedPToken;
         uint256 repayAmount;
         bool expectRevert;
-        bytes4 error;
+        bytes error;
     }
 
     struct LiquidationStateData {

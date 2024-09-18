@@ -146,15 +146,6 @@ contract TestHelpers is TestUtilities {
             }
         }
 
-        if (params.expectRevert) {
-            if (getDebug()) {
-                console.log("should revert");
-                console.log("----------------------------------------");
-                console.log("");
-            }
-            return;
-        }
-
         ActionStateData memory afterAction = getActionStateData(
             user, params.onBehalfOf, params.pToken, params.tokenAddress
         );
@@ -213,26 +204,28 @@ contract TestHelpers is TestUtilities {
             IPToken(params.pToken).transfer(params.receiver, params.amount);
         }
 
-        if (params.expectRevert) {
-            if (getDebug()) {
-                console.log("should revert");
-                console.log("----------------------------------------");
-                console.log("");
-            }
-            return;
-        }
-
         uint256 senderBalanceAfter = IPToken(params.pToken).balanceOf(params.onBehalfOf);
         uint256 receiverBalanceAfter = IPToken(params.pToken).balanceOf(params.receiver);
 
-        require(
-            senderBalanceAfter + params.amount == senderBalanceBefore,
-            "Did not transfer ptoken from sender"
-        );
-        require(
-            receiverBalanceBefore + params.amount == receiverBalanceAfter,
-            "Did not transfer ptoken to receiver"
-        );
+        if (!params.expectRevert) {
+            require(
+                senderBalanceAfter + params.amount == senderBalanceBefore,
+                "Did not transfer ptoken from sender"
+            );
+            require(
+                receiverBalanceBefore + params.amount == receiverBalanceAfter,
+                "Did not transfer ptoken to receiver"
+            );
+        } else {
+            require(
+                senderBalanceAfter == senderBalanceBefore,
+                "Did transfer ptoken from sender"
+            );
+            require(
+                receiverBalanceBefore == receiverBalanceAfter,
+                "Did transfer ptoken to receiver"
+            );
+        }
 
         if (getDebug()) {
             console.log("----------------------------------------");
@@ -253,7 +246,7 @@ contract TestHelpers is TestUtilities {
                 tokenAddress: IPToken(pToken).underlying(),
                 amount: amount,
                 expectRevert: false,
-                error: bytes4(0),
+                error: "",
                 prankAddress: prankAddress,
                 onBehalfOf: onBehalfOf
             })
@@ -273,7 +266,7 @@ contract TestHelpers is TestUtilities {
                 tokenAddress: IPToken(pToken).underlying(),
                 amount: amount,
                 expectRevert: false,
-                error: bytes4(0),
+                error: "",
                 prankAddress: prankAddress,
                 onBehalfOf: onBehalfOf
             })
@@ -286,7 +279,7 @@ contract TestHelpers is TestUtilities {
         address onBehalfOf,
         address pToken,
         uint256 amount,
-        bytes4 err
+        bytes memory err
     ) public {
         doAction(
             ActionParameters({
@@ -315,7 +308,7 @@ contract TestHelpers is TestUtilities {
                 tokenAddress: IPToken(pToken).underlying(),
                 amount: amount,
                 expectRevert: false,
-                error: bytes4(0),
+                error: "",
                 prankAddress: prankAddress,
                 onBehalfOf: onBehalfOf
             })
@@ -327,7 +320,7 @@ contract TestHelpers is TestUtilities {
         address onBehalfOf,
         address pToken,
         uint256 amount,
-        bytes4 err
+        bytes memory err
     ) public {
         doAction(
             ActionParameters({
@@ -356,7 +349,7 @@ contract TestHelpers is TestUtilities {
                 tokenAddress: IPToken(pToken).underlying(),
                 amount: amount,
                 expectRevert: false,
-                error: bytes4(0),
+                error: "",
                 prankAddress: prankAddress,
                 onBehalfOf: onBehalfOf
             })
@@ -368,7 +361,7 @@ contract TestHelpers is TestUtilities {
         address onBehalfOf,
         address pToken,
         uint256 amount,
-        bytes4 err
+        bytes memory err
     ) public {
         doAction(
             ActionParameters({
@@ -397,7 +390,7 @@ contract TestHelpers is TestUtilities {
                 tokenAddress: IPToken(pToken).underlying(),
                 amount: amount,
                 expectRevert: false,
-                error: bytes4(0),
+                error: "",
                 prankAddress: prankAddress,
                 onBehalfOf: onBehalfOf
             })
@@ -409,7 +402,7 @@ contract TestHelpers is TestUtilities {
         address onBehalfOf,
         address pToken,
         uint256 amount,
-        bytes4 err
+        bytes memory err
     ) public {
         doAction(
             ActionParameters({
@@ -438,7 +431,7 @@ contract TestHelpers is TestUtilities {
                 tokenAddress: IPToken(pToken).underlying(),
                 amount: amount,
                 expectRevert: false,
-                error: bytes4(0),
+                error: "",
                 prankAddress: prankAddress,
                 onBehalfOf: onBehalfOf
             })
@@ -450,7 +443,7 @@ contract TestHelpers is TestUtilities {
         address onBehalfOf,
         address pToken,
         uint256 amount,
-        bytes4 err
+        bytes memory err
     ) public {
         doAction(
             ActionParameters({

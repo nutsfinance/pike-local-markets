@@ -72,7 +72,13 @@ contract LocalGeneral is TestLocal {
 
         doDepositAndEnter(onBehalf, onBehalf, address(pUSDC), 2000e6);
         // "DelegateNotAllowed()" selector
-        doBorrowRevert(user1, onBehalf, address(pWETH), 0.745e18, 0xf0f402cc);
+        doBorrowRevert(
+            user1,
+            onBehalf,
+            address(pWETH),
+            0.745e18,
+            abi.encodePacked(bytes4(0xf0f402cc))
+        );
 
         doDelegate(onBehalf, user1, pWETH, true);
 
@@ -142,7 +148,9 @@ contract LocalGeneral is TestLocal {
         doBorrow(onBehalf, onBehalf, address(pWETH), 0.745e18);
         doRepay(onBehalf, onBehalf, address(pWETH), 0.745e18);
         // "DelegateNotAllowed()" selector
-        doWithdrawUnderlyingRevert(user1, onBehalf, address(pUSDC), 2000e6, 0xf0f402cc);
+        doWithdrawUnderlyingRevert(
+            user1, onBehalf, address(pUSDC), 2000e6, abi.encodePacked(bytes4(0xf0f402cc))
+        );
 
         doDelegate(onBehalf, user1, pUSDC, true);
 
@@ -161,7 +169,9 @@ contract LocalGeneral is TestLocal {
         doBorrow(onBehalf, onBehalf, address(pWETH), 0.745e18);
         doRepay(onBehalf, onBehalf, address(pWETH), 0.745e18);
         // "DelegateNotAllowed()" selector
-        doWithdrawRevert(user1, onBehalf, address(pUSDC), 2000e6, 0xf0f402cc);
+        doWithdrawRevert(
+            user1, onBehalf, address(pUSDC), 2000e6, abi.encodePacked(bytes4(0xf0f402cc))
+        );
 
         doDelegate(onBehalf, user1, pUSDC, true);
 
@@ -190,7 +200,7 @@ contract LocalGeneral is TestLocal {
             borrowedPToken: address(pUSDC),
             repayAmount: 725e6,
             expectRevert: false,
-            error: bytes4(0)
+            error: ""
         });
 
         doLiquidate(lp);
