@@ -59,7 +59,10 @@ contract LocalGeneral is TestLocal {
         doDeposit(depositor, depositor, address(pWETH), 1e18);
 
         doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
+        // base rate per second 475646879
+        assertEq(pWETH.borrowRatePerSecond(), 475_646_879, "Invalid rate per second");
         doBorrow(user1, user1, address(pWETH), 0.745e18);
+        assertNotEq(pWETH.borrowRatePerSecond(), 475_646_879, "Invalid rate per second");
     }
 
     function testDBBehalf() public {

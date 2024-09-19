@@ -188,7 +188,7 @@ contract LocalRiskEngine is TestLocal {
         );
     }
 
-    function testGetMarkets() public {
+    function testGetMarkets() public view {
         IPToken[] memory markets = re.getAllMarkets();
 
         assertEq(address(pUSDC), address(markets[0]));
@@ -196,8 +196,6 @@ contract LocalRiskEngine is TestLocal {
     }
 
     function testDeprecateMarket() public {
-        IPToken[] memory markets = re.getAllMarkets();
-
         vm.startPrank(getAdmin());
         pUSDC.setReserveFactor(1e18);
 
