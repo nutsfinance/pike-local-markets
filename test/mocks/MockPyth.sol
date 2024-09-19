@@ -27,6 +27,10 @@ contract MockPyth is IPyth {
         override
         returns (PythStructs.Price memory)
     {
+        if (price == 0) {
+            revert();
+        }
+
         return PythStructs.Price(price, 0, expo, 0);
     }
 

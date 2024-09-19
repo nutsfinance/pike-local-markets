@@ -119,6 +119,20 @@ contract LocalOracle is TestLocal {
         );
         vm.expectRevert(ChainlinkOracleProvider.StalePrice.selector);
         wethPrice = chainlinkOracleProvider.getPrice(weth);
+
+        // invalid asset
+        vm.expectRevert(ChainlinkOracleProvider.InvalidAsset.selector);
+        chainlinkOracleProvider.setAssetConfig(address(0), wethPriceFeed, 1 hours);
+
+        // invalid feed
+        vm.expectRevert(ChainlinkOracleProvider.InvalidFeed.selector);
+        chainlinkOracleProvider.setAssetConfig(
+            weth, AggregatorV3Interface(address(0)), 1 hours
+        );
+
+        // invalid stale period
+        vm.expectRevert(ChainlinkOracleProvider.InvalidStalePeriod.selector);
+        chainlinkOracleProvider.setAssetConfig(weth, wethPriceFeed, 0);
     }
 
     function testPythOracleProvider() public {
@@ -132,6 +146,14 @@ contract LocalOracle is TestLocal {
         // get weth price
         uint256 wethPrice = pythOracleProvider.getPrice(weth);
         assertEq(wethPrice, 2000e18);
+
+        // invalid asset
+        vm.expectRevert(PythOracleProvider.InvalidAsset.selector);
+        pythOracleProvider.setAssetConfig(address(0), "weth", 1 hours);
+
+        // invalid stale period
+        vm.expectRevert(PythOracleProvider.InvalidMaxStalePeriod.selector);
+        pythOracleProvider.setAssetConfig(weth, "weth", 0);
     }
 
     function testOracleEngine() public {
@@ -146,6 +168,9 @@ contract LocalOracle is TestLocal {
         wethPriceFeed.setRoundData(2002e8, block.timestamp, block.timestamp);
 
         uint256 wethPrice = oracleEngine.getPrice(weth);
+        assertEq(wethPrice, 2002e18);
+
+        wethPrice = oracleEngine.getUnderlyingPrice(pWETH);
         assertEq(wethPrice, 2002e18);
 
         // get fallback if main oracle is down
@@ -180,5 +205,40 @@ contract LocalOracle is TestLocal {
         pyth.setData(4001e8, -8);
         vm.expectRevert(OracleEngine.BoundValidationFailed.selector);
         wethPrice = oracleEngine.getPrice(weth);
+
+        // fallback fails
+        pyth.setData(0, 0);
+        wethPrice = oracleEngine.getPrice(weth);
+        assertEq(wethPrice, 2002e18);
+
+        // main and fallback both fails
+        wethPriceFeed.setRoundData(
+            2002e8, block.timestamp - 2 hours, block.timestamp - 2 hours
+        );
+        vm.expectRevert(OracleEngine.InvalidFallbackOraclePrice.selector);
+        wethPrice = oracleEngine.getPrice(weth);
+
+        // only main is configured and it fails
+        oracleEngine.setAssetConfig(
+            weth, address(chainlinkOracleProvider), address(0), 0, 0
+        );
+        vm.expectRevert(OracleEngine.InvalidMainOraclePrice.selector);
+        wethPrice = oracleEngine.getPrice(weth);
+
+        // invalid bounds
+        vm.expectRevert(OracleEngine.InvalidBounds.selector);
+        oracleEngine.setAssetConfig(
+            weth, address(chainlinkOracleProvider), address(0), 2, 1
+        );
+
+        // invalid main oracle
+        vm.expectRevert(OracleEngine.InvalidMainOracle.selector);
+        oracleEngine.setAssetConfig(weth, address(0), address(0), 0, 0);
+
+        // invalid asset
+        vm.expectRevert(OracleEngine.InvalidAsset.selector);
+        oracleEngine.setAssetConfig(
+            address(0), address(chainlinkOracleProvider), address(0), 0, 0
+        );
     }
 }
