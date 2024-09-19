@@ -48,11 +48,6 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
     error InvalidMaxStalePeriod();
 
     /**
-     * @notice Error emitted when price is invalid
-     */
-    error InvalidPrice();
-
-    /**
      * @notice Contract constructor
      * @param _pyth Pyth oracle address
      */
