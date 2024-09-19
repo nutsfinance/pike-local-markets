@@ -145,7 +145,7 @@ contract LocalOracle is TestLocal {
         );
         wethPriceFeed.setRoundData(2002e8, block.timestamp, block.timestamp);
 
-        uint256 wethPrice = chainlinkOracleProvider.getPrice(weth);
+        uint256 wethPrice = oracleEngine.getPrice(weth);
         assertEq(wethPrice, 2002e18);
 
         // get fallback if main oracle is down
