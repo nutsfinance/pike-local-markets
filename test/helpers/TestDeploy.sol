@@ -236,6 +236,12 @@ contract TestDeploy is TestSetters {
             selectors[i] = bytes4(method.keccak());
             s.split(comma).until(dbquote); // advance s to the next comma
         }
+
+        // retry if no selectors found
+        if (selectors.length == 0) {
+            return generateSelectors(_facetName);
+        }
+
         return selectors;
     }
 }
