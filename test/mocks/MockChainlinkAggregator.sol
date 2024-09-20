@@ -33,7 +33,7 @@ contract MockChainlinkAggregator is AggregatorV3Interface {
         return (0, int256(price), startedAt, updatedAt, 0);
     }
 
-    function getRoundData(uint80 _roundId)
+    function getRoundData(uint80)
         external
         view
         returns (uint80, int256, uint256, uint256, uint80)
@@ -41,11 +41,11 @@ contract MockChainlinkAggregator is AggregatorV3Interface {
         return (0, int256(price), startedAt, updatedAt, 0);
     }
 
-    function description() external view returns (string memory) {
+    function description() external pure returns (string memory) {
         return "ChainlinkAggregator";
     }
 
-    function version() external view returns (uint256) {
+    function version() external pure returns (uint256) {
         return 0;
     }
 }

@@ -12,7 +12,7 @@ contract MockPyth is IPyth {
         expo = _expo;
     }
 
-    function getPriceUnsafe(bytes32 _feed)
+    function getPriceUnsafe(bytes32)
         external
         view
         override
@@ -21,7 +21,7 @@ contract MockPyth is IPyth {
         return PythStructs.Price(price, 0, expo, 0);
     }
 
-    function getPriceNoOlderThan(bytes32 _feed, uint256 _age)
+    function getPriceNoOlderThan(bytes32, uint256)
         external
         view
         override
@@ -34,7 +34,7 @@ contract MockPyth is IPyth {
         return PythStructs.Price(price, 0, expo, 0);
     }
 
-    function getEmaPriceUnsafe(bytes32 _feed)
+    function getEmaPriceUnsafe(bytes32)
         external
         view
         override
@@ -43,7 +43,7 @@ contract MockPyth is IPyth {
         return PythStructs.Price(price, 0, expo, 0);
     }
 
-    function getEmaPriceNoOlderThan(bytes32 _feed, uint256 _age)
+    function getEmaPriceNoOlderThan(bytes32, uint256)
         external
         view
         override

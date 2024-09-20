@@ -105,4 +105,29 @@ contract LocalReserve is TestLocal {
 
         assertEq(pWETH.reserveFactorMantissa(), newReserveFactor);
     }
+
+    function testReserveFactor_FailIfOutOfBound() public {
+        vm.prank(getAdmin());
+        // "SetReserveFactorBoundsCheck()" selector
+        vm.expectRevert(0xe2e441e6);
+        pUSDC.setReserveFactor(10e18);
+    }
+
+    function testReduceReserve_FailIfMoreThanBalance() public {
+        deal(address(pUSDC.underlying()), address(pUSDC), 1e18);
+
+        vm.prank(getAdmin());
+        // "ReduceReservesCashNotAvailable()" selector
+        vm.expectRevert(0x3345e999);
+        pUSDC.reduceReserves(1e18 + 1);
+    }
+
+    function testReduceReserve_FailIfNotValid() public {
+        deal(address(pUSDC.underlying()), address(pUSDC), 1e18);
+
+        vm.prank(getAdmin());
+        // "ReduceReservesCashValidation()" selector
+        vm.expectRevert(0xf1a5300a);
+        pUSDC.reduceReserves(1e18);
+    }
 }
