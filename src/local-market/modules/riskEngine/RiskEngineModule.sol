@@ -327,11 +327,8 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             }
 
             // attempt to add borrower to the market
-            RiskEngineError.Error addErr =
-                addToMarketInternal(IPToken(msg.sender), borrower);
-            if (addErr != RiskEngineError.Error.NO_ERROR) {
-                return uint256(addErr);
-            }
+            // already checked if market is listed
+            addToMarketInternal(IPToken(msg.sender), borrower);
 
             // it should be impossible to break the important invariant
             assert(_getRiskEngineStorage().markets[pToken].accountMembership[borrower]);
