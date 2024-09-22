@@ -12,7 +12,7 @@ import {RBACModule, IRBAC} from "@modules/common/RBACModule.sol";
 import {RiskEngineModule, IRiskEngine} from "@modules/riskEngine/RiskEngineModule.sol";
 import {InterestRateModule} from "@modules/pToken/InterestRateModule.sol";
 import {PTokenModule, IPToken} from "@modules/pToken/PTokenModule.sol";
-import {MockToken} from "@mocks/MockToken.sol";
+import {MockToken, MockReentrantToken} from "@mocks/MockToken.sol";
 import {MockOracle} from "@mocks/MockOracle.sol";
 
 contract TestDeploy is TestSetters {
@@ -34,27 +34,6 @@ contract TestDeploy is TestSetters {
         setOracle(oracle);
 
         address riskEngine = deployRiskEngine();
-
-        vm.startPrank(getAdmin());
-
-        IRBAC(riskEngine).grantPermission(
-            getAdmin(), 0x434f4e464947555241544f520000000000000000000000000000000000000000
-        );
-        IRBAC(riskEngine).grantPermission(
-            getAdmin(), 0x535550504c595f4341505f475541524449414e00000000000000000000000000
-        );
-        IRBAC(riskEngine).grantPermission(
-            getAdmin(), 0x424f52524f575f4341505f475541524449414e00000000000000000000000000
-        );
-        IRBAC(riskEngine).grantPermission(
-            getAdmin(), 0x50415553455f475541524449414e000000000000000000000000000000000000
-        );
-
-        IRiskEngine(riskEngine).setOracle(oracle);
-        IRiskEngine(riskEngine).setCloseFactor(50e16);
-        IRiskEngine(riskEngine).setLiquidationIncentive(1.08e18);
-
-        vm.stopPrank();
     }
 
     function deployPToken(
@@ -63,9 +42,11 @@ contract TestDeploy is TestSetters {
         uint8 underlyingDecimals,
         uint256 price,
         uint256 colFactor,
-        uint256 liqThreshold
+        uint256 liqThreshold,
+        function (string memory, string memory, uint8) internal returns (address)
+            deployUnderlying
     ) internal returns (address) {
-        address underlying = address(new MockToken(name_, symbol_, underlyingDecimals));
+        address underlying = deployUnderlying(name_, symbol_, underlyingDecimals);
 
         IRiskEngine re = IRiskEngine(getRiskEngine());
 
@@ -160,6 +141,27 @@ contract TestDeploy is TestSetters {
         InitialModuleBundle initialModuleBundle = InitialModuleBundle(riskEngine);
         initialModuleBundle.initialize(getAdmin());
 
+        vm.startPrank(getAdmin());
+
+        IRBAC(riskEngine).grantPermission(
+            getAdmin(), 0x434f4e464947555241544f520000000000000000000000000000000000000000
+        );
+        IRBAC(riskEngine).grantPermission(
+            getAdmin(), 0x535550504c595f4341505f475541524449414e00000000000000000000000000
+        );
+        IRBAC(riskEngine).grantPermission(
+            getAdmin(), 0x424f52524f575f4341505f475541524449414e00000000000000000000000000
+        );
+        IRBAC(riskEngine).grantPermission(
+            getAdmin(), 0x50415553455f475541524449414e000000000000000000000000000000000000
+        );
+
+        IRiskEngine(riskEngine).setOracle(getOracle());
+        IRiskEngine(riskEngine).setCloseFactor(50e16);
+        IRiskEngine(riskEngine).setLiquidationIncentive(1.08e18);
+
+        vm.stopPrank();
+
         return riskEngine;
     }
 
@@ -243,5 +245,20 @@ contract TestDeploy is TestSetters {
         }
 
         return selectors;
+    }
+
+    function deployMockToken(string memory name_, string memory symbol_, uint8 decimals_)
+        internal
+        returns (address)
+    {
+        return address(new MockToken(name_, symbol_, decimals_));
+    }
+
+    function deployMockReentrantToken(
+        string memory name_,
+        string memory symbol_,
+        uint8 decimals_
+    ) internal returns (address) {
+        return address(new MockReentrantToken(name_, symbol_, decimals_));
     }
 }

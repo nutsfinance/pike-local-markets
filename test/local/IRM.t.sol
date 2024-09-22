@@ -29,8 +29,8 @@ contract LocalIRM is TestLocal {
         init();
 
         // eth price = 2000$, usdc price = 1$
-        deployPToken("pike-usdc", "pUSDC", 6, 1e6, 74.5e16, 84.5e16);
-        deployPToken("pike-weth", "pWETH", 18, 2000e6, 72.5e16, 82.5e16);
+        deployPToken("pike-usdc", "pUSDC", 6, 1e6, 74.5e16, 84.5e16, deployMockToken);
+        deployPToken("pike-weth", "pWETH", 18, 2000e6, 72.5e16, 82.5e16, deployMockToken);
 
         pUSDC = getPToken("pUSDC");
         pUSDCIRM = getIRM("pUSDC");

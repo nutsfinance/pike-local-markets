@@ -24,8 +24,8 @@ contract LocalGeneral is TestLocal {
         init();
 
         // eth price = 2000$, usdc price = 1$
-        deployPToken("pike-usdc", "pUSDC", 6, 1e6, 74.5e16, 84.5e16);
-        deployPToken("pike-weth", "pWETH", 18, 2000e6, 72.5e16, 82.5e16);
+        deployPToken("pike-usdc", "pUSDC", 6, 1e6, 74.5e16, 84.5e16, deployMockToken);
+        deployPToken("pike-weth", "pWETH", 18, 2000e6, 72.5e16, 82.5e16, deployMockToken);
 
         pUSDC = getPToken("pUSDC");
         pWETH = getPToken("pWETH");
@@ -42,7 +42,13 @@ contract LocalGeneral is TestLocal {
 
     function testD() public {
         address user1 = makeAddr("user1");
-        doDeposit(user1, user1, address(pUSDC), 100e6);
+        doDepositAndEnter(user1, user1, address(pUSDC), 100e6);
+        (, uint256 liquidity,) = re.getAccountLiquidity(user1);
+        (, uint256 borrowLiquidity,) = re.getAccountBorrowLiquidity(user1);
+        // max liquidity to allow liquidation for pUSDC is set to 84.5%
+        assertEq(liquidity, 84.5e18, "Invalid liquidity");
+        // max liquidity to allow borrow for pUSDC is set to 74.5%
+        assertEq(borrowLiquidity, 74.5e18, "Invalid liquidity to borrow");
     }
 
     function testDBehalf() public {
@@ -61,7 +67,20 @@ contract LocalGeneral is TestLocal {
         doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
         // base rate per second 475646879
         assertEq(pWETH.borrowRatePerSecond(), 475_646_879, "Invalid rate per second");
+
+        (, uint256 estimatedLiquidityNeededToBorrow,) =
+            re.getHypotheticalAccountLiquidity(user1, address(pWETH), 0, 0.745e18);
+
+        (, uint256 availableLiquidityToBorrow,) = re.getAccountBorrowLiquidity(user1);
+
+        assertEq(
+            estimatedLiquidityNeededToBorrow,
+            availableLiquidityToBorrow,
+            "Mismatch values"
+        );
+
         doBorrow(user1, user1, address(pWETH), 0.745e18);
+
         assertNotEq(pWETH.borrowRatePerSecond(), 475_646_879, "Invalid rate per second");
     }
 

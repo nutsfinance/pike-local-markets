@@ -2,7 +2,7 @@ pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
-
+import {IRBAC} from "@modules/common/RBACModule.sol";
 import {IPToken, IERC20} from "@interfaces/IPToken.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
@@ -24,8 +24,8 @@ contract LocalRiskEngine is TestLocal {
         init();
 
         // eth price = 2000$, usdc price = 1$
-        deployPToken("pike-usdc", "pUSDC", 6, 1e6, 74.5e16, 84.5e16);
-        deployPToken("pike-weth", "pWETH", 18, 2000e6, 72.5e16, 82.5e16);
+        deployPToken("pike-usdc", "pUSDC", 6, 1e6, 74.5e16, 84.5e16, deployMockToken);
+        deployPToken("pike-weth", "pWETH", 18, 2000e6, 72.5e16, 82.5e16, deployMockToken);
 
         /// eth price = 2000$, usdc price = 1$
         pUSDC = getPToken("pUSDC");
@@ -203,5 +203,328 @@ contract LocalRiskEngine is TestLocal {
         re.setBorrowPaused(pUSDC, true);
 
         assertEq(re.isDeprecated(pUSDC), true, "not deprecated");
+    }
+
+    function testSetCF_FailIfNotListed() public {
+        vm.startPrank(getAdmin());
+
+        // "MarketNotListed()" selector
+        vm.expectRevert(0x69609fc6);
+        re.setCollateralFactor(IPToken(address(0)), 0, 0);
+    }
+
+    function testSetCF_FailIfInvalidCF() public {
+        vm.startPrank(getAdmin());
+
+        // "InvalidCollateralFactor()" selector
+        vm.expectRevert(0xbc8b2b40);
+        re.setCollateralFactor(pUSDC, 1e18, 0);
+
+        // "InvalidLiquidationThreshold()" selector
+        vm.expectRevert(0x3e51d2c0);
+        re.setCollateralFactor(pUSDC, 0, 1e18 + 1);
+
+        // "InvalidLiquidationThreshold()" selector
+        vm.expectRevert(0x3e51d2c0);
+        re.setCollateralFactor(pUSDC, 0.8e18, 0.7e18);
+    }
+
+    function testSupportMarket_FailIfAlreadyListed() public {
+        vm.startPrank(getAdmin());
+
+        // "AlreadyListed()" selector
+        vm.expectRevert(0xa3d582ec);
+        re.supportMarket(pUSDC);
+
+        changeList(address(pUSDC), false);
+
+        // "AlreadyListed()" selector
+        vm.expectRevert(0xa3d582ec);
+        re.supportMarket(pUSDC);
+    }
+
+    function testSetCaps_FailIfNoParity() public {
+        vm.startPrank(getAdmin());
+
+        IPToken[] memory pTokens = new IPToken[](0);
+        uint256[] memory caps = new uint256[](0);
+
+        // "NoArrayParity()" selector
+        vm.expectRevert(0x266c51bb);
+        re.setMarketBorrowCaps(pTokens, caps);
+
+        // "NoArrayParity()" selector
+        vm.expectRevert(0x266c51bb);
+        re.setMarketSupplyCaps(pTokens, caps);
+    }
+
+    function testSetPause_FailIfNotListed() public {
+        vm.startPrank(getAdmin());
+
+        // "MarketNotListed()" selector
+        vm.expectRevert(0x69609fc6);
+        re.setMintPaused(IPToken(address(0)), true);
+
+        // "MarketNotListed()" selector
+        vm.expectRevert(0x69609fc6);
+        re.setBorrowPaused(IPToken(address(0)), true);
+    }
+
+    function testExit_FailIfBorrowed() public {
+        address user1 = makeAddr("user1");
+        address depositor = makeAddr("depositor");
+
+        ///porivde liquidity
+        doDeposit(depositor, depositor, address(pWETH), 1e18);
+
+        doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
+
+        doBorrow(user1, user1, address(pWETH), 0.745e18);
+
+        vm.prank(user1);
+        // "NonZeroBorrowBalance()" selector
+        vm.expectRevert(0xe9b593c4);
+        re.exitMarket(address(pWETH));
+    }
+
+    function testExit_FailIfPriceZero() public {
+        address user1 = makeAddr("user1");
+
+        doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
+
+        mockOracle.setPrice(address(pUSDC), 0, 18);
+
+        vm.prank(user1);
+        // "ExitMarketRedeemRejection(uint256)" selector
+        vm.expectRevert(abi.encodePacked(bytes4(0xf34eff40), uint256(5)));
+        re.exitMarket(address(pUSDC));
+    }
+
+    function testExit_FailIfNotListed() public {
+        address user1 = makeAddr("user1");
+
+        changeList(address(pWETH), false);
+
+        vm.prank(user1);
+        // "ExitMarketRedeemRejection(uint256)" selector
+        vm.expectRevert(abi.encodePacked(bytes4(0xf34eff40), uint256(4)));
+        re.exitMarket(address(pWETH));
+    }
+
+    function testExit_SucessWithoutEnter() public {
+        address user1 = makeAddr("user1");
+
+        doDeposit(user1, user1, address(pUSDC), 2000e6);
+        vm.prank(user1);
+        re.exitMarket(address(pUSDC));
+    }
+
+    function testDelegate_Fail() public {
+        address user1 = makeAddr("user1");
+        address user2 = makeAddr("user2");
+
+        vm.startPrank(user1);
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        re.updateDelegate(address(0), true);
+
+        re.updateDelegate(user2, true);
+
+        // "DelegationStatusUnchanged()" selector
+        vm.expectRevert(0xdb6c2c83);
+        re.updateDelegate(user2, true);
+    }
+
+    function testBorrowAllowed_Fail() public {
+        address user1 = makeAddr("user1");
+        address depositor = makeAddr("depositor");
+
+        ///porivde liquidity
+        doDeposit(depositor, depositor, address(pWETH), 1e18);
+
+        doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
+
+        mockOracle.setPrice(address(pWETH), 0, 18);
+
+        // "BorrowRiskEngineRejection(uint256)" selector
+        doBorrowRevert(
+            user1,
+            user1,
+            address(pWETH),
+            0.745e18,
+            abi.encodePacked(bytes4(0xcd617e38), uint256(5))
+        );
+
+        mockOracle.setPrice(address(pWETH), 2000e6, 18);
+        mockOracle.setPrice(address(pUSDC), 0, 18);
+
+        // "BorrowRiskEngineRejection(uint256)" selector
+        doBorrowRevert(
+            user1,
+            user1,
+            address(pWETH),
+            0.745e18,
+            abi.encodePacked(bytes4(0xcd617e38), uint256(5))
+        );
+
+        changeList(address(pWETH), false);
+
+        // "BorrowRiskEngineRejection(uint256)" selector
+        doBorrowRevert(
+            user1,
+            user1,
+            address(pWETH),
+            0.745e18,
+            abi.encodePacked(bytes4(0xcd617e38), uint256(4))
+        );
+
+        changeList(user1, true);
+
+        vm.prank(address(1));
+        // "SenderNotPToken()" selector
+        vm.expectRevert(0xe6c91dd9);
+        re.borrowAllowed(user1, user1, 0);
+    }
+
+    function testMintAllowed_FailIfNotListed() public {
+        address user1 = makeAddr("user1");
+
+        changeList(address(pUSDC), false);
+
+        // "MintRiskEngineRejection(uint256)" selector
+        doDepositRevert(
+            user1,
+            user1,
+            address(pUSDC),
+            2000e6,
+            abi.encodePacked(bytes4(0x1d3413fb), uint256(4))
+        );
+    }
+
+    function testLiquidateAllowed_Fail() public {
+        address user1 = makeAddr("user1");
+        address depositor = makeAddr("depositor");
+        address liquidator = makeAddr("liquidator");
+
+        ///porivde liquidity
+        doDeposit(depositor, depositor, address(pUSDC), 2000e6);
+
+        doDepositAndEnter(user1, user1, address(pWETH), 1e18);
+        doBorrow(user1, user1, address(pUSDC), 1450e6);
+
+        // "LiquidateRiskEngineRejection(uint256)" selector
+        LiquidationParams memory lp = LiquidationParams({
+            prankAddress: liquidator,
+            userToLiquidate: user1,
+            collateralPToken: address(pWETH),
+            borrowedPToken: address(pUSDC),
+            repayAmount: 726e6,
+            expectRevert: true,
+            error: abi.encodePacked(bytes4(0xd1192049), uint256(2))
+        });
+        doLiquidate(lp);
+
+        // 1450 / 0.825(weth liq threshold) = 1757.57 is liquidation threshold price for collateral
+
+        mockOracle.setPrice(address(pWETH), 1757e6, 18);
+        // "LiquidateRiskEngineRejection(uint256)" selector
+        lp = LiquidationParams({
+            prankAddress: liquidator,
+            userToLiquidate: user1,
+            collateralPToken: address(pWETH),
+            borrowedPToken: address(pUSDC),
+            repayAmount: 726e6,
+            expectRevert: true,
+            error: abi.encodePacked(bytes4(0xd1192049), uint256(6))
+        });
+        doLiquidate(lp);
+
+        // deprecate pUSDC
+        vm.startPrank(getAdmin());
+        pUSDC.setReserveFactor(1e18);
+        re.setCollateralFactor(pUSDC, 0, 0);
+        re.setBorrowPaused(pUSDC, true);
+        vm.stopPrank();
+
+        // "RepayMoreThanBorrowed()" selector
+        lp = LiquidationParams({
+            prankAddress: liquidator,
+            userToLiquidate: user1,
+            collateralPToken: address(pWETH),
+            borrowedPToken: address(pUSDC),
+            repayAmount: 1451e6,
+            expectRevert: true,
+            error: abi.encodePacked(bytes4(0x6b48cf42))
+        });
+        doLiquidate(lp);
+    }
+
+    function testSeizeAllowed_Fail() public {
+        address user1 = makeAddr("user1");
+        address depositor = makeAddr("depositor");
+        address liquidator = makeAddr("liquidator");
+
+        ///porivde liquidity
+        doDeposit(depositor, depositor, address(pUSDC), 2000e6);
+
+        doDepositAndEnter(user1, user1, address(pWETH), 1e18);
+        doBorrow(user1, user1, address(pUSDC), 1450e6);
+
+        address mockRE = deployRiskEngine();
+        vm.prank(getAdmin());
+        pWETH.setRiskEngine(IRiskEngine(mockRE));
+
+        // 1450 / 0.825(weth liq threshold) = 1757.57 is liquidation threshold price for collateral
+
+        mockOracle.setPrice(address(pWETH), 1757e6, 18);
+        // "LiquidateSeizeRiskEngineRejection(uint256)" selector
+        LiquidationParams memory lp = LiquidationParams({
+            prankAddress: liquidator,
+            userToLiquidate: user1,
+            collateralPToken: address(pWETH),
+            borrowedPToken: address(pUSDC),
+            repayAmount: 725e6,
+            expectRevert: true,
+            error: abi.encodePacked(bytes4(0x995a5edc), uint256(4))
+        });
+        doLiquidate(lp);
+
+        vm.startPrank(getAdmin());
+        IRiskEngine(mockRE).supportMarket(pWETH);
+        IRiskEngine(mockRE).supportMarket(pUSDC);
+        vm.stopPrank();
+
+        // "LiquidateSeizeRiskEngineRejection(uint256)" selector
+        lp = LiquidationParams({
+            prankAddress: liquidator,
+            userToLiquidate: user1,
+            collateralPToken: address(pWETH),
+            borrowedPToken: address(pUSDC),
+            repayAmount: 725e6,
+            expectRevert: true,
+            error: abi.encodePacked(bytes4(0x995a5edc), uint256(1))
+        });
+        doLiquidate(lp);
+    }
+
+    function testRedeemAllowed_Fail() public {
+        // "InvalidRedeemTokens()" selector
+        vm.expectRevert(0xfe91e15d);
+        re.redeemVerify(1, 0);
+    }
+
+    function testAddToMarket_Fail() public {
+        address user1 = makeAddr("user1");
+
+        doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
+        enterMarket(user1, address(pUSDC));
+
+        address[] memory markets = new address[](1);
+        markets[0] = address(0);
+
+        vm.prank(user1);
+        uint256[] memory results = re.enterMarkets(markets);
+        // market not listed error code = 4
+        assertEq(results[0], 4);
     }
 }

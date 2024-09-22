@@ -564,4 +564,16 @@ contract TestHelpers is TestUtilities {
             console.log("");
         }
     }
+
+    function changeList(address pToken, bool approved) public {
+        // markets mapping slot with pToken as key
+        bytes32 slot = keccak256(
+            abi.encode(
+                pToken, 0x045c767dd6aa575c77a2f8d1bda11e214b14b47092bcc4f410a939f824586804
+            )
+        );
+        vm.store(
+            address(getRiskEngine()), slot, approved ? bytes32(uint256(1)) : bytes32(0)
+        );
+    }
 }

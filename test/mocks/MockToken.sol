@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {IPToken} from "@interfaces/IPToken.sol";
 
 contract MockToken is ERC20 {
     uint8 private _decimals;
@@ -22,5 +23,20 @@ contract MockToken is ERC20 {
 
     function burn(address from, uint256 amount) external {
         _burn(from, amount);
+    }
+}
+
+contract MockReentrantToken is MockToken {
+    constructor(string memory name, string memory symbol, uint8 decimals_)
+        MockToken(name, symbol, decimals_)
+    {}
+
+    function transferFrom(address from, address to, uint256 value)
+        public
+        override
+        returns (bool)
+    {
+        IPToken(msg.sender).mint(0);
+        return true;
     }
 }

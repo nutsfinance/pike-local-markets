@@ -27,8 +27,8 @@ contract LocalPToken is TestLocal {
         init();
 
         // eth price = 2000$, usdc price = 1$
-        deployPToken("pike-usdc", "pUSDC", 6, 1e6, 74.5e16, 84.5e16);
-        deployPToken("pike-weth", "pWETH", 18, 2000e6, 72.5e16, 82.5e16);
+        deployPToken("pike-usdc", "pUSDC", 6, 1e6, 74.5e16, 84.5e16, deployMockToken);
+        deployPToken("pike-weth", "pWETH", 18, 2000e6, 72.5e16, 82.5e16, deployMockToken);
 
         /// eth price = 2000$, usdc price = 1$
         pUSDC = getPToken("pUSDC");
@@ -157,14 +157,7 @@ contract LocalPToken is TestLocal {
         doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
         doBorrow(user1, user1, address(pWETH), 0.745e18);
 
-        // markets mapping slot with pWETH as key
-        bytes32 slot = keccak256(
-            abi.encode(
-                address(pWETH),
-                0x045c767dd6aa575c77a2f8d1bda11e214b14b47092bcc4f410a939f824586804
-            )
-        );
-        vm.store(address(re), slot, bytes32(0));
+        changeList(address(pWETH), false);
 
         //"RepayBorrowRiskEngineRejection(uint256)" selector
         doRepayRevert(
@@ -191,14 +184,7 @@ contract LocalPToken is TestLocal {
 
         mockOracle.setPrice(address(pWETH), 1757e6, 18);
 
-        // markets mapping slot with pWETH as key
-        bytes32 slot = keccak256(
-            abi.encode(
-                address(pWETH),
-                0x045c767dd6aa575c77a2f8d1bda11e214b14b47092bcc4f410a939f824586804
-            )
-        );
-        vm.store(address(re), slot, bytes32(0));
+        changeList(address(pWETH), false);
 
         //"LiquidateRiskEngineRejection(uint256)" selector
         LiquidationParams memory lp = LiquidationParams({
@@ -217,7 +203,6 @@ contract LocalPToken is TestLocal {
     function testLiquidate_FailIfBorrowerIsLiquidator() public {
         address user1 = makeAddr("user1");
         address depositor = makeAddr("depositor");
-        address liquidator = makeAddr("liquidator");
 
         ///porivde liquidity
         doDeposit(depositor, depositor, address(pUSDC), 2000e6);
@@ -300,5 +285,17 @@ contract LocalPToken is TestLocal {
         });
 
         doLiquidate(lp);
+    }
+
+    function testDeposit_FailIfReenter() public {
+        address depositor = makeAddr("depositor");
+
+        address pReenter = deployPToken(
+            "pike-usdc", "pUSDC", 6, 1e6, 74.5e16, 84.5e16, deployMockReentrantToken
+        );
+        // "ReentrancyGuardReentrantCall()" selector
+        doDepositRevert(
+            depositor, depositor, pReenter, 2000e6, abi.encodePacked(bytes4(0x3ee5aeb5))
+        );
     }
 }
