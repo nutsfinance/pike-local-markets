@@ -22,7 +22,7 @@ contract LocalPToken is TestLocal {
     IRiskEngine re;
 
     function setUp() public {
-        setDebug(false);
+        setDebug(true);
         setAdmin(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
         init();
 

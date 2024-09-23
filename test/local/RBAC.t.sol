@@ -24,7 +24,7 @@ contract LocalRBAC is TestLocal {
     IRiskEngine re;
 
     function setUp() public {
-        setDebug(false);
+        setDebug(true);
         setAdmin(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
         init();
 
@@ -43,31 +43,56 @@ contract LocalRBAC is TestLocal {
         vm.prank(getAdmin());
         // "AlreadyGranted()" selector
         vm.expectRevert(0x87b38f77);
-        IRBAC(address(re)).grantPermission(getAdmin(), configurator_premission);
+        IRBAC(address(re)).grantPermission(getAdmin(), configurator_permission);
+    }
+
+    function testGrant_FailIfInvalidPermission() public {
+        vm.prank(getAdmin());
+        // "InvalidPermission()" selector
+        vm.expectRevert(0x868a64de);
+        IRBAC(address(re)).grantPermission(getAdmin(), bytes32(0));
+    }
+
+    function testGrant_FailIfNotOwner() public {
+        vm.prank(address(1));
+        // "Unauthorized(address)" selector
+        vm.expectRevert(abi.encodePacked(bytes4(0x8e4a23d6), abi.encode(address(1))));
+        IRBAC(address(re)).grantPermission(getAdmin(), bytes32(0));
+    }
+
+    function testAction_FailIfNotPermissioned() public {
+        vm.prank(address(1));
+        // "PermissionDenied(address,bytes32)" selector
+        vm.expectRevert(
+            abi.encodePacked(
+                bytes4(0x736eb895), abi.encode(address(1), pause_guard_permission)
+            )
+        );
+        re.setMintPaused(pWETH, true);
     }
 
     function testRevoke_Success() public {
         vm.prank(getAdmin());
-        IRBAC(address(re)).revokePermission(getAdmin(), configurator_premission);
+        IRBAC(address(re)).revokePermission(getAdmin(), configurator_permission);
 
         assertEq(
-            IRBAC(address(re)).hasPermission(getAdmin(), configurator_premission),
+            IRBAC(address(re)).hasPermission(getAdmin(), configurator_permission),
             false,
             "invalid permission"
         );
 
         // "ZeroAddress()" selector
         vm.expectRevert(0xd92e233d);
-        IRBAC(address(re)).hasPermission(address(0), configurator_premission);
+        IRBAC(address(re)).hasPermission(address(0), configurator_permission);
     }
 
     function testRevoke_FailIfAlreadyRevoked() public {
         vm.startPrank(getAdmin());
-        IRBAC(address(re)).revokePermission(getAdmin(), configurator_premission);
+        IRBAC(address(re)).revokePermission(getAdmin(), configurator_permission);
 
         // "AlreadyRevoked()" selector
         vm.expectRevert(0x905e7107);
-        IRBAC(address(re)).revokePermission(getAdmin(), configurator_premission);
+        IRBAC(address(re)).revokePermission(getAdmin(), configurator_permission);
     }
 
     function testRenounce_Success() public {
