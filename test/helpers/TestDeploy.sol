@@ -18,6 +18,18 @@ import {MockOracle} from "@mocks/MockOracle.sol";
 contract TestDeploy is TestSetters {
     using strings for *;
 
+    bytes32 constant configurator_premission =
+        0x434f4e464947555241544f520000000000000000000000000000000000000000;
+
+    bytes32 constant supply_guard_premission =
+        0x535550504c595f4341505f475541524449414e00000000000000000000000000;
+
+    bytes32 constant borrow_guard_premission =
+        0x424f52524f575f4341505f475541524449414e00000000000000000000000000;
+
+    bytes32 constant pause_guard_premission =
+        0x50415553455f475541524449414e000000000000000000000000000000000000;
+
     uint256 initialExchangeRate = 1e18;
     uint256 reserveFactor = 5e16;
     uint256 protocolSeizeShare = 1e16;
@@ -143,18 +155,10 @@ contract TestDeploy is TestSetters {
 
         vm.startPrank(getAdmin());
 
-        IRBAC(riskEngine).grantPermission(
-            getAdmin(), 0x434f4e464947555241544f520000000000000000000000000000000000000000
-        );
-        IRBAC(riskEngine).grantPermission(
-            getAdmin(), 0x535550504c595f4341505f475541524449414e00000000000000000000000000
-        );
-        IRBAC(riskEngine).grantPermission(
-            getAdmin(), 0x424f52524f575f4341505f475541524449414e00000000000000000000000000
-        );
-        IRBAC(riskEngine).grantPermission(
-            getAdmin(), 0x50415553455f475541524449414e000000000000000000000000000000000000
-        );
+        IRBAC(riskEngine).grantPermission(getAdmin(), configurator_premission);
+        IRBAC(riskEngine).grantPermission(getAdmin(), supply_guard_premission);
+        IRBAC(riskEngine).grantPermission(getAdmin(), borrow_guard_premission);
+        IRBAC(riskEngine).grantPermission(getAdmin(), pause_guard_premission);
 
         IRiskEngine(riskEngine).setOracle(getOracle());
         IRiskEngine(riskEngine).setCloseFactor(50e16);

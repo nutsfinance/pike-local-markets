@@ -17,7 +17,7 @@ contract OwnableModule is IOwnable, OwnableMixin {
         Ownable2StepStorage storage data = _getOwnableStorage();
 
         if (data.pendingOwner != msg.sender) {
-            revert NotNominated(msg.sender);
+            revert NotNominated();
         }
 
         data.pendingOwner = address(0);
