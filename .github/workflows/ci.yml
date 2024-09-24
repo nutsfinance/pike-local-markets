@@ -53,3 +53,37 @@ jobs:
         run: |
           yarn test
         id: test
+  coverage:
+    name: Coverage Badge
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'early-stage') }}
+
+    env:
+      GIST_SECRET: ${{ secrets.GIST_SECRET }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up environment
+        uses: ./.github/setup
+
+      - name: Extract coverage value
+        id: extract_coverage
+        run: |
+          coverage_output=$(forge coverage --match-contract Local -vv --no-match-coverage "(script|test|node_modules)")
+          line_coverage=$(echo "$coverage_output" | awk '/^\| Total/ {print $4}')
+          echo "value=${line_coverage}" >> $GITHUB_OUTPUT
+
+      - name: Update code coverage badge JSON gist
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ env.GIST_SECRET }}
+          gistID: 76be8eb437f8ba3a2f6b2ee5b7de9eb9
+          filename: Pike_local_market_line_coverage.json
+          label: Line Coverage
+          message: ${{ steps.extract_coverage.outputs.value }}
+          namedLogo: jest
+          color: green
+          logoColor: lightblue
