@@ -18,7 +18,7 @@ contract TestHelpers is TestUtilities {
         Action action = Action(params.action);
 
         if (getDebug()) {
-            console.log("-[User %s]--------------", user);
+            console.log("-[User %s]--------------", params.onBehalfOf);
         }
 
         if (action == Action.SUPPLY || action == Action.REPAY) {
@@ -172,7 +172,7 @@ contract TestHelpers is TestUtilities {
         vm.deal(user, 1 ether);
 
         if (getDebug()) {
-            console.log("-[User %s]--------------", user);
+            console.log("-[User %s]--------------", params.onBehalfOf);
         }
 
         uint256 senderBalanceBefore = IPToken(params.pToken).balanceOf(params.onBehalfOf);
@@ -271,7 +271,7 @@ contract TestHelpers is TestUtilities {
                 onBehalfOf: onBehalfOf
             })
         );
-        enterMarket(prankAddress, pToken);
+        enterMarket(onBehalfOf, pToken);
     }
 
     function doDepositRevert(
@@ -575,5 +575,23 @@ contract TestHelpers is TestUtilities {
         vm.store(
             address(getRiskEngine()), slot, approved ? bytes32(uint256(1)) : bytes32(0)
         );
+    }
+
+    function setTotalReserves(address pToken, uint256 totalReserves) public {
+        // totalReserves slot
+        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0b;
+        vm.store(pToken, slot, bytes32(totalReserves));
+    }
+
+    function setTotalBorrows(address pToken, uint256 totalBorrows) public {
+        // totalBorrows slot
+        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0a;
+        vm.store(pToken, slot, bytes32(totalBorrows));
+    }
+
+    function setPTokenTotalSupply(address pToken, uint256 totalSupply) public {
+        // totalSupply slot
+        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0c;
+        vm.store(pToken, slot, bytes32(totalSupply));
     }
 }

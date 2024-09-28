@@ -12,8 +12,6 @@ import {TestDeploy} from "@helpers/TestDeploy.sol";
 contract TestUtilities is TestDeploy {
     uint256 constant ONE_MANTISSA = 1e18;
     uint256 constant SECONDS_PER_YEAR = 31_536_000;
-    uint256 constant liquidationPenalty = 5e16; //5%
-    uint256 constant liquidationIncentive = 108e18; //10%
 
     function getActionStateData(
         address user,
@@ -140,9 +138,10 @@ contract TestUtilities is TestDeploy {
                         == afterData.pTokenData.totalCash,
                     "Did not transfer token to pToken"
                 );
-                require(
-                    beforeData.userData.collateral + mintTokens
-                        == afterData.userData.collateral,
+                assertApproxEqRel(
+                    beforeData.userData.collateral + amount,
+                    afterData.userData.collateral,
+                    1e12, // ± 0.0001000000000000%
                     "Did not deposit in pToken"
                 );
                 require(

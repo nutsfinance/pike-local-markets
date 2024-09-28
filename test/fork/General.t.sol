@@ -29,7 +29,7 @@ contract ForkGeneral is TestFork {
 
     function testD() public {
         address user1 = makeAddr("user1");
-        setDebug(true);
+        setDebug(false);
         doDeposit(user1, user1, address(pUSDC), 100e6);
     }
 }

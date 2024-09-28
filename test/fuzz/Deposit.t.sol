@@ -1,0 +1,85 @@
+pragma solidity 0.8.20;
+
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "forge-std/Test.sol";
+
+import {IPToken, IERC20} from "@interfaces/IPToken.sol";
+import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
+import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
+import {TestFuzz} from "@helpers/TestFuzz.sol";
+
+import {MockOracle} from "@mocks/MockOracle.sol";
+
+contract FuzzDeposit is TestFuzz {
+    IPToken pUSDC;
+    IPToken pWETH;
+
+    MockOracle mockOracle;
+
+    IRiskEngine re;
+
+    function setUp() public {
+        setDebug(false);
+        setAdmin(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
+        init();
+
+        // eth price = 2000$, usdc price = 1$
+        deployPToken("pike-usdc", "pUSDC", 6, 1e6, 74.5e16, 84.5e16, deployMockToken);
+        deployPToken("pike-weth", "pWETH", 18, 2000e6, 72.5e16, 82.5e16, deployMockToken);
+
+        pUSDC = getPToken("pUSDC");
+        pWETH = getPToken("pWETH");
+        re = getRiskEngine();
+        mockOracle = MockOracle(re.oracle());
+    }
+
+    function testFuzz_deposit(
+        address depositor,
+        address onBehalfOf,
+        uint256 underlyingToDeposit,
+        uint256 pTokenTotalSupply,
+        uint256 totalBorrows,
+        uint256 cash
+    ) public {
+        vm.assume(
+            depositor != address(pUSDC) && depositor != address(this)
+                && depositor != address(pWETH) && depositor != address(re)
+                && depositor != address(0)
+        );
+        vm.assume(
+            onBehalfOf != address(pUSDC) && onBehalfOf != address(this)
+                && onBehalfOf != address(pWETH) && onBehalfOf != address(re)
+                && onBehalfOf != address(0)
+        );
+
+        underlyingToDeposit = bound(underlyingToDeposit, 10e6, 1e15);
+        cash = bound(cash, 10e6, 1e15);
+        totalBorrows = bound(totalBorrows, 10e6, 1e15);
+        pTokenTotalSupply = bound(pTokenTotalSupply, 10e6, (totalBorrows + cash));
+
+        vm.assume((cash + totalBorrows) / pTokenTotalSupply < 8);
+
+        setPTokenTotalSupply(address(pUSDC), pTokenTotalSupply);
+        setTotalBorrows(address(pUSDC), totalBorrows);
+        deal(address(pUSDC.underlying()), address(pUSDC), cash);
+
+        doDepositAndEnter(depositor, onBehalfOf, address(pUSDC), underlyingToDeposit);
+
+        (, uint256 liquidity,) = re.getAccountLiquidity(onBehalfOf);
+        (, uint256 borrowLiquidity,) = re.getAccountBorrowLiquidity(onBehalfOf);
+        // max liquidity to allow liquidation for pUSDC is set to 84.5%
+        assertApproxEqRel(
+            liquidity,
+            84.5e10 * underlyingToDeposit,
+            1e12, // ± 0.0001000000000000%
+            "Invalid liquidity"
+        );
+        // max liquidity to allow borrow for pUSDC is set to 74.5%
+        assertApproxEqRel(
+            borrowLiquidity,
+            74.5e10 * underlyingToDeposit,
+            1e12, // ± 0.0001000000000000%
+            "Invalid liquidity to borrow"
+        );
+    }
+}

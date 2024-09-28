@@ -24,7 +24,7 @@ contract LocalIRM is TestLocal {
     IRiskEngine re;
 
     function setUp() public {
-        setDebug(true);
+        setDebug(false);
         setAdmin(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
         init();
 
