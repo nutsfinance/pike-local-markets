@@ -13,6 +13,11 @@ import {CommonError} from "@errors/CommonError.sol";
 import {PTokenError} from "@errors/PTokenError.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
 
+/**
+ * @title Pike Markets PToken Contract
+ * @notice ERC20 Compatible PTokens
+ * @author NUTS Finance (hello@pike.finance)
+ */
 contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     using ExponentialNoError for ExponentialNoError.Exp;
     using ExponentialNoError for uint256;

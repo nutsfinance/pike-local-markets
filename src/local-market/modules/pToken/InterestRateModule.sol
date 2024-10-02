@@ -6,6 +6,10 @@ import {InterestRateStorage} from "@storage/InterestRateStorage.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
 
+/**
+ * @title Pike Markets InterestRateModule Contract
+ * @author NUTS Finance (hello@pike.finance)
+ */
 contract InterestRateModule is IInterestRateModel, InterestRateStorage, OwnableMixin {
     /**
      * @notice Initialize an interest rate model
