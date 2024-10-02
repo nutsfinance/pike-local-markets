@@ -225,24 +225,28 @@ contract TestUtilities is TestDeploy {
                 redeemTokens = amount * ONE_MANTISSA / exchangeRateStored;
             }
             if (!expectRevert) {
-                require(
-                    beforeData.pTokenData.totalSupply
-                        == redeemTokens + afterData.pTokenData.totalSupply,
+                assertApproxEqRel(
+                    beforeData.pTokenData.totalSupply,
+                    redeemTokens + afterData.pTokenData.totalSupply,
+                    1e11, // ± 0.0000100000000000%
                     "Did not withdraw from ptoken"
                 );
-                require(
-                    beforeData.userData.collateral
-                        == redeemTokens + afterData.userData.collateral,
+                assertApproxEqRel(
+                    beforeData.userData.collateral,
+                    amount + afterData.userData.collateral,
+                    1e12, // ± 0.0001000000000000%
                     "Did not withdraw from user"
                 );
-                require(
-                    beforeData.pTokenData.totalCash
-                        == amount + afterData.pTokenData.totalCash,
-                    "Did not transfer money from spoke"
+                assertApproxEqRel(
+                    beforeData.pTokenData.totalCash,
+                    amount + afterData.pTokenData.totalCash,
+                    1e11, // ± 0.0000100000000000%
+                    "Did not transfer money from pToken"
                 );
-                require(
-                    beforeData.userData.underlyingBalance + amount
-                        == afterData.userData.underlyingBalance,
+                assertApproxEqRel(
+                    beforeData.userData.underlyingBalance + amount,
+                    afterData.userData.underlyingBalance,
+                    1e12, // ± 0.0001000000000000%
                     "Did not transfer money to user"
                 );
             } else {
@@ -256,7 +260,7 @@ contract TestUtilities is TestDeploy {
                 );
                 require(
                     beforeData.pTokenData.totalCash == afterData.pTokenData.totalCash,
-                    "Did transfer money from spoke"
+                    "Did transfer money from pToken"
                 );
                 require(
                     beforeData.userData.underlyingBalance

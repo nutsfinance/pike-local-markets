@@ -13,10 +13,16 @@ import {MockOracle} from "@mocks/MockOracle.sol";
 contract FuzzDeposit is TestFuzz {
     IPToken pUSDC;
     IPToken pWETH;
+    IRiskEngine re;
 
     MockOracle mockOracle;
 
-    IRiskEngine re;
+    address depositor;
+    address onBehalfOf;
+    uint256 underlyingToDeposit;
+    uint256 pTokenTotalSupply;
+    uint256 totalBorrows;
+    uint256 cash;
 
     function setUp() public {
         setDebug(false);
@@ -33,14 +39,21 @@ contract FuzzDeposit is TestFuzz {
         mockOracle = MockOracle(re.oracle());
     }
 
-    function testFuzz_deposit(
-        address depositor,
-        address onBehalfOf,
-        uint256 underlyingToDeposit,
-        uint256 pTokenTotalSupply,
-        uint256 totalBorrows,
-        uint256 cash
-    ) public {
+    function testFuzz_deposit(address[2] memory addresses, uint256[4] memory amounts)
+        public
+    {
+        depositor = addresses[0];
+        onBehalfOf = addresses[1];
+        underlyingToDeposit = amounts[0];
+        pTokenTotalSupply = amounts[1];
+        totalBorrows = amounts[2];
+        cash = amounts[3];
+
+        underlyingToDeposit = bound(underlyingToDeposit, 10e6, 1e15);
+        cash = bound(cash, 10e6, 1e15);
+        totalBorrows = bound(totalBorrows, 10e6, 1e15);
+        pTokenTotalSupply = bound(pTokenTotalSupply, 10e6, (totalBorrows + cash));
+
         vm.assume(
             depositor != address(pUSDC) && depositor != address(this)
                 && depositor != address(pWETH) && depositor != address(re)
@@ -51,12 +64,6 @@ contract FuzzDeposit is TestFuzz {
                 && onBehalfOf != address(pWETH) && onBehalfOf != address(re)
                 && onBehalfOf != address(0)
         );
-
-        underlyingToDeposit = bound(underlyingToDeposit, 10e6, 1e15);
-        cash = bound(cash, 10e6, 1e15);
-        totalBorrows = bound(totalBorrows, 10e6, 1e15);
-        pTokenTotalSupply = bound(pTokenTotalSupply, 10e6, (totalBorrows + cash));
-
         vm.assume((cash + totalBorrows) / pTokenTotalSupply < 8);
 
         setPTokenTotalSupply(address(pUSDC), pTokenTotalSupply);
