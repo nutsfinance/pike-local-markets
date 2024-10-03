@@ -54,16 +54,8 @@ contract FuzzDeposit is TestFuzz {
         totalBorrows = bound(totalBorrows, 10e6, 1e15);
         pTokenTotalSupply = bound(pTokenTotalSupply, 10e6, (totalBorrows + cash));
 
-        vm.assume(
-            depositor != address(pUSDC) && depositor != address(this)
-                && depositor != address(pWETH) && depositor != address(re)
-                && depositor != address(0)
-        );
-        vm.assume(
-            onBehalfOf != address(pUSDC) && onBehalfOf != address(this)
-                && onBehalfOf != address(pWETH) && onBehalfOf != address(re)
-                && onBehalfOf != address(0)
-        );
+        vm.assume(depositor != address(pUSDC) && depositor != address(0));
+        vm.assume(onBehalfOf != address(pUSDC) && onBehalfOf != address(0));
         vm.assume((cash + totalBorrows) / pTokenTotalSupply < 8);
 
         setPTokenTotalSupply(address(pUSDC), pTokenTotalSupply);

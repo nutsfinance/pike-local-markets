@@ -17,7 +17,7 @@ contract FuzzWithdraw is TestFuzz {
 
     MockOracle mockOracle;
 
-    address depositor;
+    address withdrawer;
     address onBehalfOf;
     uint256 underlyingToDeposit;
     uint256 underlyingToWithdraw;
@@ -45,7 +45,7 @@ contract FuzzWithdraw is TestFuzz {
         address[2] memory addresses,
         uint256[5] memory amounts
     ) public {
-        depositor = addresses[0];
+        withdrawer = addresses[0];
         onBehalfOf = addresses[1];
         underlyingToDeposit = amounts[0];
         underlyingToWithdraw = amounts[1];
@@ -59,34 +59,26 @@ contract FuzzWithdraw is TestFuzz {
         totalBorrows = bound(totalBorrows, 10e6, 1e15);
         pTokenTotalSupply = bound(pTokenTotalSupply, 10e6, (totalBorrows + cash));
 
-        vm.assume(
-            depositor != address(pUSDC) && depositor != address(this)
-                && depositor != address(pWETH) && depositor != address(re)
-                && depositor != address(0)
-        );
-        vm.assume(
-            onBehalfOf != address(pUSDC) && onBehalfOf != address(this)
-                && onBehalfOf != address(pWETH) && onBehalfOf != address(re)
-                && onBehalfOf != address(0)
-        );
+        vm.assume(withdrawer != address(pUSDC) && withdrawer != address(0));
+        vm.assume(onBehalfOf != address(pUSDC) && onBehalfOf != address(0));
         vm.assume((cash + totalBorrows) / pTokenTotalSupply < 8);
 
         setPTokenTotalSupply(address(pUSDC), pTokenTotalSupply);
         setTotalBorrows(address(pUSDC), totalBorrows);
         deal(address(pUSDC.underlying()), address(pUSDC), cash);
-        if (depositor != onBehalfOf) {
+        if (withdrawer != onBehalfOf) {
             vm.prank(onBehalfOf);
-            re.updateDelegate(depositor, true);
+            re.updateDelegate(withdrawer, true);
         }
 
-        doDepositAndEnter(depositor, onBehalfOf, address(pUSDC), underlyingToDeposit);
-        doWithdrawUnderlying(depositor, onBehalfOf, address(pUSDC), underlyingToWithdraw);
+        doDepositAndEnter(withdrawer, onBehalfOf, address(pUSDC), underlyingToDeposit);
+        doWithdrawUnderlying(withdrawer, onBehalfOf, address(pUSDC), underlyingToWithdraw);
     }
 
     function testFuzz_withdraw(address[2] memory addresses, uint256[5] memory amounts)
         public
     {
-        depositor = addresses[0];
+        withdrawer = addresses[0];
         onBehalfOf = addresses[1];
         underlyingToDeposit = amounts[0];
         pTokenToWithdraw = amounts[1];
@@ -99,29 +91,21 @@ contract FuzzWithdraw is TestFuzz {
         totalBorrows = bound(totalBorrows, 10e6, 1e15);
         pTokenTotalSupply = bound(pTokenTotalSupply, 10e6, (totalBorrows + cash));
 
-        vm.assume(
-            depositor != address(pUSDC) && depositor != address(this)
-                && depositor != address(pWETH) && depositor != address(re)
-                && depositor != address(0)
-        );
-        vm.assume(
-            onBehalfOf != address(pUSDC) && onBehalfOf != address(this)
-                && onBehalfOf != address(pWETH) && onBehalfOf != address(re)
-                && onBehalfOf != address(0)
-        );
+        vm.assume(withdrawer != address(pUSDC) && withdrawer != address(0));
+        vm.assume(onBehalfOf != address(pUSDC) && onBehalfOf != address(0));
         vm.assume((cash + totalBorrows) / pTokenTotalSupply < 8);
 
         setPTokenTotalSupply(address(pUSDC), pTokenTotalSupply);
         setTotalBorrows(address(pUSDC), totalBorrows);
         deal(address(pUSDC.underlying()), address(pUSDC), cash);
-        if (depositor != onBehalfOf) {
+        if (withdrawer != onBehalfOf) {
             vm.prank(onBehalfOf);
-            re.updateDelegate(depositor, true);
+            re.updateDelegate(withdrawer, true);
         }
 
-        doDepositAndEnter(depositor, onBehalfOf, address(pUSDC), underlyingToDeposit);
+        doDepositAndEnter(withdrawer, onBehalfOf, address(pUSDC), underlyingToDeposit);
 
         pTokenToWithdraw = bound(pTokenToWithdraw, 1, pUSDC.balanceOf(onBehalfOf));
-        doWithdraw(depositor, onBehalfOf, address(pUSDC), pTokenToWithdraw);
+        doWithdraw(withdrawer, onBehalfOf, address(pUSDC), pTokenToWithdraw);
     }
 }
