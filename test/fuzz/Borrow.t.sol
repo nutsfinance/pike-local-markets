@@ -25,6 +25,7 @@ contract FuzzBorrow is TestFuzz {
     uint256 usdcCF;
     uint256 usdcToDeposit;
     uint256 wethToBorrow;
+    uint256 wethToRepay;
     uint256 pTokenTotalSupply;
     uint256 totalBorrows;
     uint256 cash;
@@ -51,7 +52,7 @@ contract FuzzBorrow is TestFuzz {
         mockOracle = MockOracle(re.oracle());
     }
 
-    function testFuzz_borrow(address[2] memory addresses, uint256[8] memory amounts)
+    function testFuzz_borrow(address[2] memory addresses, uint256[9] memory amounts)
         public
     {
         borrower = addresses[0];
@@ -61,9 +62,10 @@ contract FuzzBorrow is TestFuzz {
         usdcCF = amounts[2];
         usdcToDeposit = amounts[3];
         wethToBorrow = amounts[4];
-        pTokenTotalSupply = amounts[5];
-        totalBorrows = amounts[6];
-        cash = amounts[7];
+        wethToRepay = amounts[5];
+        pTokenTotalSupply = amounts[6];
+        totalBorrows = amounts[7];
+        cash = amounts[8];
 
         /// 0.98-1.02$
         usdcPrice = bound(usdcPrice, 0.98e6, 1.02e6);
@@ -78,6 +80,7 @@ contract FuzzBorrow is TestFuzz {
             1e10,
             usdcToDeposit * usdcPrice * (usdcCF - 0.00001e16) / (wethPrice * 1e6)
         );
+        wethToRepay = bound(wethToRepay, 1, wethToBorrow);
         usdcCash = bound(cash, 10e6, 1e15);
         usdcTotalBorrows = bound(totalBorrows, 10e6, 1e15);
         usdcTotalSupply = bound(pTokenTotalSupply, 10e6, (usdcCash + usdcTotalBorrows));
@@ -116,5 +119,6 @@ contract FuzzBorrow is TestFuzz {
 
         doDepositAndEnter(borrower, onBehalfOf, address(pUSDC), usdcToDeposit);
         doBorrow(borrower, onBehalfOf, address(pWETH), wethToBorrow);
+        doRepay(borrower, onBehalfOf, address(pWETH), wethToRepay);
     }
 }
