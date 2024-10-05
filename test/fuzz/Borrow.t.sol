@@ -67,14 +67,15 @@ contract FuzzBorrow is TestFuzz {
         totalBorrows = amounts[7];
         cash = amounts[8];
 
-        /// 0.98-1.02$
+        /// bound usdc price 0.98-1.02$
         usdcPrice = bound(usdcPrice, 0.98e6, 1.02e6);
-        /// 1000-4000$
+        /// bound weth price 1000-4000$
         wethPrice = bound(wethPrice, 1000e6, 4000e6);
-        /// 10-90%
+        /// bound collateral factor 10-90%
         usdcCF = bound(usdcCF, 10e16, 90e16);
+        /// bound usdc 10-1B$
         usdcToDeposit = bound(usdcToDeposit, 100e6, 1e15);
-        /// ± 0.00001% deviate from CF
+        /// needs to borrow with small deviation from CF(± 0.00001%)
         wethToBorrow = bound(
             wethToBorrow,
             1e10,
@@ -97,6 +98,7 @@ contract FuzzBorrow is TestFuzz {
             onBehalfOf != address(pUSDC) && onBehalfOf != address(pWETH)
                 && onBehalfOf != address(0)
         );
+        /// set boundry for exchangeRate ratio (with 20% apr per year it takes 40 years to 8x)
         vm.assume((usdcCash + usdcTotalBorrows) / usdcTotalSupply < 8);
         vm.assume((wethCash + wethTotalBorrows) / wethTotalSupply < 8);
 

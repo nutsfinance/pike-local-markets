@@ -15,7 +15,7 @@ contract InterestRateModule is IInterestRateModel, InterestRateStorage, OwnableM
      * @notice Initialize an interest rate model
      * @param baseRatePerYear The approximate target base APR, as a mantissa (scaled by BASE)
      * @param multiplierPerYear The rate of increase in interest rate wrt utilization (scaled by BASE)
-     * @param jumpMultiplierPerYear The multiplierPerBlock after hitting a specified utilization point
+     * @param jumpMultiplierPerYear The multiplierPerSecond after hitting a specified utilization point
      * @param kink The utilization point at which the jump multiplier is applied
      */
     function initialize(

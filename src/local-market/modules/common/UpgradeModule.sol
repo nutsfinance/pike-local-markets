@@ -6,6 +6,10 @@ import {OwnableStorage} from "@storage/OwnableStorage.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {IUpgrade} from "@interfaces/IUpgrade.sol";
 
+/**
+ * @title Contract for managing upgradeability
+ * See IUpgrade.
+ */
 contract UpgradeModule is IUpgrade, UpgradeStorage, OwnableStorage {
     /**
      * @inheritdoc IUpgrade

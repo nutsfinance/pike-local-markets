@@ -49,13 +49,16 @@ contract FuzzDeposit is TestFuzz {
         totalBorrows = amounts[2];
         cash = amounts[3];
 
+        /// bound usdc 10-1B$
         underlyingToDeposit = bound(underlyingToDeposit, 10e6, 1e15);
+        /// set cash, totalBorrows and totalSupply to get random exchangeRate
         cash = bound(cash, 10e6, 1e15);
         totalBorrows = bound(totalBorrows, 10e6, 1e15);
         pTokenTotalSupply = bound(pTokenTotalSupply, 10e6, (totalBorrows + cash));
 
         vm.assume(depositor != address(pUSDC) && depositor != address(0));
         vm.assume(onBehalfOf != address(pUSDC) && onBehalfOf != address(0));
+        /// set boundry for exchangeRate ratio (with 20% apr per year it takes 40 years to 8x)
         vm.assume((cash + totalBorrows) / pTokenTotalSupply < 8);
 
         setPTokenTotalSupply(address(pUSDC), pTokenTotalSupply);
