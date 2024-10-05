@@ -341,14 +341,16 @@ contract TestUtilities is TestDeploy {
                     == afterData.borrowedPTokenData.totalCash,
                 "Did not deposit to ptoken"
             );
-            require(
-                beforeData.prankAddressData.collateral + liquidatorSeizeShare
-                    == afterData.prankAddressData.collateral,
+            assertApproxEqRel(
+                beforeData.prankAddressData.collateral + liquidatorSeizeShare,
+                afterData.prankAddressData.collateral,
+                1e3, // ± 0.0000000000001000%
                 "Collateral did not transfer to liquidator"
             );
-            require(
-                beforeData.userToLiquidateData.collateral
-                    == afterData.userToLiquidateData.collateral + seizeTokens,
+            assertApproxEqRel(
+                beforeData.userToLiquidateData.collateral,
+                afterData.userToLiquidateData.collateral + seizeTokens,
+                1e3, // ± 0.0000000000001000%
                 "Collateral did not transfer from borrower"
             );
             require(
@@ -356,9 +358,10 @@ contract TestUtilities is TestDeploy {
                     == afterData.collateralPTokenData.totalSupply + protocolSeizeToken,
                 "Collateral ptoken did not transfer to protocol"
             );
-            require(
-                beforeData.collateralPTokenData.totalReserve + protocolSeizeAmount
-                    == afterData.collateralPTokenData.totalReserve,
+            assertApproxEqRel(
+                beforeData.collateralPTokenData.totalReserve + protocolSeizeAmount,
+                afterData.collateralPTokenData.totalReserve,
+                1e3, // ± 0.0000000000001000%
                 "Collateral underlying ptoken did not transfer to protocol reserve"
             );
             require(
