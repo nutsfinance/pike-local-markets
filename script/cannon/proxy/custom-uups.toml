@@ -20,7 +20,6 @@ initialCallData = "<%= encodeFunctionData({abi: contracts.InitialModuleBundle.ab
 
 [deploy.InitialModuleBundle]
 artifact = "InitialModuleBundle"
-create2 = true
 
 [deploy.InitialProxy]
 artifact = "ERC1967Proxy"
