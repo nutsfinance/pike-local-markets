@@ -15,6 +15,13 @@ contract ZeroBaseJumpRateModel is
     ZeroBaseJumpRateStorage,
     OwnableMixin
 {
+    event NewInterestParams(
+        uint256 baseRatePerSecond,
+        uint256 multiplierPerSecond,
+        uint256 jumpMultiplierPerSecond,
+        uint256 kink
+    );
+
     /**
      * @notice Initialize an interest rate model
      * @param baseUtilizationRate the initial utilization rate that low slope starts from (scaled by BASE)
@@ -50,7 +57,7 @@ contract ZeroBaseJumpRateModel is
         uint256 borrows,
         uint256 reserves,
         uint256 reserveFactorMantissa
-    ) public view returns (uint256) {
+    ) public pure returns (uint256) {
         uint256 oneMinusReserveFactor = BASE - reserveFactorMantissa;
         uint256 borrowRate = getBorrowRate(cash, borrows, reserves);
         uint256 rateToPool = borrowRate * oneMinusReserveFactor / BASE;

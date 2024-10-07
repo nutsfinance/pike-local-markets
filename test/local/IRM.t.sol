@@ -8,7 +8,7 @@ import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {
     InterestRateModule,
     IInterestRateModel
-} from "@modules/pToken/InterestRateModule.sol";
+} from "@modules/interestRateModel/InterestRateModule.sol";
 import {TestLocal} from "@helpers/TestLocal.sol";
 
 import {MockOracle} from "@mocks/MockOracle.sol";
