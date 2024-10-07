@@ -10,7 +10,7 @@ import {IDiamondCut} from "@mocks/Diamond/IDiamondCut.sol";
 import {InitialModuleBundle} from "@modules/InitialModuleBundle.sol";
 import {RBACModule, IRBAC} from "@modules/common/RBACModule.sol";
 import {RiskEngineModule, IRiskEngine} from "@modules/riskEngine/RiskEngineModule.sol";
-import {InterestRateModule} from "@modules/pToken/InterestRateModule.sol";
+import {InterestRateModule} from "@modules/interestRateModel/InterestRateModule.sol";
 import {PTokenModule, IPToken} from "@modules/pToken/PTokenModule.sol";
 import {MockToken, MockReentrantToken} from "@mocks/MockToken.sol";
 import {MockOracle} from "@mocks/MockOracle.sol";

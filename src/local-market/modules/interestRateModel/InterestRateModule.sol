@@ -11,6 +11,13 @@ import {OwnableMixin} from "@utils/OwnableMixin.sol";
  * @author NUTS Finance (hello@pike.finance)
  */
 contract InterestRateModule is IInterestRateModel, InterestRateStorage, OwnableMixin {
+    event NewInterestParams(
+        uint256 baseRatePerSecond,
+        uint256 multiplierPerSecond,
+        uint256 jumpMultiplierPerSecond,
+        uint256 kink
+    );
+
     /**
      * @notice Initialize an interest rate model
      * @param baseRatePerYear The approximate target base APR, as a mantissa (scaled by BASE)
@@ -34,7 +41,10 @@ contract InterestRateModule is IInterestRateModel, InterestRateStorage, OwnableM
         data.kink = kink;
 
         emit NewInterestParams(
-            baseRatePerYear, multiplierPerYear, jumpMultiplierPerYear, kink
+            data.baseRatePerSecond,
+            data.multiplierPerSecond,
+            data.jumpMultiplierPerSecond,
+            kink
         );
     }
 
@@ -43,7 +53,7 @@ contract InterestRateModule is IInterestRateModel, InterestRateStorage, OwnableM
      */
     function getBorrowRate(uint256 cash, uint256 borrows, uint256 reserves)
         public
-        view
+        pure
         returns (uint256)
     {
         uint256 util = getUtilization(cash, borrows, reserves);
@@ -67,7 +77,7 @@ contract InterestRateModule is IInterestRateModel, InterestRateStorage, OwnableM
         uint256 borrows,
         uint256 reserves,
         uint256 reserveFactorMantissa
-    ) public view returns (uint256) {
+    ) public pure returns (uint256) {
         uint256 oneMinusReserveFactor = BASE - reserveFactorMantissa;
         uint256 borrowRate = getBorrowRate(cash, borrows, reserves);
         uint256 rateToPool = borrowRate * oneMinusReserveFactor / BASE;

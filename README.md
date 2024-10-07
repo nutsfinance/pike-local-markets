@@ -94,45 +94,49 @@ yarn deploy:testnet # or dryrun before `yarn deploy:testnet:dryrun`
 
 ```bash
 Contracts
-├── local-market
-│   ├── errors
-│   │   ├── CommonError.sol
-│   │   ├── PTokenError.sol
-│   │   └── RiskEngineError.sol
-│   ├── interfaces
-│   │   ├── IInterestRateModel.sol
-│   │   ├── IOwnable.sol
-│   │   ├── IPToken.sol
-│   │   ├── IRBAC.sol
-│   │   ├── IRiskEngine.sol
-│   │   └── IUpgrade.sol
-│   ├── modules
-│   │   ├── InitialModuleBundle.sol
-│   │   ├── common
-│   │   │   ├── OwnableModule.sol
-│   │   │   ├── RBACModule.sol
-│   │   │   └── UpgradeModule.sol
-│   │   ├── pToken
-│   │   │   ├── InterestRateModule.sol
-│   │   │   └── PTokenModule.sol
-│   │   └── riskEngine
-│   │       └── RiskEngineModule.sol
-│   ├── storage
-│   │   ├── InterestRateStorage.sol
-│   │   ├── OwnableStorage.sol
-│   │   ├── PTokenStorage.sol
-│   │   ├── RBACStorage.sol
-│   │   ├── RiskEngineStorage.sol
-│   │   └── UpgradeStorage.sol
-│   └── utils
-│       ├── ExponentialNoError.sol
-│       ├── OwnableMixin.sol
-│       └── RBACMixin.sol
-└── oracles
-    ├── ChainlinkOracleProvider.sol
-    ├── OracleEngine.sol
-    ├── PythOracleProvider.sol
-    └── interfaces
-        ├── IOracleEngine.sol
-        └── IOracleProvider.sol
+│   ├── local-market
+│   │   ├── errors
+│   │   │   ├── CommonError.sol
+│   │   │   ├── IRMError.sol
+│   │   │   ├── PTokenError.sol
+│   │   │   └── RiskEngineError.sol
+│   │   ├── interfaces
+│   │   │   ├── IInterestRateModel.sol
+│   │   │   ├── IOwnable.sol
+│   │   │   ├── IPToken.sol
+│   │   │   ├── IRBAC.sol
+│   │   │   ├── IRiskEngine.sol
+│   │   │   └── IUpgrade.sol
+│   │   ├── modules
+│   │   │   ├── InitialModuleBundle.sol
+│   │   │   ├── common
+│   │   │   │   ├── OwnableModule.sol
+│   │   │   │   ├── RBACModule.sol
+│   │   │   │   └── UpgradeModule.sol
+│   │   │   ├── interestRateModel
+│   │   │   │   ├── DoubleJumpRateModel.sol
+│   │   │   │   ├── InterestRateModule.sol
+│   │   │   ├── pToken
+│   │   │   │   └── PTokenModule.sol
+│   │   │   └── riskEngine
+│   │   │       └── RiskEngineModule.sol
+│   │   ├── storage
+│   │   │   ├── DoubleJumpRateStorage.sol
+│   │   │   ├── InterestRateStorage.sol
+│   │   │   ├── OwnableStorage.sol
+│   │   │   ├── PTokenStorage.sol
+│   │   │   ├── RBACStorage.sol
+│   │   │   ├── RiskEngineStorage.sol
+│   │   │   ├── UpgradeStorage.sol
+│   │   └── utils
+│   │       ├── ExponentialNoError.sol
+│   │       ├── OwnableMixin.sol
+│   │       └── RBACMixin.sol
+└── └── oracles
+        ├── ChainlinkOracleProvider.sol
+        ├── OracleEngine.sol
+        ├── PythOracleProvider.sol
+        └── interfaces
+            ├── IOracleEngine.sol
+            └── IOracleProvider.sol
 ```
