@@ -25,7 +25,7 @@ remappings = [
 ffi = true
 
 [fuzz]
-runs = 100000
+runs = 10000
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
 [fmt]
