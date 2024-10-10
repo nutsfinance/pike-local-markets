@@ -94,6 +94,18 @@ contract LocalReserve is TestLocal {
         assertEq(adminBalanceAfter, adminBalanceBefore + value);
     }
 
+    function testSetProtocolSeizeShare() public {
+        // 2%
+        uint256 newSeizeShare = 2e16;
+
+        assertNotEq(pWETH.protocolSeizeShareMantissa(), newSeizeShare);
+
+        vm.prank(getAdmin());
+        pWETH.setProtocolSeizeShare(newSeizeShare);
+
+        assertEq(pWETH.protocolSeizeShareMantissa(), newSeizeShare);
+    }
+
     function testSetReserveFactor() public {
         // 10%
         uint256 newReserveFactor = 10e16;
@@ -101,7 +113,7 @@ contract LocalReserve is TestLocal {
         assertNotEq(pWETH.reserveFactorMantissa(), newReserveFactor);
 
         vm.prank(getAdmin());
-        pWETH.setReserveFactor(10e16);
+        pWETH.setReserveFactor(newReserveFactor);
 
         assertEq(pWETH.reserveFactorMantissa(), newReserveFactor);
     }

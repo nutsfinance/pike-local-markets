@@ -49,6 +49,13 @@ interface IPToken is IERC20 {
     );
 
     /**
+     * @notice Event emitted when the seize share is changed
+     */
+    event NewProtocolSeizeShare(
+        uint256 oldProtocolSeizeShareMantissa, uint256 newProtocolSeizeShareMantissa
+    );
+
+    /**
      * @notice Event emitted when interest is accrued
      */
     event AccrueInterest(
@@ -204,6 +211,12 @@ interface IPToken is IERC20 {
      * @dev Admin function to accrue interest and set a new reserve factor
      */
     function setReserveFactor(uint256 newReserveFactorMantissa) external;
+
+    /**
+     * @notice sets a new seize share for the protocol
+     * @dev Admin function to set a new seize share
+     */
+    function setProtocolSeizeShare(uint256 newProtocolSeizeShareMantissa) external;
 
     /**
      * @notice Accrues interest and reduces reserves by transferring to reserve protocol contract

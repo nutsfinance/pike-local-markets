@@ -140,7 +140,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         IPToken[] calldata pTokens,
         uint256[] calldata newBorrowCaps
     ) external {
-        checkPermission(_BORROW_CAP_GUARDIAN_PERMISSION, msg.sender);
         uint256 numMarkets = pTokens.length;
         uint256 numBorrowCap = newBorrowCaps.length;
 
@@ -149,6 +148,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         }
 
         for (uint256 i = 0; i < numMarkets; ++i) {
+            checkNestedPermission(
+                _BORROW_CAP_GUARDIAN_PERMISSION, address(pTokens[i]), msg.sender
+            );
             _getRiskEngineStorage().borrowCaps[address(pTokens[i])] = newBorrowCaps[i];
             emit NewBorrowCap(pTokens[i], newBorrowCaps[i]);
         }
@@ -161,7 +163,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         IPToken[] calldata pTokens,
         uint256[] calldata newSupplyCaps
     ) external {
-        checkPermission(_SUPPLY_CAP_GUARDIAN_PERMISSION, msg.sender);
         uint256 numMarkets = pTokens.length;
         uint256 newSupplyCap = newSupplyCaps.length;
 
@@ -170,6 +171,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         }
 
         for (uint256 i; i < numMarkets; ++i) {
+            checkNestedPermission(
+                _SUPPLY_CAP_GUARDIAN_PERMISSION, address(pTokens[i]), msg.sender
+            );
             _getRiskEngineStorage().supplyCaps[address(pTokens[i])] = newSupplyCaps[i];
             emit NewSupplyCap(pTokens[i], newSupplyCaps[i]);
         }

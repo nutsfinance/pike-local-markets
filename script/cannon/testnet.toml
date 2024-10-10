@@ -306,19 +306,35 @@ from = "<%= settings.owner %>"
 func = "grantPermission"
 args = ["<%= settings.pauseGuardRole %>", "<%= settings.owner %>"]
 
-[invoke.set_core_supply_guard]
+[invoke.set_core_supply_guard_pUSDC]
 target = [ "core.Proxy" ]
 abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
 from = "<%= settings.owner %>"
-func = "grantPermission"
-args = ["<%= settings.supGuardRole %>", "<%= settings.owner %>"]
+func = "grantNestedPermission"
+args = ["<%= settings.supGuardRole %>", "<%= pUSDC.Proxy.address %>", "<%= settings.owner %>"]
+depends = [ "clone.pUSDC"]
 
-[invoke.set_core_borrow_guard]
+[invoke.set_core_supply_guard_pWETH]
 target = [ "core.Proxy" ]
 abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
 from = "<%= settings.owner %>"
-func = "grantPermission"
-args = ["<%= settings.borGuardRole %>", "<%= settings.owner %>"]
+func = "grantNestedPermission"
+args = ["<%= settings.supGuardRole %>", "<%= pWETH.Proxy.address %>", "<%= settings.owner %>"]
+depends = [ "clone.pWETH"]
+
+[invoke.set_core_borrow_guard_pUSDC]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.owner %>"
+func = "grantNestedPermission"
+args = ["<%= settings.borGuardRole %>", "<%= pUSDC.Proxy.address %>", "<%= settings.owner %>"]
+
+[invoke.set_core_borrow_guard_pWETH]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.owner %>"
+func = "grantNestedPermission"
+args = ["<%= settings.borGuardRole %>", "<%= pWETH.Proxy.address %>", "<%= settings.owner %>"]
 
 [invoke.set_pUSDC_configurator]
 target = [ "core.Proxy" ]
@@ -380,7 +396,7 @@ abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
 from = "<%= settings.owner %>"
 func = "setMarketBorrowCaps"
 args = [["<%= pWETH.Proxy.address %>", "<%= pUSDC.Proxy.address %>"], ["<%= MaxUint256 %>", "<%= MaxUint256 %>"]]
-depends = [ "invoke.set_core_borrow_guard" ]
+depends = [ "invoke.set_core_borrow_guard_pWETH", "invoke.set_core_borrow_guard_pUSDC" ]
 
 [invoke.set_supply_cap]
 target = [ "core.Proxy" ]
@@ -388,6 +404,6 @@ abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
 from = "<%= settings.owner %>"
 func = "setMarketSupplyCaps"
 args = [["<%= pWETH.Proxy.address %>", "<%= pUSDC.Proxy.address %>"], ["<%= MaxUint256 %>", "<%= MaxUint256 %>"]]
-depends = [ "invoke.set_core_supply_guard" ]
+depends = [ "invoke.set_core_supply_guard_pWETH", "invoke.set_core_supply_guard_pUSDC" ]
 
 

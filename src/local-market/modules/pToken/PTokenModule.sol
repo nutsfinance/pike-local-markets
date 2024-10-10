@@ -69,7 +69,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         // Set initial exchange rate
         _getPTokenStorage().initialExchangeRateMantissa = initialExchangeRateMantissa_;
 
-        _getPTokenStorage().protocolSeizeShareMantissa = protocolSeizeShareMantissa_;
+        _setProtocolSeizeShareMantissa(protocolSeizeShareMantissa_);
 
         _getPTokenStorage().borrowRateMaxMantissa = borrowRateMaxMantissa_;
 
@@ -109,6 +109,15 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         accrueInterest();
         // _setReserveFactorFresh emits reserve-factor-specific logs on errors, so we don't need to.
         _setReserveFactorFresh(newReserveFactorMantissa);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function setProtocolSeizeShare(uint256 newProtocolSeizeShareMantissa) external {
+        checkPermission(_RESERVE_MANAGER_PERMISSION, msg.sender);
+
+        _setProtocolSeizeShareMantissa(newProtocolSeizeShareMantissa);
     }
 
     /**
@@ -1101,6 +1110,21 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
 
         /* We emit a Transfer event */
         emit Transfer(src, dst, tokens);
+    }
+
+    /**
+     * @notice Sets a new protocol seize share for the protocol
+     */
+    function _setProtocolSeizeShareMantissa(uint256 newProtocolSeizeShareMantissa)
+        internal
+    {
+        uint256 oldProtocolSeizeShareMantissa =
+            _getPTokenStorage().protocolSeizeShareMantissa;
+        _getPTokenStorage().protocolSeizeShareMantissa = newProtocolSeizeShareMantissa;
+
+        emit NewProtocolSeizeShare(
+            oldProtocolSeizeShareMantissa, newProtocolSeizeShareMantissa
+        );
     }
 
     /**
