@@ -8,6 +8,7 @@ import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
 import {PTokenStorage} from "@storage/PTokenStorage.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
+import {RBACMixin} from "@utils/RBACMixin.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {PTokenError} from "@errors/PTokenError.sol";
@@ -18,7 +19,7 @@ import {IPToken} from "@interfaces/IPToken.sol";
  * @notice ERC20 Compatible PTokens
  * @author NUTS Finance (hello@pike.finance)
  */
-contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
+contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
     using ExponentialNoError for ExponentialNoError.Exp;
     using ExponentialNoError for uint256;
     using SafeERC20 for IERC20;
@@ -103,7 +104,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
-    function setReserveFactor(uint256 newReserveFactorMantissa) external onlyOwner {
+    function setReserveFactor(uint256 newReserveFactorMantissa) external {
+        checkPermission(_RESERVE_MANAGER_PERMISSION, msg.sender);
         accrueInterest();
         // _setReserveFactorFresh emits reserve-factor-specific logs on errors, so we don't need to.
         _setReserveFactorFresh(newReserveFactorMantissa);
@@ -122,7 +124,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
-    function reduceReserves(uint256 reduceAmount) external onlyOwner nonReentrant {
+    function reduceReserves(uint256 reduceAmount) external nonReentrant {
+        checkPermission(_RESERVE_WITHDRAWER_PERMISSION, msg.sender);
         accrueInterest();
         // _reduceReservesFresh emits reserve-reduction-specific logs on errors, so we don't need to.
         _reduceReservesFresh(reduceAmount);

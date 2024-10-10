@@ -3,7 +3,8 @@ pragma solidity 0.8.20;
 
 abstract contract RBACStorage {
     struct RBACData {
-        mapping(address => mapping(bytes32 => bool)) permissions;
+        mapping(bytes32 => mapping(address => bool)) permissions;
+        mapping(bytes32 => mapping(address => mapping(address => bool))) nestedPermissions;
     }
 
     /// keccak256(abi.encode(uint256(keccak256("pike.LM.RBAC")) - 1)) & ~bytes32(uint256(0xff))
@@ -14,14 +15,28 @@ abstract contract RBACStorage {
     bytes32 internal constant _PAUSE_GUARDIAN_PERMISSION = "PAUSE_GUARDIAN";
     bytes32 internal constant _BORROW_CAP_GUARDIAN_PERMISSION = "BORROW_CAP_GUARDIAN";
     bytes32 internal constant _SUPPLY_CAP_GUARDIAN_PERMISSION = "SUPPLY_CAP_GUARDIAN";
+    bytes32 internal constant _RESERVE_MANAGER_PERMISSION = "RESERVE_MANAGER";
+    bytes32 internal constant _RESERVE_WITHDRAWER_PERMISSION = "RESERVE_WITHDRAWER";
 
-    error PermissionDenied(address, bytes32);
+    error PermissionDenied(bytes32, address);
+    error NestedPermissionDenied(bytes32, address, address);
     error InvalidPermission();
 
-    function _checkPermission(address target, bytes32 permission) internal view {
+    function _checkPermission(bytes32 permission, address target) internal view {
         _isPermissionValid(permission);
-        if (!_getRBACStorage().permissions[target][permission]) {
-            revert PermissionDenied(target, permission);
+        if (!_getRBACStorage().permissions[permission][target]) {
+            revert PermissionDenied(permission, target);
+        }
+    }
+
+    function _checkNestedPermission(
+        bytes32 permission,
+        address nestedAddress,
+        address target
+    ) internal view {
+        _isPermissionValid(permission);
+        if (!_getRBACStorage().nestedPermissions[permission][nestedAddress][target]) {
+            revert NestedPermissionDenied(permission, nestedAddress, target);
         }
     }
 
@@ -31,6 +46,8 @@ abstract contract RBACStorage {
                 && permission != _PAUSE_GUARDIAN_PERMISSION
                 && permission != _BORROW_CAP_GUARDIAN_PERMISSION
                 && permission != _SUPPLY_CAP_GUARDIAN_PERMISSION
+                && permission != _RESERVE_MANAGER_PERMISSION
+                && permission != _RESERVE_WITHDRAWER_PERMISSION
         ) {
             revert InvalidPermission();
         }

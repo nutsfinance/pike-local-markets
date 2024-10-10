@@ -43,29 +43,29 @@ contract LocalRBAC is TestLocal {
         vm.prank(getAdmin());
         // "AlreadyGranted()" selector
         vm.expectRevert(0x87b38f77);
-        IRBAC(address(re)).grantPermission(getAdmin(), configurator_permission);
+        IRBAC(address(re)).grantPermission(configurator_permission, getAdmin());
     }
 
     function testGrant_FailIfInvalidPermission() public {
         vm.prank(getAdmin());
         // "InvalidPermission()" selector
         vm.expectRevert(0x868a64de);
-        IRBAC(address(re)).grantPermission(getAdmin(), bytes32(0));
+        IRBAC(address(re)).grantPermission(bytes32(0), getAdmin());
     }
 
     function testGrant_FailIfNotOwner() public {
         vm.prank(address(1));
         // "Unauthorized(address)" selector
         vm.expectRevert(abi.encodePacked(bytes4(0x8e4a23d6), abi.encode(address(1))));
-        IRBAC(address(re)).grantPermission(getAdmin(), bytes32(0));
+        IRBAC(address(re)).grantPermission(bytes32(0), getAdmin());
     }
 
     function testAction_FailIfNotPermissioned() public {
         vm.prank(address(1));
-        // "PermissionDenied(address,bytes32)" selector
+        // "PermissionDenied(bytes32,address)" selector
         vm.expectRevert(
             abi.encodePacked(
-                bytes4(0x736eb895), abi.encode(address(1), pause_guard_permission)
+                bytes4(0xc768858b), abi.encode(pause_guard_permission, address(1))
             )
         );
         re.setMintPaused(pWETH, true);
@@ -73,26 +73,26 @@ contract LocalRBAC is TestLocal {
 
     function testRevoke_Success() public {
         vm.prank(getAdmin());
-        IRBAC(address(re)).revokePermission(getAdmin(), configurator_permission);
+        IRBAC(address(re)).revokePermission(configurator_permission, getAdmin());
 
         assertEq(
-            IRBAC(address(re)).hasPermission(getAdmin(), configurator_permission),
+            IRBAC(address(re)).hasPermission(configurator_permission, getAdmin()),
             false,
             "invalid permission"
         );
 
         // "ZeroAddress()" selector
         vm.expectRevert(0xd92e233d);
-        IRBAC(address(re)).hasPermission(address(0), configurator_permission);
+        IRBAC(address(re)).hasPermission(configurator_permission, address(0));
     }
 
     function testRevoke_FailIfAlreadyRevoked() public {
         vm.startPrank(getAdmin());
-        IRBAC(address(re)).revokePermission(getAdmin(), configurator_permission);
+        IRBAC(address(re)).revokePermission(configurator_permission, getAdmin());
 
         // "AlreadyRevoked()" selector
         vm.expectRevert(0x905e7107);
-        IRBAC(address(re)).revokePermission(getAdmin(), configurator_permission);
+        IRBAC(address(re)).revokePermission(configurator_permission, getAdmin());
     }
 
     function testRenounce_Success() public {
