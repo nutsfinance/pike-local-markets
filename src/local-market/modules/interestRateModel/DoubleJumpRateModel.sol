@@ -1,55 +1,37 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
+import {
+    IInterestRateModel,
+    IDoubleJumpRateModel
+} from "@interfaces/IDoubleJumpRateModel.sol";
 import {DoubleJumpRateStorage} from "@storage/DoubleJumpRateStorage.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {IRMError} from "@errors/IRMError.sol";
-import {OwnableMixin} from "@utils/OwnableMixin.sol";
+import {RBACMixin} from "@utils/RBACMixin.sol";
 
 /**
  * @title Pike Markets DoubleJumpRateModel Contract
  * @author NUTS Finance (hello@pike.finance)
  */
-contract DoubleJumpRateModel is
-    IInterestRateModel,
-    DoubleJumpRateStorage,
-    OwnableMixin
-{
-    event NewInterestParams(
-        uint256 baseRatePerSecond,
-        uint256 multiplierPerSecond,
-        uint256 firstJumpMultiplierPerSecond,
-        uint256 secondJumpMultiplierPerSecond,
-        uint256 firstKink,
-        uint256 secondKink
-    );
-
+contract DoubleJumpRateModel is IDoubleJumpRateModel, DoubleJumpRateStorage, RBACMixin {
     /**
-     * @notice Initialize an interest rate model
-     * @param baseRatePerYear the initial rate that low slope starts from (scaled by BASE)
-     * @param multiplierPerYear The rate of increase in interest rate wrt utilization (scaled by BASE)
-     * @param firstJumpMultiplierPerYear The multiplierPerSecond after hitting first specified utilization point
-     * @param secondJumpMultiplierPerYear The multiplierPerSecond after hitting second specified utilization point
-     * @param firstKink The utilization point at which the first jump multiplier is applied
-     * @param secondKink The utilization point at which the second jump multiplier is applied
+     * @inheritdoc IDoubleJumpRateModel
      */
-    function initialize(
+    function configureInterestRateModel(
         uint256 baseRatePerYear,
         uint256 multiplierPerYear,
         uint256 firstJumpMultiplierPerYear,
         uint256 secondJumpMultiplierPerYear,
         uint256 firstKink,
         uint256 secondKink
-    ) external onlyOwner {
+    ) external {
+        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
         InterestRateData storage data = _getIRMStorage();
-        if (data.secondKink != 0) {
-            revert CommonError.AlreadyInitialized();
-        }
-        if (data.secondKink == 0) {
+        if (secondKink == 0) {
             revert CommonError.ZeroValue();
         }
-        if (baseRatePerYear != 0 && multiplierPerYear == 0) {
+        if (baseRatePerYear != 0 && firstKink != 0 && multiplierPerYear == 0) {
             revert IRMError.InvalidMultiplierForNonZeroBaseRate();
         }
         if (
