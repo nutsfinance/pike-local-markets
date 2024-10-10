@@ -23,7 +23,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      * @inheritdoc IRiskEngine
      */
     function setOracle(address newOracle) external {
-        checkPermission(msg.sender, _CONFIGURATOR_PERMISSION);
+        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
         emit NewOracleEngine(_getRiskEngineStorage().oracle, newOracle);
         _getRiskEngineStorage().oracle = newOracle;
     }
@@ -32,7 +32,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      * @inheritdoc IRiskEngine
      */
     function setCloseFactor(uint256 newCloseFactorMantissa) external {
-        checkPermission(msg.sender, _CONFIGURATOR_PERMISSION);
+        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
         uint256 oldCloseFactorMantissa = _getRiskEngineStorage().closeFactorMantissa;
         _getRiskEngineStorage().closeFactorMantissa = newCloseFactorMantissa;
         emit NewCloseFactor(oldCloseFactorMantissa, newCloseFactorMantissa);
@@ -46,7 +46,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint256 newCollateralFactorMantissa,
         uint256 newLiquidationThresholdMantissa
     ) external {
-        checkPermission(msg.sender, _CONFIGURATOR_PERMISSION);
+        checkNestedPermission(_CONFIGURATOR_PERMISSION, address(pToken), msg.sender);
         // Verify market is listed
         Market storage market = _getRiskEngineStorage().markets[address(pToken)];
         if (!market.isListed) {
@@ -96,7 +96,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      * @inheritdoc IRiskEngine
      */
     function setLiquidationIncentive(uint256 newLiquidationIncentiveMantissa) external {
-        checkPermission(msg.sender, _CONFIGURATOR_PERMISSION);
+        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
         // Save current value for use in log
         uint256 oldLiquidationIncentiveMantissa =
             _getRiskEngineStorage().liquidationIncentiveMantissa;
@@ -115,7 +115,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      * @inheritdoc IRiskEngine
      */
     function supportMarket(IPToken pToken) external {
-        checkPermission(msg.sender, _CONFIGURATOR_PERMISSION);
+        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
         if (_getRiskEngineStorage().markets[address(pToken)].isListed) {
             revert RiskEngineError.AlreadyListed();
         }
@@ -140,7 +140,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         IPToken[] calldata pTokens,
         uint256[] calldata newBorrowCaps
     ) external {
-        checkPermission(msg.sender, _BORROW_CAP_GUARDIAN_PERMISSION);
+        checkPermission(_BORROW_CAP_GUARDIAN_PERMISSION, msg.sender);
         uint256 numMarkets = pTokens.length;
         uint256 numBorrowCap = newBorrowCaps.length;
 
@@ -161,7 +161,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         IPToken[] calldata pTokens,
         uint256[] calldata newSupplyCaps
     ) external {
-        checkPermission(msg.sender, _SUPPLY_CAP_GUARDIAN_PERMISSION);
+        checkPermission(_SUPPLY_CAP_GUARDIAN_PERMISSION, msg.sender);
         uint256 numMarkets = pTokens.length;
         uint256 newSupplyCap = newSupplyCaps.length;
 
@@ -179,7 +179,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      * @inheritdoc IRiskEngine
      */
     function setMintPaused(IPToken pToken, bool state) external returns (bool) {
-        checkPermission(msg.sender, _PAUSE_GUARDIAN_PERMISSION);
+        checkPermission(_PAUSE_GUARDIAN_PERMISSION, msg.sender);
         if (!_getRiskEngineStorage().markets[address(pToken)].isListed) {
             revert RiskEngineError.MarketNotListed();
         }
@@ -193,7 +193,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      * @inheritdoc IRiskEngine
      */
     function setBorrowPaused(IPToken pToken, bool state) external returns (bool) {
-        checkPermission(msg.sender, _PAUSE_GUARDIAN_PERMISSION);
+        checkPermission(_PAUSE_GUARDIAN_PERMISSION, msg.sender);
         if (!_getRiskEngineStorage().markets[address(pToken)].isListed) {
             revert RiskEngineError.MarketNotListed();
         }
@@ -207,7 +207,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      * @inheritdoc IRiskEngine
      */
     function setTransferPaused(bool state) external returns (bool) {
-        checkPermission(msg.sender, _PAUSE_GUARDIAN_PERMISSION);
+        checkPermission(_PAUSE_GUARDIAN_PERMISSION, msg.sender);
         _getRiskEngineStorage().transferGuardianPaused = state;
         emit ActionPaused("Transfer", state);
         return state;
@@ -217,7 +217,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      * @inheritdoc IRiskEngine
      */
     function setSeizePaused(bool state) external returns (bool) {
-        checkPermission(msg.sender, _PAUSE_GUARDIAN_PERMISSION);
+        checkPermission(_PAUSE_GUARDIAN_PERMISSION, msg.sender);
         _getRiskEngineStorage().seizeGuardianPaused = state;
         emit ActionPaused("Seize", state);
         return state;

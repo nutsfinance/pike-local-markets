@@ -30,6 +30,12 @@ contract TestDeploy is TestSetters {
     bytes32 constant pause_guard_permission =
         0x50415553455f475541524449414e000000000000000000000000000000000000;
 
+    bytes32 constant reserve_manager_permission =
+        0x524553455256455f4d414e414745520000000000000000000000000000000000;
+
+    bytes32 constant reserve_withdrawer_permission =
+        0x524553455256455f574954484452415745520000000000000000000000000000;
+
     uint256 initialExchangeRate = 1e18;
     uint256 reserveFactor = 5e16;
     uint256 protocolSeizeShare = 1e16;
@@ -77,15 +83,17 @@ contract TestDeploy is TestSetters {
             pTokenDecimals: pTokenDecimals
         });
 
-        string[] memory pTokenFacets = new string[](3);
+        string[] memory pTokenFacets = new string[](4);
         pTokenFacets[0] = "InitialModuleBundle";
         pTokenFacets[1] = "InterestRateModule";
         pTokenFacets[2] = "PTokenModule";
+        pTokenFacets[3] = "RBACModule";
 
-        address[] memory pTokenModulesAddresses = new address[](3);
+        address[] memory pTokenModulesAddresses = new address[](4);
         pTokenModulesAddresses[0] = address(new InitialModuleBundle());
         pTokenModulesAddresses[1] = address(new InterestRateModule());
         pTokenModulesAddresses[2] = address(new PTokenModule());
+        pTokenModulesAddresses[3] = address(new RBACModule());
 
         address _pToken = deployDiamond(pTokenFacets, pTokenModulesAddresses);
         setPToken(symbol_, _pToken);
@@ -107,6 +115,12 @@ contract TestDeploy is TestSetters {
             initData.name,
             initData.symbol,
             initData.pTokenDecimals
+        );
+
+        IRBAC(_pToken).grantPermission(reserve_manager_permission, getAdmin());
+        IRBAC(_pToken).grantPermission(reserve_withdrawer_permission, getAdmin());
+        IRBAC(address(re)).grantNestedPermission(
+            configurator_permission, _pToken, getAdmin()
         );
 
         InterestRateModule interestRateModule = InterestRateModule(_pToken);
@@ -162,10 +176,10 @@ contract TestDeploy is TestSetters {
 
         vm.startPrank(getAdmin());
 
-        IRBAC(riskEngine).grantPermission(getAdmin(), configurator_permission);
-        IRBAC(riskEngine).grantPermission(getAdmin(), supply_guard_permission);
-        IRBAC(riskEngine).grantPermission(getAdmin(), borrow_guard_permission);
-        IRBAC(riskEngine).grantPermission(getAdmin(), pause_guard_permission);
+        IRBAC(riskEngine).grantPermission(configurator_permission, getAdmin());
+        IRBAC(riskEngine).grantPermission(supply_guard_permission, getAdmin());
+        IRBAC(riskEngine).grantPermission(borrow_guard_permission, getAdmin());
+        IRBAC(riskEngine).grantPermission(pause_guard_permission, getAdmin());
 
         IRiskEngine(riskEngine).setOracle(getOracle());
         IRiskEngine(riskEngine).setCloseFactor(_closeFactor);

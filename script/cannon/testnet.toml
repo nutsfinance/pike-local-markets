@@ -23,6 +23,12 @@ defaultValue = "0x424f52524f575f4341505f475541524449414e000000000000000000000000
 [setting.pauseGuardRole]
 defaultValue = "0x50415553455f475541524449414e000000000000000000000000000000000000"
 
+[setting.reserveManagerRole]
+defaultValue = "0x524553455256455f4d414e414745520000000000000000000000000000000000"
+
+[setting.reserveWithdrawerRole]
+defaultValue = "0x524553455256455f574954484452415745520000000000000000000000000000"
+
 [setting.usdc]
 defaultValue = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
 
@@ -65,11 +71,11 @@ artifact = "RiskEngineModule"
 artifact = "OracleEngine"
 
 [contract.ChainlinkOracleProvider]
-artifact = "ChainlinkOracleProvider"
+artifact = "src/oracles/ChainlinkOracleProvider.sol:ChainlinkOracleProvider"
 args = ["<%= AddressZero %>"]
 
 [contract.PythOracleProvider]
-artifact = "PythOracleProvider"
+artifact = "src/oracles/PythOracleProvider.sol:PythOracleProvider"
 args = ["0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"]
 
 #PToken
@@ -77,6 +83,7 @@ args = ["0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"]
 contracts = [
     "InitialModuleBundle",
     "InterestRateModule",
+    "RBACModule",
     "PTokenModule",
 ]
 
@@ -197,6 +204,22 @@ func = "initialize"
 args = ["<%= settings.usdc %>", "<%= core.Proxy.address %>", "<%= settings.initial_exchange_rate %>", "<%= settings.reserve_factor %>", "<%= settings.protocol_seize_factor %>", "<%= settings.max_borrow_rate %>", "pike-usdc", "pUSDC", "<%= settings.decimals %>"]
 depends = [ "clone.pUSDC",  "clone.core"]
 
+[invoke.pUSDC_reserve_manager]
+target = [ "pUSDC.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.owner %>"
+func = "grantPermission"
+args = ["<%= settings.reserveManagerRole %>", "<%= settings.owner %>"]
+depends = [ "clone.pUSDC" ]
+
+[invoke.pUSDC_reserve_withdrawer]
+target = [ "pUSDC.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.owner %>"
+func = "grantPermission"
+args = ["<%= settings.reserveWithdrawerRole %>", "<%= settings.owner %>"]
+depends = [ "clone.pUSDC" ]
+
 [invoke.initialize_pWETH]
 target = [ "pWETH.Proxy" ]
 abi = "<%= JSON.stringify(contracts.PTokenModule.abi) %>"
@@ -204,6 +227,22 @@ from = "<%= settings.owner %>"
 func = "initialize"
 args = ["<%= settings.weth %>", "<%= core.Proxy.address %>", "<%= settings.initial_exchange_rate %>", "<%= settings.reserve_factor %>", "<%= settings.protocol_seize_factor %>", "<%= settings.max_borrow_rate %>", "pike-weth", "pWETH", "<%= settings.decimals %>"]
 depends = [ "clone.pWETH", "clone.core" ]
+
+[invoke.pWETH_reserve_manager]
+target = [ "pWETH.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.owner %>"
+func = "grantPermission"
+args = ["<%= settings.reserveManagerRole %>", "<%= settings.owner %>"]
+depends = [ "clone.pWETH" ]
+
+[invoke.pWETH_reserve_withdrawer]
+target = [ "pWETH.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.owner %>"
+func = "grantPermission"
+args = ["<%= settings.reserveWithdrawerRole %>", "<%= settings.owner %>"]
+depends = [ "clone.pWETH" ]
 
 [invoke.initialize_pUSDC_IRM]
 target = [ "pUSDC.Proxy" ]
@@ -242,28 +281,42 @@ target = [ "core.Proxy" ]
 abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
 from = "<%= settings.owner %>"
 func = "grantPermission"
-args = ["<%= settings.owner %>", "<%= settings.confRole %>"]
+args = ["<%= settings.confRole %>", "<%= settings.owner %>"]
 
 [invoke.set_core_pause_guard]
 target = [ "core.Proxy" ]
 abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
 from = "<%= settings.owner %>"
 func = "grantPermission"
-args = ["<%= settings.owner %>", "<%= settings.pauseGuardRole %>"]
+args = ["<%= settings.pauseGuardRole %>", "<%= settings.owner %>"]
 
 [invoke.set_core_supply_guard]
 target = [ "core.Proxy" ]
 abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
 from = "<%= settings.owner %>"
 func = "grantPermission"
-args = ["<%= settings.owner %>", "<%= settings.supGuardRole %>"]
+args = ["<%= settings.supGuardRole %>", "<%= settings.owner %>"]
 
 [invoke.set_core_borrow_guard]
 target = [ "core.Proxy" ]
 abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
 from = "<%= settings.owner %>"
 func = "grantPermission"
-args = ["<%= settings.owner %>", "<%= settings.borGuardRole %>"]
+args = ["<%= settings.borGuardRole %>", "<%= settings.owner %>"]
+
+[invoke.set_pUSDC_configurator]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.owner %>"
+func = "grantNestedPermission"
+args = ["<%= settings.confRole %>", "<%= pUSDC.Proxy.address %>","<%= settings.owner %>"]
+
+[invoke.set_pWETH_configurator]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.owner %>"
+func = "grantNestedPermission"
+args = ["<%= settings.confRole %>", "<%= pWETH.Proxy.address %>","<%= settings.owner %>"]
 
 [invoke.support_pWETH]
 target = [ "core.Proxy" ]

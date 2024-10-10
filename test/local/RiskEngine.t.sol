@@ -208,9 +208,11 @@ contract LocalRiskEngine is TestLocal {
     function testSetCF_FailIfNotListed() public {
         vm.startPrank(getAdmin());
 
+        changeList(address(pUSDC), false);
+
         // "MarketNotListed()" selector
         vm.expectRevert(0x69609fc6);
-        re.setCollateralFactor(IPToken(address(0)), 0, 0);
+        re.setCollateralFactor(IPToken(pUSDC), 0, 0);
     }
 
     function testSetCF_FailIfInvalidCF() public {
