@@ -7,7 +7,7 @@ import "forge-std/Test.sol";
 import {TestState} from "@helpers/TestState.sol";
 import {IOwnable} from "@interfaces/IOwnable.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
-import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
+import {IDoubleJumpRateModel} from "@interfaces/IDoubleJumpRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 
 contract TestGetters is Test, TestState {
@@ -25,13 +25,17 @@ contract TestGetters is Test, TestState {
         }
     }
 
-    function getIRM(string memory pToken) public view returns (IInterestRateModel irm) {
+    function getIRM(string memory pToken)
+        public
+        view
+        returns (IDoubleJumpRateModel irm)
+    {
         if (getLocatState()) {
-            return IInterestRateModel(
+            return IDoubleJumpRateModel(
                 _testState.pTokens[keccak256(abi.encodePacked(pToken))]
             );
         } else {
-            return IInterestRateModel(vm.getAddress(string.concat(pToken, ".Proxy")));
+            return IDoubleJumpRateModel(vm.getAddress(string.concat(pToken, ".Proxy")));
         }
     }
 

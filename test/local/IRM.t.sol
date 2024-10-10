@@ -6,9 +6,9 @@ import "forge-std/Test.sol";
 import {IPToken, IERC20} from "@interfaces/IPToken.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {
-    InterestRateModule,
-    IInterestRateModel
-} from "@modules/interestRateModel/InterestRateModule.sol";
+    DoubleJumpRateModel,
+    IDoubleJumpRateModel
+} from "@modules/interestRateModel/DoubleJumpRateModel.sol";
 import {TestLocal} from "@helpers/TestLocal.sol";
 
 import {MockOracle} from "@mocks/MockOracle.sol";
@@ -16,8 +16,8 @@ import {MockOracle} from "@mocks/MockOracle.sol";
 contract LocalIRM is TestLocal {
     IPToken pUSDC;
     IPToken pWETH;
-    IInterestRateModel pUSDCIRM;
-    IInterestRateModel pWETHIRM;
+    IDoubleJumpRateModel pUSDCIRM;
+    IDoubleJumpRateModel pWETHIRM;
 
     MockOracle mockOracle;
 
@@ -40,13 +40,43 @@ contract LocalIRM is TestLocal {
         mockOracle = MockOracle(re.oracle());
     }
 
-    function testInitialize_FailIfInitialized() public {
-        assertEq(pUSDCIRM.getUtilization(0, 0, 0), 0);
-        assertEq(pWETHIRM.getUtilization(0, 0, 0), 0);
-
+    function testConfig_FailIfSecondKinkIsZero() public {
         vm.prank(getAdmin());
-        // "AlreadyInitialized()" selector
-        vm.expectRevert(0x0dc149f0);
-        InterestRateModule(address(pUSDCIRM)).initialize(0, 0, 0, 0);
+
+        uint256 secondKink = 0;
+
+        // "ZeroValue()" selector
+        vm.expectRevert(0x7c946ed7);
+        pUSDCIRM.configureInterestRateModel(
+            baseRatePerYear, 0, multiplierPerYear, jumpMultiplierPerYear, 0, secondKink
+        );
+    }
+
+    function testConfig_FailIfBaseRateNonZero() public {
+        vm.prank(getAdmin());
+
+        // "InvalidMultiplierForNonZeroBaseRate()" selector
+        vm.expectRevert(0x435fecd9);
+        pUSDCIRM.configureInterestRateModel(
+            baseRatePerYear, 0, multiplierPerYear, jumpMultiplierPerYear, kink, kink
+        );
+    }
+
+    function testConfig_FailIfNotInOrder() public {
+        vm.startPrank(getAdmin());
+
+        // "InvalidKinkOrMultiplierOrder()" selector
+        vm.expectRevert(0x397bc3d5);
+        pUSDCIRM.configureInterestRateModel(
+            baseRatePerYear, 0, jumpMultiplierPerYear, multiplierPerYear, 0, kink
+        );
+
+        // "InvalidKinkOrMultiplierOrder()" selector
+        vm.expectRevert(0x397bc3d5);
+        pUSDCIRM.configureInterestRateModel(
+            0, 0, multiplierPerYear, jumpMultiplierPerYear, kink, kink
+        );
+
+        vm.stopPrank();
     }
 }

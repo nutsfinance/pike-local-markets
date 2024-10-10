@@ -29,7 +29,7 @@
     "test": "forge test --match-contract Local -vv",
     "test:coverage": "forge coverage --match-contract Local -vv --no-match-coverage \"(script|test|node_modules)\"",
     "test:coverage:output": "forge coverage --match-contract Local -vv --no-match-coverage \"(script|test|node_modules)\" --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage --ignore-errors inconsistent",
-    "test:fork": "npx cannon test script/cannon/mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io --forge.match-contract Fork --forge.vv",
+    "test:fork": "forge build --ast && npx cannon test script/cannon/mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io --forge.match-contract Fork --forge.vv",
     "test:fuzz": "forge test --match-contract Fuzz -vv"
   },
   "dependencies": {

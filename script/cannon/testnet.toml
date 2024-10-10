@@ -55,8 +55,8 @@ artifact = "InitialModuleBundle"
 salt = "<%= settings.salt %>"
 create2 = true
 
-[contract.InterestRateModule]
-artifact = "InterestRateModule"
+[contract.DoubleJumpRateModel]
+artifact = "DoubleJumpRateModel"
 
 [contract.RBACModule]
 artifact = "RBACModule"
@@ -82,7 +82,7 @@ args = ["0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"]
 [router.PTokenRouter]
 contracts = [
     "InitialModuleBundle",
-    "InterestRateModule",
+    "DoubleJumpRateModel",
     "RBACModule",
     "PTokenModule",
 ]
@@ -220,6 +220,14 @@ func = "grantPermission"
 args = ["<%= settings.reserveWithdrawerRole %>", "<%= settings.owner %>"]
 depends = [ "clone.pUSDC" ]
 
+[invoke.set_pUSDC_local_configurator]
+target = [ "pUSDC.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.owner %>"
+func = "grantPermission"
+args = ["<%= settings.confRole %>", "<%= settings.owner %>"]
+depends = [ "clone.pUSDC" ]
+
 [invoke.initialize_pWETH]
 target = [ "pWETH.Proxy" ]
 abi = "<%= JSON.stringify(contracts.PTokenModule.abi) %>"
@@ -244,21 +252,29 @@ func = "grantPermission"
 args = ["<%= settings.reserveWithdrawerRole %>", "<%= settings.owner %>"]
 depends = [ "clone.pWETH" ]
 
-[invoke.initialize_pUSDC_IRM]
-target = [ "pUSDC.Proxy" ]
-abi = "<%= JSON.stringify(contracts.InterestRateModule.abi) %>"
-from = "<%= settings.owner %>"
-func = "initialize"
-args = ["<%= parseUnits('1.5', 16) %>", "<%= parseUnits('8.33', 16) %>", "<%= parseUnits('4.3', 18) %>", "<%= parseUnits('80', 16) %>"]
-depends = [ "clone.pUSDC" ]
-
-[invoke.initialize_pWETH_IRM]
+[invoke.set_pWETH_local_configurator]
 target = [ "pWETH.Proxy" ]
-abi = "<%= JSON.stringify(contracts.InterestRateModule.abi) %>"
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
 from = "<%= settings.owner %>"
-func = "initialize"
-args = ["<%= parseUnits('1.5', 16) %>", "<%= parseUnits('8.33', 16) %>", "<%= parseUnits('4.3', 18) %>", "<%= parseUnits('80', 16) %>"]
+func = "grantPermission"
+args = ["<%= settings.confRole %>", "<%= settings.owner %>"]
 depends = [ "clone.pWETH" ]
+
+[invoke.config_pUSDC_IRM]
+target = [ "pUSDC.Proxy" ]
+abi = "<%= JSON.stringify(contracts.DoubleJumpRateModel.abi) %>"
+from = "<%= settings.owner %>"
+func = "configureInterestRateModel"
+args = ["<%= parseUnits('1.5', 16) %>", "0", "<%= parseUnits('8.33', 16) %>", "<%= parseUnits('4.3', 18) %>", "0", "<%= parseUnits('80', 16) %>"]
+depends = [ "clone.pUSDC", "invoke.set_pUSDC_local_configurator" ]
+
+[invoke.config_pWETH_IRM]
+target = [ "pWETH.Proxy" ]
+abi = "<%= JSON.stringify(contracts.DoubleJumpRateModel.abi) %>"
+from = "<%= settings.owner %>"
+func = "configureInterestRateModel"
+args = ["<%= parseUnits('1.5', 16) %>", "0", "<%= parseUnits('8.33', 16) %>", "<%= parseUnits('4.3', 18) %>", "0", "<%= parseUnits('80', 16) %>"]
+depends = [ "clone.pWETH", "invoke.set_pWETH_local_configurator" ]
 
 [invoke.set_oracle]
 target = [ "core.Proxy" ]

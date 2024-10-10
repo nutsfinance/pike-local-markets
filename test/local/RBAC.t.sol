@@ -40,28 +40,45 @@ contract LocalRBAC is TestLocal {
     }
 
     function testGrant_FailIfAlreadyGranted() public {
-        vm.prank(getAdmin());
+        vm.startPrank(getAdmin());
         // "AlreadyGranted()" selector
         vm.expectRevert(0x87b38f77);
         IRBAC(address(re)).grantPermission(configurator_permission, getAdmin());
+
+        vm.expectRevert(0x87b38f77);
+        IRBAC(address(re)).grantNestedPermission(
+            configurator_permission, address(pUSDC), getAdmin()
+        );
+
+        vm.stopPrank();
     }
 
     function testGrant_FailIfInvalidPermission() public {
-        vm.prank(getAdmin());
+        vm.startPrank(getAdmin());
         // "InvalidPermission()" selector
         vm.expectRevert(0x868a64de);
         IRBAC(address(re)).grantPermission(bytes32(0), getAdmin());
+
+        vm.expectRevert(0x868a64de);
+        IRBAC(address(re)).grantNestedPermission(bytes32(0), address(pUSDC), getAdmin());
+
+        vm.stopPrank();
     }
 
     function testGrant_FailIfNotOwner() public {
-        vm.prank(address(1));
+        vm.startPrank(address(1));
         // "Unauthorized(address)" selector
         vm.expectRevert(abi.encodePacked(bytes4(0x8e4a23d6), abi.encode(address(1))));
         IRBAC(address(re)).grantPermission(bytes32(0), getAdmin());
+
+        vm.expectRevert(abi.encodePacked(bytes4(0x8e4a23d6), abi.encode(address(1))));
+        IRBAC(address(re)).grantNestedPermission(bytes32(0), address(pUSDC), getAdmin());
+
+        vm.stopPrank();
     }
 
     function testAction_FailIfNotPermissioned() public {
-        vm.prank(address(1));
+        vm.startPrank(address(1));
         // "PermissionDenied(bytes32,address)" selector
         vm.expectRevert(
             abi.encodePacked(
@@ -69,11 +86,25 @@ contract LocalRBAC is TestLocal {
             )
         );
         re.setMintPaused(pWETH, true);
+
+        // "NestedPermissionDenied(bytes32,address,address)" selector
+        vm.expectRevert(
+            abi.encodePacked(
+                bytes4(0x386bcd36),
+                abi.encode(configurator_permission, address(pWETH), address(1))
+            )
+        );
+        re.setCollateralFactor(pWETH, 0, 0);
+
+        vm.stopPrank();
     }
 
     function testRevoke_Success() public {
-        vm.prank(getAdmin());
+        vm.startPrank(getAdmin());
         IRBAC(address(re)).revokePermission(configurator_permission, getAdmin());
+        IRBAC(address(re)).revokeNestedPermission(
+            configurator_permission, address(pUSDC), getAdmin()
+        );
 
         assertEq(
             IRBAC(address(re)).hasPermission(configurator_permission, getAdmin()),
@@ -81,18 +112,50 @@ contract LocalRBAC is TestLocal {
             "invalid permission"
         );
 
+        assertEq(
+            IRBAC(address(re)).hasNestedPermission(
+                configurator_permission, address(pUSDC), getAdmin()
+            ),
+            false,
+            "invalid nested permission"
+        );
+
         // "ZeroAddress()" selector
         vm.expectRevert(0xd92e233d);
         IRBAC(address(re)).hasPermission(configurator_permission, address(0));
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        IRBAC(address(re)).hasNestedPermission(
+            configurator_permission, address(pUSDC), address(0)
+        );
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        IRBAC(address(re)).hasNestedPermission(
+            configurator_permission, address(0), getAdmin()
+        );
+
+        vm.stopPrank();
     }
 
     function testRevoke_FailIfAlreadyRevoked() public {
         vm.startPrank(getAdmin());
         IRBAC(address(re)).revokePermission(configurator_permission, getAdmin());
+        IRBAC(address(re)).revokeNestedPermission(
+            configurator_permission, address(pUSDC), getAdmin()
+        );
 
         // "AlreadyRevoked()" selector
         vm.expectRevert(0x905e7107);
         IRBAC(address(re)).revokePermission(configurator_permission, getAdmin());
+
+        vm.expectRevert(0x905e7107);
+        IRBAC(address(re)).revokeNestedPermission(
+            configurator_permission, address(pUSDC), getAdmin()
+        );
+
+        vm.stopPrank();
     }
 
     function testRenounce_Success() public {
@@ -105,6 +168,8 @@ contract LocalRBAC is TestLocal {
             address(0),
             "pending owner not renounced"
         );
+
+        vm.stopPrank();
     }
 
     function testNominateOwner_Success() public {
@@ -146,5 +211,7 @@ contract LocalRBAC is TestLocal {
         IOwnable(address(re)).renounceNomination();
 
         assertEq(address(0), IOwnable(address(re)).pendingOwner());
+
+        vm.stopPrank();
     }
 }

@@ -102,6 +102,7 @@ Contracts
 │   │   │   └── RiskEngineError.sol
 │   │   ├── interfaces
 │   │   │   ├── IInterestRateModel.sol
+│   │   │   ├── IDoubleJumpRateModel.sol
 │   │   │   ├── IOwnable.sol
 │   │   │   ├── IPToken.sol
 │   │   │   ├── IRBAC.sol
@@ -114,15 +115,13 @@ Contracts
 │   │   │   │   ├── RBACModule.sol
 │   │   │   │   └── UpgradeModule.sol
 │   │   │   ├── interestRateModel
-│   │   │   │   ├── DoubleJumpRateModel.sol
-│   │   │   │   ├── InterestRateModule.sol
+│   │   │   │   └── DoubleJumpRateModel.sol
 │   │   │   ├── pToken
 │   │   │   │   └── PTokenModule.sol
 │   │   │   └── riskEngine
 │   │   │       └── RiskEngineModule.sol
 │   │   ├── storage
 │   │   │   ├── DoubleJumpRateStorage.sol
-│   │   │   ├── InterestRateStorage.sol
 │   │   │   ├── OwnableStorage.sol
 │   │   │   ├── PTokenStorage.sol
 │   │   │   ├── RBACStorage.sol

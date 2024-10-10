@@ -10,7 +10,7 @@ import {IDiamondCut} from "@mocks/Diamond/IDiamondCut.sol";
 import {InitialModuleBundle} from "@modules/InitialModuleBundle.sol";
 import {RBACModule, IRBAC} from "@modules/common/RBACModule.sol";
 import {RiskEngineModule, IRiskEngine} from "@modules/riskEngine/RiskEngineModule.sol";
-import {InterestRateModule} from "@modules/interestRateModel/InterestRateModule.sol";
+import {DoubleJumpRateModel} from "@modules/interestRateModel/DoubleJumpRateModel.sol";
 import {PTokenModule, IPToken} from "@modules/pToken/PTokenModule.sol";
 import {MockToken, MockReentrantToken} from "@mocks/MockToken.sol";
 import {MockOracle} from "@mocks/MockOracle.sol";
@@ -85,13 +85,13 @@ contract TestDeploy is TestSetters {
 
         string[] memory pTokenFacets = new string[](4);
         pTokenFacets[0] = "InitialModuleBundle";
-        pTokenFacets[1] = "InterestRateModule";
+        pTokenFacets[1] = "DoubleJumpRateModel";
         pTokenFacets[2] = "PTokenModule";
         pTokenFacets[3] = "RBACModule";
 
         address[] memory pTokenModulesAddresses = new address[](4);
         pTokenModulesAddresses[0] = address(new InitialModuleBundle());
-        pTokenModulesAddresses[1] = address(new InterestRateModule());
+        pTokenModulesAddresses[1] = address(new DoubleJumpRateModel());
         pTokenModulesAddresses[2] = address(new PTokenModule());
         pTokenModulesAddresses[3] = address(new RBACModule());
 
@@ -119,13 +119,14 @@ contract TestDeploy is TestSetters {
 
         IRBAC(_pToken).grantPermission(reserve_manager_permission, getAdmin());
         IRBAC(_pToken).grantPermission(reserve_withdrawer_permission, getAdmin());
+        IRBAC(_pToken).grantPermission(configurator_permission, getAdmin());
         IRBAC(address(re)).grantNestedPermission(
             configurator_permission, _pToken, getAdmin()
         );
 
-        InterestRateModule interestRateModule = InterestRateModule(_pToken);
-        interestRateModule.initialize(
-            baseRatePerYear, multiplierPerYear, jumpMultiplierPerYear, kink
+        DoubleJumpRateModel interestRateModule = DoubleJumpRateModel(_pToken);
+        interestRateModule.configureInterestRateModel(
+            baseRatePerYear, 0, multiplierPerYear, jumpMultiplierPerYear, 0, kink
         );
 
         re.supportMarket(IPToken(_pToken));
