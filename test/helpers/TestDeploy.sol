@@ -123,6 +123,12 @@ contract TestDeploy is TestSetters {
         IRBAC(address(re)).grantNestedPermission(
             configurator_permission, _pToken, getAdmin()
         );
+        IRBAC(address(re)).grantNestedPermission(
+            supply_guard_permission, _pToken, getAdmin()
+        );
+        IRBAC(address(re)).grantNestedPermission(
+            borrow_guard_permission, _pToken, getAdmin()
+        );
 
         DoubleJumpRateModel interestRateModule = DoubleJumpRateModel(_pToken);
         interestRateModule.configureInterestRateModel(
@@ -178,8 +184,6 @@ contract TestDeploy is TestSetters {
         vm.startPrank(getAdmin());
 
         IRBAC(riskEngine).grantPermission(configurator_permission, getAdmin());
-        IRBAC(riskEngine).grantPermission(supply_guard_permission, getAdmin());
-        IRBAC(riskEngine).grantPermission(borrow_guard_permission, getAdmin());
         IRBAC(riskEngine).grantPermission(pause_guard_permission, getAdmin());
 
         IRiskEngine(riskEngine).setOracle(getOracle());
