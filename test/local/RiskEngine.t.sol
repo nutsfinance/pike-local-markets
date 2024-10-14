@@ -509,12 +509,6 @@ contract LocalRiskEngine is TestLocal {
         doLiquidate(lp);
     }
 
-    function testRedeemAllowed_Fail() public {
-        // "InvalidRedeemTokens()" selector
-        vm.expectRevert(0xfe91e15d);
-        re.redeemVerify(1, 0);
-    }
-
     function testAddToMarket_Fail() public {
         address user1 = makeAddr("user1");
 

@@ -355,11 +355,4 @@ interface IRiskEngine {
      * @return the oracle engine address
      */
     function oracle() external view returns (address);
-
-    /**
-     * @notice Validates redeem and reverts on rejection.
-     * @param redeemAmount The amount of the underlying asset being redeemed
-     * @param redeemTokens The number of tokens being redeemed
-     */
-    function redeemVerify(uint256 redeemAmount, uint256 redeemTokens) external pure;
 }

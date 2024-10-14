@@ -17,6 +17,7 @@ library PTokenError {
     error RedeemRiskEngineRejection(uint256 errorCode);
     error RedeemFreshnessCheck();
     error RedeemTransferOutNotPossible();
+    error InvalidRedeemTokens();
 
     error BorrowRiskEngineRejection(uint256 errorCode);
     error BorrowFreshnessCheck();

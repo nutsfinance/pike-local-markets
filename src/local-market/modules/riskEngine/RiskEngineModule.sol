@@ -672,16 +672,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     /**
      * @inheritdoc IRiskEngine
      */
-    function redeemVerify(uint256 redeemAmount, uint256 redeemTokens) external pure {
-        // Require tokens is zero or amount is also zero
-        if (redeemTokens == 0 && redeemAmount > 0) {
-            revert RiskEngineError.InvalidRedeemTokens();
-        }
-    }
-
-    /**
-     * @inheritdoc IRiskEngine
-     */
     function isDeprecated(IPToken pToken) public view returns (bool) {
         return _getRiskEngineStorage().markets[address(pToken)].collateralFactorMantissa
             == 0 && _getRiskEngineStorage().borrowGuardianPaused[address(pToken)] == true
