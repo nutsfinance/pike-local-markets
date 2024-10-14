@@ -749,12 +749,13 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
          */
         doTransferOut(redeemer, redeemAmount);
 
+        if (redeemTokens == 0 && redeemAmount > 0) {
+            revert PTokenError.InvalidRedeemTokens();
+        }
+
         /* We emit a Transfer event, and a Redeem event */
         emit Transfer(onBehalfOf, address(0), redeemTokens);
         emit Redeem(onBehalfOf, redeemAmount, redeemTokens);
-
-        /* We call the defense hook */
-        _getPTokenStorage().riskEngine.redeemVerify(redeemAmount, redeemTokens);
     }
 
     /**

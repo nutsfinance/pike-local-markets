@@ -9,6 +9,8 @@ out/
 
 node_modules
 
+certora
+
 # Docs
 docs/
 

@@ -25,7 +25,6 @@ library RiskEngineError {
     error SeizePaused();
     error TransferPaused();
 
-    error InvalidRedeemTokens();
     error SenderNotPToken();
     error RepayMoreThanBorrowed();
 
