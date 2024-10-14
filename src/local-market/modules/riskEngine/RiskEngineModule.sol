@@ -77,15 +77,14 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint256 oldCollateralFactorMantissa = market.collateralFactorMantissa;
         market.collateralFactorMantissa = newCollateralFactorMantissa;
 
-        // Emit event with asset, old collateral factor, and new collateral factor
-        emit NewCollateralFactor(
-            pToken, oldCollateralFactorMantissa, newCollateralFactorMantissa
-        );
-
         // Set market's liquidation threshold to new liquidation threshold, remember old value
         uint256 oldLiquidationThresholdMantissa = market.liquidationThresholdMantissa;
         market.liquidationThresholdMantissa = newLiquidationThresholdMantissa;
 
+        // Emit event with asset, old collateral factor, and new collateral factor
+        emit NewCollateralFactor(
+            pToken, oldCollateralFactorMantissa, newCollateralFactorMantissa
+        );
         // Emit event with asset, old liquidation threshold, and new liquidation threshold
         emit NewLiquidationThreshold(
             pToken, oldLiquidationThresholdMantissa, newLiquidationThresholdMantissa
@@ -120,9 +119,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             revert RiskEngineError.AlreadyListed();
         }
 
-        /// TODO: ERC165 check compliance
-
-        // Note that isComped is not in active use anymore
         Market storage newMarket = _getRiskEngineStorage().markets[address(pToken)];
         newMarket.isListed = true;
         newMarket.collateralFactorMantissa = 0;
