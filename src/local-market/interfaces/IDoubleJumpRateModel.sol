@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 
@@ -19,11 +19,14 @@ interface IDoubleJumpRateModel is IInterestRateModel {
      * All annualized rates are converted to per-second rates for internal calculations.
      * Only callable by the configurator.
      * @param baseRatePerYear The base interest rate per year (scaled by 1e18) before utilization hits the first kink.
-     * @param multiplierPerYear The multiplier per year (scaled by 1e18) that increases the interest rate as utilization increases before the first kink.
+     * @param multiplierPerYear The multiplier per year (scaled by 1e18)
+     * that increases the interest rate as utilization increases before the first kink.
      * @param firstJumpMultiplierPerYear The additional multiplier applied after the first kink point (scaled by 1e18).
-     * @param secondJumpMultiplierPerYear The additional multiplier applied after the second kink point (scaled by 1e18).
-     * @param firstKink The utilization rate (scaled by 1e18) at which the interest rate "jumps" according to the first jump multiplier.
-     * @param secondKink The utilization rate (scaled by 1e18) at which the interest rate "jumps" according to the second jump multiplier.
+     * @param secondJumpMultiplierPerYear The additional multiplier applied after second kink point (scaled by 1e18).
+     * @param firstKink The utilization rate (scaled by 1e18) at which the interest rate "jumps"
+     *  according to the first jump multiplier.
+     * @param secondKink The utilization rate (scaled by 1e18) at which the interest rate "jumps"
+     * according to the second jump multiplier.
      */
     function configureInterestRateModel(
         uint256 baseRatePerYear,

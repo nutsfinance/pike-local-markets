@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import {
     SafeERC20, IERC20
@@ -28,12 +28,17 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
      * @dev Prevents a contract from calling itself, directly or indirectly.
      */
     modifier nonReentrant() {
-        if (!_getPTokenStorage()._notEntered) {
+        if (_reentrancyGuardEntered()) {
             revert CommonError.ReentrancyGuardReentrantCall();
         }
-        _getPTokenStorage()._notEntered = false;
+
+        assembly ("memory-safe") {
+            tstore(_SLOT_PTOKEN_STORAGE, 1)
+        }
         _;
-        _getPTokenStorage()._notEntered = true;
+        assembly ("memory-safe") {
+            tstore(_SLOT_PTOKEN_STORAGE, 0)
+        }
     }
 
     /**
@@ -85,9 +90,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         _getPTokenStorage().name = name_;
         _getPTokenStorage().symbol = symbol_;
         _getPTokenStorage().decimals = decimals_;
-
-        // The counter starts true to prevent changing it from zero to non-zero (i.e. smaller cost/refund)
-        _getPTokenStorage()._notEntered = true;
 
         // Set underlying and sanity check it
         _getPTokenStorage().underlying = underlying_;
@@ -1349,5 +1351,15 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
      */
     function _getBlockTimestamp() internal view returns (uint256) {
         return block.timestamp;
+    }
+
+    /**
+     * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
+     * `nonReentrant` function in the call stack.
+     */
+    function _reentrancyGuardEntered() internal view returns (bool result) {
+        assembly ("memory-safe") {
+            result := tload(_SLOT_PTOKEN_STORAGE)
+        }
     }
 }

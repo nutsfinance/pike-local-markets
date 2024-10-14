@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import "cannon-std/Cannon.sol";
 import "forge-std/Test.sol";
 
 import {TestState} from "@helpers/TestState.sol";
+
 import {IOwnable} from "@interfaces/IOwnable.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
+import {PTokenModule} from "@modules/pToken/PTokenModule.sol";
+import {RiskEngineModule} from "@modules/riskEngine/RiskEngineModule.sol";
 import {IDoubleJumpRateModel} from "@interfaces/IDoubleJumpRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 
@@ -17,11 +20,11 @@ contract TestGetters is Test, TestState {
         return _testState.admin;
     }
 
-    function getPToken(string memory pToken) public view returns (IPToken token) {
+    function getPToken(string memory pToken) public view returns (PTokenModule token) {
         if (getLocatState()) {
-            return IPToken(_testState.pTokens[keccak256(abi.encodePacked(pToken))]);
+            return PTokenModule(_testState.pTokens[keccak256(abi.encodePacked(pToken))]);
         } else {
-            return IPToken(vm.getAddress(string.concat(pToken, ".Proxy")));
+            return PTokenModule(vm.getAddress(string.concat(pToken, ".Proxy")));
         }
     }
 
@@ -39,11 +42,11 @@ contract TestGetters is Test, TestState {
         }
     }
 
-    function getRiskEngine() public view returns (IRiskEngine re) {
+    function getRiskEngine() public view returns (RiskEngineModule re) {
         if (getLocatState()) {
-            return IRiskEngine(_testState.riskEngine);
+            return RiskEngineModule(_testState.riskEngine);
         } else {
-            return IRiskEngine(vm.getAddress("core.Proxy"));
+            return RiskEngineModule(vm.getAddress("core.Proxy"));
         }
     }
 
