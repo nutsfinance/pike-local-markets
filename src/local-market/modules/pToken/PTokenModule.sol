@@ -529,8 +529,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
 
         if (borrowSnapshot.principal == 0) return 0;
 
-        uint256 principalTimesIndex = borrowSnapshot.principal * snapshot.accBorrowIndex;
-        return principalTimesIndex / borrowSnapshot.interestIndex;
+        return borrowSnapshot.principal * snapshot.accBorrowIndex
+            / borrowSnapshot.interestIndex;
     }
 
     /**
@@ -561,11 +561,12 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
 
         /// Get accrued snapshot
         PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
-        uint256 borrowRateMantissa = IInterestRateModel(address(this)).getBorrowRate(
-            getCash(), snapshot.totalBorrow, snapshot.totalReserve
-        );
 
-        if (borrowRateMantissa > _getPTokenStorage().borrowRateMaxMantissa) {
+        if (
+            IInterestRateModel(address(this)).getBorrowRate(
+                getCash(), snapshot.totalBorrow, snapshot.totalReserve
+            ) > _getPTokenStorage().borrowRateMaxMantissa
+        ) {
             revert PTokenError.BorrowRateBoundsCheck();
         }
 
@@ -598,10 +599,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
             return _getPTokenStorage().initialExchangeRateMantissa;
         }
         PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
-        uint256 totalCash = getCash();
-        uint256 cashPlusBorrowsMinusReserves =
-            totalCash + snapshot.totalBorrow - snapshot.totalReserve;
-        return cashPlusBorrowsMinusReserves * ExponentialNoError.expScale / _totalSupply;
+
+        return (getCash() + snapshot.totalBorrow - snapshot.totalReserve)
+            * ExponentialNoError.expScale / _totalSupply;
     }
 
     /**
@@ -992,11 +992,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
             revert PTokenError.LiquidateSeizeRiskEngineRejection(allowed);
         }
 
-        /* Fail if borrower = liquidator */
-        if (borrower == liquidator) {
-            revert PTokenError.LiquidateSeizeLiquidatorIsBorrower();
-        }
-
         /*
          * We calculate the new borrower and liquidator token balances, failing on underflow/overflow:
          *  borrowerTokensNew = accountTokens[borrower] - seizeTokens
@@ -1305,9 +1300,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         /* Calculate new borrow balance using the interest index:
          *  recentBorrowBalance = borrower.borrowBalance * market.borrowIndex / borrower.borrowIndex
          */
-        uint256 principalTimesIndex =
-            borrowSnapshot.principal * _getPTokenStorage().borrowIndex;
-        return principalTimesIndex / borrowSnapshot.interestIndex;
+        return borrowSnapshot.principal * _getPTokenStorage().borrowIndex
+            / borrowSnapshot.interestIndex;
     }
 
     /**
@@ -1328,8 +1322,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
              * Otherwise:
              *  exchangeRate = (totalCash + totalBorrows - totalReserves) / totalSupply
              */
-            uint256 totalCash = getCash();
-            uint256 cashPlusBorrowsMinusReserves = totalCash
+            uint256 cashPlusBorrowsMinusReserves = getCash()
                 + _getPTokenStorage().totalBorrows - _getPTokenStorage().totalReserves;
             return
                 cashPlusBorrowsMinusReserves * ExponentialNoError.expScale / _totalSupply;

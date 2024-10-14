@@ -38,7 +38,6 @@ library PTokenError {
     error LiquidateSeizeTooMuch();
 
     error LiquidateSeizeRiskEngineRejection(uint256 errorCode);
-    error LiquidateSeizeLiquidatorIsBorrower();
 
     error AddReservesFactorFreshCheck();
     error ReduceReservesFreshCheck();
