@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import {IRBAC} from "@interfaces/IRBAC.sol";
 import {RBACMixin} from "@utils/RBACMixin.sol";

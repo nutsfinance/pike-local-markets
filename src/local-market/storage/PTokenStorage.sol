@@ -1,18 +1,18 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 
 contract PTokenStorage {
     struct PTokenData {
         /**
+         * @dev Guard variable for re-entrancy checks
+         */
+        bytes32 _entered;
+        /**
          * @notice Underlying asset for this PToken
          */
         address underlying;
-        /**
-         * @dev Guard variable for re-entrancy checks
-         */
-        bool _notEntered;
         /**
          * @notice ERC20 token name for this token
          */

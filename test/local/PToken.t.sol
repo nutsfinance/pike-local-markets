@@ -1,4 +1,4 @@
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
@@ -99,7 +99,7 @@ contract LocalPToken is TestLocal {
 
     function testAccrueInterest_FailIfBorrowRateMaxMantissaReached() public {
         // borrowRateMaxMantissa slot
-        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d07;
+        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d08;
         vm.store(address(pUSDC), slot, bytes32(0));
 
         //skip time
