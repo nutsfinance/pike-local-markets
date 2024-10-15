@@ -355,4 +355,14 @@ interface IRiskEngine {
      * @return the oracle engine address
      */
     function oracle() external view returns (address);
+
+    /**
+     * @return the collateral factor of a pToken
+     */
+    function collateralFactor(IPToken pToken) external view returns (uint256);
+
+    /**
+     * @return the liquidation threshold of a pToken
+     */
+    function liquidationThreshold(IPToken pToken) external view returns (uint256);
 }
