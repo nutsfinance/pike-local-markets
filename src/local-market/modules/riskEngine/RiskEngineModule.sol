@@ -668,6 +668,20 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     /**
      * @inheritdoc IRiskEngine
      */
+    function collateralFactor(IPToken pToken) external view returns (uint256) {
+        return _getCollateralFactor(pToken).mantissa;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function liquidationThreshold(IPToken pToken) external view returns (uint256) {
+        return _getLiquidationThreshold(pToken).mantissa;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
     function isDeprecated(IPToken pToken) public view returns (bool) {
         return _getRiskEngineStorage().markets[address(pToken)].collateralFactorMantissa
             == 0 && _getRiskEngineStorage().borrowGuardianPaused[address(pToken)] == true

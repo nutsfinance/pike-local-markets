@@ -138,6 +138,9 @@ contract TestDeploy is TestSetters {
         re.supportMarket(IPToken(_pToken));
         re.setCollateralFactor(IPToken(_pToken), colFactor, liqThreshold);
 
+        assertEq(re.collateralFactor(IPToken(_pToken)), colFactor);
+        assertEq(re.liquidationThreshold(IPToken(_pToken)), liqThreshold);
+
         IPToken[] memory markets = new IPToken[](1);
         markets[0] = IPToken(_pToken);
 
