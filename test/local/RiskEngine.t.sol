@@ -19,7 +19,7 @@ contract LocalRiskEngine is TestLocal {
     IRiskEngine re;
 
     function setUp() public {
-        setDebug(true);
+        setDebug(false);
         setAdmin(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
         init();
 
@@ -470,7 +470,7 @@ contract LocalRiskEngine is TestLocal {
         doDepositAndEnter(user1, user1, address(pWETH), 1e18);
         doBorrow(user1, user1, address(pUSDC), 1450e6);
 
-        address mockRE = deployRiskEngine();
+        address mockRE = deployRiskEngine(closeFactor, liquidationIncentive);
         vm.prank(getAdmin());
         pWETH.setRiskEngine(IRiskEngine(mockRE));
 

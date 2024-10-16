@@ -51,7 +51,7 @@ The OracleProvider is responsible for retrieving price data from specific extern
 To run the Pike Local Market, clone the repository and install the necessary dependencies. Ensure you have [yarn](https://yarnpkg.com/lang/en/docs/install/) or [npm](https://docs.npmjs.com/cli/install) installed.
 
 ```bash
-$ git clone https://github.com/compound-finance/compound-protocol
+$ git clone https://github.com/nutsfinance/pike-local-markets.git
 $ cd pike-local-markets
 $ yarn install --lock-file # or `npm install`
 ```

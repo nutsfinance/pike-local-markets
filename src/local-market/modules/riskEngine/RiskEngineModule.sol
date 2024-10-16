@@ -11,6 +11,10 @@ import {CommonError} from "@errors/CommonError.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
 import {RBACMixin} from "@utils/RBACMixin.sol";
 
+/**
+ * @title Pike Markets RiskEngine Contract
+ * @author NUTS Finance (hello@pike.finance)
+ */
 contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACMixin {
     using ExponentialNoError for ExponentialNoError.Exp;
     using ExponentialNoError for uint256;

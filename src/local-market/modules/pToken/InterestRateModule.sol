@@ -6,12 +6,16 @@ import {InterestRateStorage} from "@storage/InterestRateStorage.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
 
+/**
+ * @title Pike Markets InterestRateModule Contract
+ * @author NUTS Finance (hello@pike.finance)
+ */
 contract InterestRateModule is IInterestRateModel, InterestRateStorage, OwnableMixin {
     /**
      * @notice Initialize an interest rate model
      * @param baseRatePerYear The approximate target base APR, as a mantissa (scaled by BASE)
      * @param multiplierPerYear The rate of increase in interest rate wrt utilization (scaled by BASE)
-     * @param jumpMultiplierPerYear The multiplierPerBlock after hitting a specified utilization point
+     * @param jumpMultiplierPerYear The multiplierPerSecond after hitting a specified utilization point
      * @param kink The utilization point at which the jump multiplier is applied
      */
     function initialize(

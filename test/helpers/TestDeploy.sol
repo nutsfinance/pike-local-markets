@@ -41,11 +41,14 @@ contract TestDeploy is TestSetters {
     uint256 jumpMultiplierPerYear = 4.3e18;
     uint256 kink = 80e16;
 
-    function deployProtocol() public {
+    uint256 closeFactor = 50e16;
+    uint256 liquidationIncentive = 1.08e18;
+
+    function deployProtocol() public virtual {
         address oracle = address(new MockOracle());
         setOracle(oracle);
 
-        address riskEngine = deployRiskEngine();
+        deployRiskEngine(closeFactor, liquidationIncentive);
     }
 
     function deployPToken(
@@ -57,7 +60,7 @@ contract TestDeploy is TestSetters {
         uint256 liqThreshold,
         function (string memory, string memory, uint8) internal returns (address)
             deployUnderlying
-    ) internal returns (address) {
+    ) internal virtual returns (address) {
         address underlying = deployUnderlying(name_, symbol_, underlyingDecimals);
 
         IRiskEngine re = IRiskEngine(getRiskEngine());
@@ -135,7 +138,11 @@ contract TestDeploy is TestSetters {
         return _pToken;
     }
 
-    function deployRiskEngine() internal returns (address) {
+    function deployRiskEngine(uint256 _closeFactor, uint256 _liquidationIncentive)
+        internal
+        virtual
+        returns (address)
+    {
         string[] memory riskEngineModulesFacets = new string[](3);
         riskEngineModulesFacets[0] = "InitialModuleBundle";
         riskEngineModulesFacets[1] = "RBACModule";
@@ -161,8 +168,8 @@ contract TestDeploy is TestSetters {
         IRBAC(riskEngine).grantPermission(getAdmin(), pause_guard_permission);
 
         IRiskEngine(riskEngine).setOracle(getOracle());
-        IRiskEngine(riskEngine).setCloseFactor(50e16);
-        IRiskEngine(riskEngine).setLiquidationIncentive(1.08e18);
+        IRiskEngine(riskEngine).setCloseFactor(_closeFactor);
+        IRiskEngine(riskEngine).setLiquidationIncentive(_liquidationIncentive);
 
         vm.stopPrank();
 

@@ -31,11 +31,7 @@ contract MockReentrantToken is MockToken {
         MockToken(name, symbol, decimals_)
     {}
 
-    function transferFrom(address from, address to, uint256 value)
-        public
-        override
-        returns (bool)
-    {
+    function transferFrom(address, address, uint256) public override returns (bool) {
         IPToken(msg.sender).mint(0);
         return true;
     }
