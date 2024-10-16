@@ -36,4 +36,19 @@ interface IDoubleJumpRateModel is IInterestRateModel {
         uint256 firstKink,
         uint256 secondKink
     ) external;
+
+    /**
+     * @return first and second kinks
+     */
+    function kinks() external view returns (uint256, uint256);
+
+    /**
+     * @return base rate per second
+     */
+    function baseRatePerSecond() external view returns (uint256);
+
+    /**
+     * @return base multiplier, and double jump multipliers
+     */
+    function multipliers() external pure returns (uint256, uint256, uint256);
 }

@@ -346,12 +346,12 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             return uint256(RiskEngineError.Error.PRICE_ERROR);
         }
 
-        uint256 borrowCap = _getRiskEngineStorage().borrowCaps[pToken];
+        uint256 cap = _getRiskEngineStorage().borrowCaps[pToken];
         // Borrow cap of type(uint256).max corresponds to unlimited borrowing
-        if (borrowCap != type(uint256).max) {
+        if (cap != type(uint256).max) {
             uint256 totalBorrows = IPToken(pToken).totalBorrows();
             uint256 nextTotalBorrows = totalBorrows.add_(borrowAmount);
-            if (nextTotalBorrows > borrowCap) {
+            if (nextTotalBorrows > cap) {
                 return uint256(RiskEngineError.Error.BORROW_CAP_EXCEEDED);
             }
         }
@@ -387,15 +387,15 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             return uint256(RiskEngineError.Error.MARKET_NOT_LISTED);
         }
 
-        uint256 supplyCap = _getRiskEngineStorage().supplyCaps[pToken];
+        uint256 cap = _getRiskEngineStorage().supplyCaps[pToken];
         // Skipping the cap check for uncapped coins to save some gas
-        if (supplyCap != type(uint256).max) {
+        if (cap != type(uint256).max) {
             uint256 pTokenSupply = IPToken(pToken).totalSupply();
             ExponentialNoError.Exp memory exchangeRate =
                 ExponentialNoError.Exp({mantissa: IPToken(pToken).exchangeRateStored()});
             uint256 nextTotalSupply =
                 exchangeRate.mul_ScalarTruncateAddUInt(pTokenSupply, mintAmount);
-            if (nextTotalSupply > supplyCap) {
+            if (nextTotalSupply > cap) {
                 return uint256(RiskEngineError.Error.SUPPLY_CAP_EXCEEDED);
             }
         }
@@ -677,6 +677,34 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      */
     function liquidationThreshold(IPToken pToken) external view returns (uint256) {
         return _getLiquidationThreshold(pToken).mantissa;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function liquidationIncentive() external view returns (uint256) {
+        return _getRiskEngineStorage().liquidationIncentiveMantissa;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function closeFactor() external view returns (uint256) {
+        return _getRiskEngineStorage().closeFactorMantissa;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function supplyCap(address pToken) external view returns (uint256) {
+        return _getRiskEngineStorage().supplyCaps[pToken];
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function borrowCap(address pToken) external view returns (uint256) {
+        return _getRiskEngineStorage().borrowCaps[pToken];
     }
 
     /**

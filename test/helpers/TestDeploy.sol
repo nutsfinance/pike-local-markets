@@ -150,6 +150,9 @@ contract TestDeploy is TestSetters {
         re.setMarketBorrowCaps(markets, caps);
         re.setMarketSupplyCaps(markets, caps);
 
+        assertEq(re.supplyCap(address(markets[0])), caps[0]);
+        assertEq(re.borrowCap(address(markets[0])), caps[0]);
+
         vm.stopPrank();
 
         assertEq(IPToken(_pToken).decimals(), pTokenDecimals);
@@ -192,6 +195,9 @@ contract TestDeploy is TestSetters {
         IRiskEngine(riskEngine).setOracle(getOracle());
         IRiskEngine(riskEngine).setCloseFactor(_closeFactor);
         IRiskEngine(riskEngine).setLiquidationIncentive(_liquidationIncentive);
+
+        assertEq(IRiskEngine(riskEngine).liquidationIncentive(), _liquidationIncentive);
+        assertEq(IRiskEngine(riskEngine).closeFactor(), _closeFactor);
 
         vm.stopPrank();
 

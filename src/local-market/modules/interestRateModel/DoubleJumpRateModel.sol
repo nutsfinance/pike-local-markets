@@ -59,6 +59,32 @@ contract DoubleJumpRateModel is IDoubleJumpRateModel, DoubleJumpRateStorage, RBA
     }
 
     /**
+     * @inheritdoc IDoubleJumpRateModel
+     */
+    function kinks() external view returns (uint256, uint256) {
+        return (_getIRMStorage().firstKink, _getIRMStorage().secondKink);
+    }
+
+    /**
+     * @inheritdoc IDoubleJumpRateModel
+     */
+    function baseRatePerSecond() external view returns (uint256) {
+        return _getIRMStorage().baseRatePerSecond;
+    }
+
+    /**
+     * @inheritdoc IDoubleJumpRateModel
+     */
+    function multipliers() external pure returns (uint256, uint256, uint256) {
+        InterestRateData memory data = _getIRMStorage();
+        return (
+            data.multiplierPerSecond,
+            data.firstJumpMultiplierPerSecond,
+            data.secondJumpMultiplierPerSecond
+        );
+    }
+
+    /**
      * @inheritdoc IInterestRateModel
      */
     function getSupplyRate(
