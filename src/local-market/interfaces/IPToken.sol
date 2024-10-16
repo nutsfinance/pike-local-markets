@@ -13,18 +13,23 @@ interface IPToken is IERC20 {
     /**
      * @notice Event emitted when tokens are minted
      */
-    event Mint(address minter, uint256 mintAmount, uint256 mintTokens);
+    event Mint(
+        address minter, address onBehalfOf, uint256 mintAmount, uint256 mintTokens
+    );
 
     /**
      * @notice Event emitted when tokens are redeemed
      */
-    event Redeem(address redeemer, uint256 redeemAmount, uint256 redeemTokens);
+    event Redeem(
+        address redeemer, address onBehalfOf, uint256 redeemAmount, uint256 redeemTokens
+    );
 
     /**
      * @notice Event emitted when underlying is borrowed
      */
     event Borrow(
         address borrower,
+        address onBehalfOf,
         uint256 borrowAmount,
         uint256 accountBorrows,
         uint256 totalBorrows

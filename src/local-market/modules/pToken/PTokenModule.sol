@@ -665,7 +665,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
             _getPTokenStorage().accountTokens[onBehalfOf] + mintTokens;
 
         /* We emit a Mint event, and a Transfer event */
-        emit Mint(onBehalfOf, actualMintAmount, mintTokens);
+        emit Mint(minter, onBehalfOf, actualMintAmount, mintTokens);
         emit Transfer(address(0), onBehalfOf, mintTokens);
     }
 
@@ -757,7 +757,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
 
         /* We emit a Transfer event, and a Redeem event */
         emit Transfer(onBehalfOf, address(0), redeemTokens);
-        emit Redeem(onBehalfOf, redeemAmount, redeemTokens);
+        emit Redeem(redeemer, onBehalfOf, redeemAmount, redeemTokens);
     }
 
     /**
@@ -817,7 +817,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         doTransferOut(borrower, borrowAmount);
 
         /* We emit a Borrow event */
-        emit Borrow(onBehalfOf, borrowAmount, accountBorrowsNew, totalBorrowsNew);
+        emit Borrow(
+            borrower, onBehalfOf, borrowAmount, accountBorrowsNew, totalBorrowsNew
+        );
     }
 
     /**
