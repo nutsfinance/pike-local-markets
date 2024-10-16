@@ -23,6 +23,12 @@ contract LocalIRM is TestLocal {
 
     IRiskEngine re;
 
+    uint256 firstKink;
+    uint256 secondKink;
+    uint256 baseMulPerYear;
+    uint256 firstJumpMulPerYear;
+    uint256 secondJumpMulPerYear;
+
     function setUp() public {
         setDebug(false);
         setAdmin(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
@@ -43,12 +49,17 @@ contract LocalIRM is TestLocal {
     function testConfig_FailIfSecondKinkIsZero() public {
         vm.prank(getAdmin());
 
-        uint256 secondKink = 0;
+        uint256 secondKinkLocal = 0;
 
         // "ZeroValue()" selector
         vm.expectRevert(0x7c946ed7);
         pUSDCIRM.configureInterestRateModel(
-            baseRatePerYear, 0, multiplierPerYear, jumpMultiplierPerYear, 0, secondKink
+            baseRatePerYear,
+            0,
+            multiplierPerYear,
+            jumpMultiplierPerYear,
+            0,
+            secondKinkLocal
         );
     }
 
@@ -78,5 +89,36 @@ contract LocalIRM is TestLocal {
         );
 
         vm.stopPrank();
+    }
+
+    function testConfig_SetParams(uint256[2] memory amounts) public {
+        secondKink = bound(secondKink, 1, 1e18);
+        firstKink = bound(firstKink, 0, secondKink - 1);
+        baseRatePerYear = bound(baseRatePerYear, 0, amounts[0]);
+        baseMulPerYear = amounts[1];
+        secondJumpMulPerYear = bound(secondJumpMulPerYear, 1, type(uint256).max);
+        vm.assume(firstJumpMulPerYear < secondJumpMulPerYear);
+
+        vm.prank(getAdmin());
+        pUSDCIRM.configureInterestRateModel(
+            baseRatePerYear,
+            baseMulPerYear,
+            firstJumpMulPerYear,
+            secondJumpMulPerYear,
+            firstKink,
+            secondKink
+        );
+
+        (uint256 set1stKink, uint256 set2ndKink) = pUSDCIRM.kinks();
+        uint256 setBaseRate = pUSDCIRM.baseRatePerSecond();
+        (uint256 setBaseMultiplier, uint256 set1stJump, uint256 set2ndJump) =
+            pUSDCIRM.multipliers();
+
+        assertEq(set1stKink, firstKink);
+        assertEq(set2ndKink, secondKink);
+        assertEq(setBaseRate, baseRatePerYear / SECONDS_PER_YEAR);
+        assertEq(setBaseMultiplier, baseMulPerYear / SECONDS_PER_YEAR);
+        assertEq(set1stJump, firstJumpMulPerYear / SECONDS_PER_YEAR);
+        assertEq(set2ndJump, secondJumpMulPerYear / SECONDS_PER_YEAR);
     }
 }

@@ -365,4 +365,24 @@ interface IRiskEngine {
      * @return the liquidation threshold of a pToken
      */
     function liquidationThreshold(IPToken pToken) external view returns (uint256);
+
+    /**
+     * @return the liquidation incentives of pTokens
+     */
+    function liquidationIncentive() external view returns (uint256);
+
+    /**
+     * @return the close factor percentage for liquidation
+     */
+    function closeFactor() external view returns (uint256);
+
+    /**
+     * @return the supply cap for the pToken
+     */
+    function supplyCap(address pToken) external view returns (uint256);
+
+    /**
+     * @return the borrow cap for the pToken
+     */
+    function borrowCap(address pToken) external view returns (uint256);
 }
