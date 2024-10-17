@@ -34,7 +34,7 @@ contract LocalAccrueInterest is TestLocal {
         mockOracle = MockOracle(re.oracle());
     }
 
-    function testDBwithInterest() public {
+    function testDBwithInterestInNormalSlope() public {
         address user1 = makeAddr("user1");
         address user2 = makeAddr("user2");
         address depositor = makeAddr("depositor");
@@ -46,6 +46,57 @@ contract LocalAccrueInterest is TestLocal {
         doDepositAndEnter(user2, user2, address(pUSDC), 2000e6);
         doBorrow(user1, user1, address(pWETH), 0.745e18);
         doBorrow(user2, user2, address(pWETH), 0.2e18);
+
+        uint256 collateralBefore = pWETH.balanceOfUnderlying(depositor);
+        uint256 borrowBefore1 = pWETH.borrowBalanceCurrent(user1);
+        uint256 borrowBefore2 = pWETH.borrowBalanceCurrent(user2);
+
+        // get rates per second at time of supply and borrow
+        uint256 supplyRate = pWETH.supplyRatePerSecond();
+        uint256 borrowRate = pWETH.borrowRatePerSecond();
+
+        uint256 borrowInterest1 = borrowBefore1 * borrowRate * 365 days / ONE_MANTISSA;
+        uint256 borrowInterest2 = borrowBefore2 * borrowRate * 365 days / ONE_MANTISSA;
+        uint256 supplyInterest = collateralBefore * supplyRate * 365 days / ONE_MANTISSA;
+
+        // skip 1 year
+        skip(365 days);
+
+        uint256 collateralAfter = pWETH.balanceOfUnderlying(depositor);
+        uint256 borrowAfter1 = pWETH.borrowBalanceCurrent(user1);
+        uint256 borrowAfter2 = pWETH.borrowBalanceCurrent(user2);
+
+        assertEq(
+            borrowBefore1 + borrowInterest1,
+            borrowAfter1,
+            "borrow interest 1 is inaccurate"
+        );
+        assertEq(
+            borrowBefore2 + borrowInterest2,
+            borrowAfter2,
+            "borrow interest 2 is inaccurate"
+        );
+
+        assertApproxEqRel(
+            collateralBefore + supplyInterest,
+            collateralAfter,
+            1e8, // ± 0.0000000100000000%
+            "supply interest is inaccurate"
+        );
+    }
+
+    function testDBwithInterestInHighSlope() public {
+        address user1 = makeAddr("user1");
+        address user2 = makeAddr("user2");
+        address depositor = makeAddr("depositor");
+
+        ///porivde liquidity
+        doDeposit(depositor, depositor, address(pWETH), 1e18);
+
+        doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
+        doDepositAndEnter(user2, user2, address(pUSDC), 2000e6);
+        doBorrow(user1, user1, address(pWETH), 0.745e18);
+        doBorrow(user2, user2, address(pWETH), 0.21e18);
 
         uint256 collateralBefore = pWETH.balanceOfUnderlying(depositor);
         uint256 borrowBefore1 = pWETH.borrowBalanceCurrent(user1);

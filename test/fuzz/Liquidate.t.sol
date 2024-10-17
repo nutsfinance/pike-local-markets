@@ -62,31 +62,25 @@ contract FuzzLiquidate is TestFuzz {
         borrower = addresses[0];
         onBehalfOf = addresses[1];
         liquidator = addresses[2];
-        usdcPrice = amounts[0];
-        wethPrice = amounts[1];
-        wethLF = amounts[2];
-        wethToDeposit = amounts[3];
-        usdcToBorrow = amounts[4];
-        usdcToRepay = amounts[5];
         pTokenTotalSupply = amounts[6];
         totalBorrows = amounts[7];
         cash = amounts[8];
 
         /// bound usdc price 0.98-1.02$
-        usdcPrice = bound(usdcPrice, 0.98e6, 1.02e6);
+        usdcPrice = bound(amounts[0], 0.98e6, 1.02e6);
         /// bound weth price 1000-4000$
-        wethPrice = bound(wethPrice, 1000e6, 4000e6);
+        wethPrice = bound(amounts[1], 1000e6, 4000e6);
         /// bound liquidation factor 40-90%
-        wethLF = bound(wethLF, wethCF, 90e16);
+        wethLF = bound(amounts[2], wethCF, 90e16);
         /// bound usdc 1000-400M$
-        wethToDeposit = bound(wethToDeposit, 1e18, 1e23);
+        wethToDeposit = bound(amounts[3], 1e18, 1e23);
         /// needs to borrow with small deviation from CF(± 0.00001%)
         usdcToBorrow = bound(
-            usdcToBorrow,
+            amounts[4],
             1e6,
             wethToDeposit * wethPrice * (wethCF - 0.00001e16) / (usdcPrice * 1e30)
         );
-        usdcToRepay = bound(usdcToRepay, 1, usdcToBorrow / 2);
+        usdcToRepay = bound(amounts[5], 1, usdcToBorrow / 2);
         usdcCash = bound(cash, 10e6, 1e15);
         usdcCash = Math.max(usdcCash, usdcToBorrow);
         usdcTotalBorrows = bound(totalBorrows, 10e6, 1e15);

@@ -108,7 +108,7 @@ contract LocalReserve is TestLocal {
 
     function testSetReserveFactor() public {
         // 10%
-        uint256 newReserveFactor = 10e16;
+        uint256 newReserveFactor = 5e16;
 
         assertNotEq(pWETH.reserveFactorMantissa(), newReserveFactor);
 

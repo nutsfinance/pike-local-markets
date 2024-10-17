@@ -37,15 +37,17 @@ contract TestDeploy is TestSetters {
         0x524553455256455f574954484452415745520000000000000000000000000000;
 
     uint256 initialExchangeRate = 1e18;
-    uint256 reserveFactor = 5e16;
+    uint256 reserveFactor = 10e16;
     uint256 protocolSeizeShare = 1e16;
     uint256 borrowRateMax = 5e12;
     uint8 pTokenDecimals = 18;
 
-    uint256 baseRatePerYear = 1.5e16;
-    uint256 multiplierPerYear = 8.33e16;
-    uint256 jumpMultiplierPerYear = 4.3e18;
-    uint256 kink = 80e16;
+    uint256 baseRatePerYear = 0;
+    uint256 multiplierPerYear = 0;
+    uint256 jumpMultiplierPerYear1 = 6.111111e16;
+    uint256 jumpMultiplierPerYear2 = 6e18;
+    uint256 kink1 = 5e16;
+    uint256 kink2 = 95e16;
 
     uint256 closeFactor = 50e16;
     uint256 liquidationIncentive = 1.08e18;
@@ -132,7 +134,12 @@ contract TestDeploy is TestSetters {
 
         DoubleJumpRateModel interestRateModule = DoubleJumpRateModel(_pToken);
         interestRateModule.configureInterestRateModel(
-            baseRatePerYear, 0, multiplierPerYear, jumpMultiplierPerYear, 0, kink
+            baseRatePerYear,
+            multiplierPerYear,
+            jumpMultiplierPerYear1,
+            jumpMultiplierPerYear2,
+            kink1,
+            kink2
         );
 
         re.supportMarket(IPToken(_pToken));

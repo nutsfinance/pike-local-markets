@@ -44,17 +44,13 @@ contract FuzzDeposit is TestFuzz {
     {
         depositor = addresses[0];
         onBehalfOf = addresses[1];
-        underlyingToDeposit = amounts[0];
-        pTokenTotalSupply = amounts[1];
-        totalBorrows = amounts[2];
-        cash = amounts[3];
 
         /// bound usdc 10-1B$
-        underlyingToDeposit = bound(underlyingToDeposit, 10e6, 1e15);
+        underlyingToDeposit = bound(amounts[0], 10e6, 1e15);
         /// set cash, totalBorrows and totalSupply to get random exchangeRate
-        cash = bound(cash, 10e6, 1e15);
-        totalBorrows = bound(totalBorrows, 10e6, 1e15);
-        pTokenTotalSupply = bound(pTokenTotalSupply, 10e6, (totalBorrows + cash));
+        cash = bound(amounts[1], 10e6, 1e15);
+        totalBorrows = bound(amounts[2], 10e6, 1e15);
+        pTokenTotalSupply = bound(amounts[3], 10e6, (totalBorrows + cash));
 
         vm.assume(depositor != address(pUSDC) && depositor != address(0));
         vm.assume(onBehalfOf != address(pUSDC) && onBehalfOf != address(0));

@@ -265,7 +265,7 @@ target = [ "pUSDC.Proxy" ]
 abi = "<%= JSON.stringify(contracts.DoubleJumpRateModel.abi) %>"
 from = "<%= settings.owner %>"
 func = "configureInterestRateModel"
-args = ["<%= parseUnits('1.5', 16) %>", "0", "<%= parseUnits('8.33', 16) %>", "<%= parseUnits('4.3', 18) %>", "0", "<%= parseUnits('80', 16) %>"]
+args = ["0", "0", "<%= parseUnits('6.111111', 16) %>", "<%= parseUnits('6', 18) %>", "<%= parseUnits('5', 16) %>", "<%= parseUnits('95', 16) %>"]
 depends = [ "clone.pUSDC", "invoke.set_pUSDC_local_configurator" ]
 
 [invoke.config_pWETH_IRM]
@@ -273,7 +273,7 @@ target = [ "pWETH.Proxy" ]
 abi = "<%= JSON.stringify(contracts.DoubleJumpRateModel.abi) %>"
 from = "<%= settings.owner %>"
 func = "configureInterestRateModel"
-args = ["<%= parseUnits('1.5', 16) %>", "0", "<%= parseUnits('8.33', 16) %>", "<%= parseUnits('4.3', 18) %>", "0", "<%= parseUnits('80', 16) %>"]
+args = ["0", "0", "<%= parseUnits('6.111111', 16) %>", "<%= parseUnits('6', 18) %>", "<%= parseUnits('5', 16) %>", "<%= parseUnits('95', 16) %>"]
 depends = [ "clone.pWETH", "invoke.set_pWETH_local_configurator" ]
 
 [invoke.set_oracle]

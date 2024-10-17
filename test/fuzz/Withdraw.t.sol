@@ -47,19 +47,14 @@ contract FuzzWithdraw is TestFuzz {
     ) public {
         withdrawer = addresses[0];
         onBehalfOf = addresses[1];
-        underlyingToDeposit = amounts[0];
-        underlyingToWithdraw = amounts[1];
-        pTokenTotalSupply = amounts[2];
-        totalBorrows = amounts[3];
-        cash = amounts[4];
 
         /// bound usdc 10-1B$
-        underlyingToDeposit = bound(underlyingToDeposit, 10e6, 1e15);
-        underlyingToWithdraw = bound(underlyingToWithdraw, 10e6, underlyingToDeposit);
+        underlyingToDeposit = bound(amounts[0], 10e6, 1e15);
+        underlyingToWithdraw = bound(amounts[1], 10e6, underlyingToDeposit);
         /// set cash, totalBorrows and totalSupply to get random exchangeRate
-        cash = bound(cash, 10e6, 1e15);
-        totalBorrows = bound(totalBorrows, 10e6, 1e15);
-        pTokenTotalSupply = bound(pTokenTotalSupply, 10e6, (totalBorrows + cash));
+        cash = bound(amounts[4], 10e6, 1e15);
+        totalBorrows = bound(amounts[3], 10e6, 1e15);
+        pTokenTotalSupply = bound(amounts[2], 10e6, (totalBorrows + cash));
 
         vm.assume(withdrawer != address(pUSDC) && withdrawer != address(0));
         vm.assume(onBehalfOf != address(pUSDC) && onBehalfOf != address(0));
@@ -83,18 +78,13 @@ contract FuzzWithdraw is TestFuzz {
     {
         withdrawer = addresses[0];
         onBehalfOf = addresses[1];
-        underlyingToDeposit = amounts[0];
-        pTokenToWithdraw = amounts[1];
-        pTokenTotalSupply = amounts[2];
-        totalBorrows = amounts[3];
-        cash = amounts[4];
 
         /// bound usdc 10-1B$
-        underlyingToDeposit = bound(underlyingToDeposit, 10e6, 1e15);
+        underlyingToDeposit = bound(amounts[0], 10e6, 1e15);
         /// set cash, totalBorrows and totalSupply to get random exchangeRate
-        cash = bound(cash, 10e6, 1e15);
-        totalBorrows = bound(totalBorrows, 10e6, 1e15);
-        pTokenTotalSupply = bound(pTokenTotalSupply, 10e6, (totalBorrows + cash));
+        cash = bound(amounts[4], 10e6, 1e15);
+        totalBorrows = bound(amounts[3], 10e6, 1e15);
+        pTokenTotalSupply = bound(amounts[2], 10e6, (totalBorrows + cash));
 
         vm.assume(withdrawer != address(pUSDC) && withdrawer != address(0));
         vm.assume(onBehalfOf != address(pUSDC) && onBehalfOf != address(0));
@@ -111,7 +101,7 @@ contract FuzzWithdraw is TestFuzz {
 
         doDepositAndEnter(withdrawer, onBehalfOf, address(pUSDC), underlyingToDeposit);
 
-        pTokenToWithdraw = bound(pTokenToWithdraw, 1, pUSDC.balanceOf(onBehalfOf));
+        pTokenToWithdraw = bound(amounts[1], 1, pUSDC.balanceOf(onBehalfOf));
         doWithdraw(withdrawer, onBehalfOf, address(pUSDC), pTokenToWithdraw);
     }
 }

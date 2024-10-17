@@ -57,31 +57,25 @@ contract FuzzBorrow is TestFuzz {
     {
         borrower = addresses[0];
         onBehalfOf = addresses[1];
-        usdcPrice = amounts[0];
-        wethPrice = amounts[1];
-        usdcCF = amounts[2];
-        usdcToDeposit = amounts[3];
-        wethToBorrow = amounts[4];
-        wethToRepay = amounts[5];
         pTokenTotalSupply = amounts[6];
         totalBorrows = amounts[7];
         cash = amounts[8];
 
         /// bound usdc price 0.98-1.02$
-        usdcPrice = bound(usdcPrice, 0.98e6, 1.02e6);
+        usdcPrice = bound(amounts[0], 0.98e6, 1.02e6);
         /// bound weth price 1000-4000$
-        wethPrice = bound(wethPrice, 1000e6, 4000e6);
+        wethPrice = bound(amounts[1], 1000e6, 4000e6);
         /// bound collateral factor 10-90%
-        usdcCF = bound(usdcCF, 10e16, 90e16);
+        usdcCF = bound(amounts[2], 10e16, 90e16);
         /// bound usdc 10-1B$
-        usdcToDeposit = bound(usdcToDeposit, 100e6, 1e15);
+        usdcToDeposit = bound(amounts[3], 100e6, 1e15);
         /// needs to borrow with small deviation from CF(± 0.00001%)
         wethToBorrow = bound(
-            wethToBorrow,
+            amounts[4],
             1e10,
             usdcToDeposit * usdcPrice * (usdcCF - 0.00001e16) / (wethPrice * 1e6)
         );
-        wethToRepay = bound(wethToRepay, 1, wethToBorrow);
+        wethToRepay = bound(amounts[5], 1, wethToBorrow);
         usdcCash = bound(cash, 10e6, 1e15);
         usdcTotalBorrows = bound(totalBorrows, 10e6, 1e15);
         usdcTotalSupply = bound(pTokenTotalSupply, 10e6, (usdcCash + usdcTotalBorrows));

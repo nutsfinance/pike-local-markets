@@ -98,6 +98,10 @@ contract LocalPToken is TestLocal {
     }
 
     function testAccrueInterest_FailIfBorrowRateMaxMantissaReached() public {
+        address user1 = makeAddr("user1");
+        doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
+        doBorrow(user1, user1, address(pUSDC), 1000e6);
+
         // borrowRateMaxMantissa slot
         bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d08;
         vm.store(address(pUSDC), slot, bytes32(0));
