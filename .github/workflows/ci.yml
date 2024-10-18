@@ -87,3 +87,19 @@ jobs:
           namedLogo: jest
           color: green
           logoColor: lightblue
+  slither:
+    name: Static Analyser
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'early-stage') }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up environment
+        uses: ./.github/setup
+
+      - uses: crytic/slither-action@v0.4.0
+        with:
+          fail-on: config

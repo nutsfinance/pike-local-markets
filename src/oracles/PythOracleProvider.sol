@@ -2,7 +2,7 @@
 pragma solidity 0.8.25;
 
 import {IOracleProvider} from "@oracles/interfaces/IOracleProvider.sol";
-import {IPyth, PythStructs} from "@pythnetwork//IPyth.sol";
+import {IPyth, PythStructs} from "@pythnetwork/IPyth.sol";
 import {OwnableUpgradeable} from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IERC20Metadata} from
