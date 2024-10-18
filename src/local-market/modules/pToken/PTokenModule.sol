@@ -71,7 +71,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         if (initialExchangeRateMantissa_ == 0 || borrowRateMaxMantissa_ == 0) {
             revert CommonError.ZeroValue();
         }
-        if (underlying_ == address(0) || riskEngine_ == address(0)) {
+        if (underlying_ == address(0) || address(riskEngine_) == address(0)) {
             revert CommonError.ZeroAddress();
         }
 
