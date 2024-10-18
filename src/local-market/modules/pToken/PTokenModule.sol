@@ -62,6 +62,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, ERC165 {
         if (initialExchangeRateMantissa_ == 0 || borrowRateMaxMantissa_ == 0) {
             revert CommonError.ZeroValue();
         }
+        if (underlying_ == address(0)) {
+            revert CommonError.ZeroAddress();
+        }
+
         // Set initial exchange rate
         _getPTokenStorage().initialExchangeRateMantissa = initialExchangeRateMantissa_;
 
