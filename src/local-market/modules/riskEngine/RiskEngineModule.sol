@@ -16,7 +16,13 @@ import {ERC165, ERC165Checker} from "@utils/ERC165.sol";
  * @title Pike Markets RiskEngine Contract
  * @author NUTS Finance (hello@pike.finance)
  */
-contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACMixin, ERC165 {
+contract RiskEngineModule is
+    IRiskEngine,
+    RiskEngineStorage,
+    OwnableMixin,
+    RBACMixin,
+    ERC165
+{
     using ExponentialNoError for ExponentialNoError.Exp;
     using ExponentialNoError for uint256;
     using ERC165Checker for address;
