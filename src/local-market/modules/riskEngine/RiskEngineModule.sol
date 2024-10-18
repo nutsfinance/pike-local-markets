@@ -124,8 +124,6 @@ contract RiskEngineModule is
             revert RiskEngineError.AlreadyListed();
         }
 
-        /// TODO: ERC165 check compliance
-
         // Note that isComped is not in active use anymore
         Market storage newMarket = _getRiskEngineStorage().markets[address(pToken)];
         newMarket.isListed = true;
