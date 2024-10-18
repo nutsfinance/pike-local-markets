@@ -12,11 +12,13 @@ import {OwnableMixin} from "@utils/OwnableMixin.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {PTokenError} from "@errors/PTokenError.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
+import {ERC165, ERC165Checker} from "@utils/ERC165.sol";
 
-contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
+contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, ERC165 {
     using ExponentialNoError for ExponentialNoError.Exp;
     using ExponentialNoError for uint256;
     using SafeERC20 for IERC20;
+    using ERC165Checker for address;
 
     /**
      * @dev Prevents a contract from calling itself, directly or indirectly.
@@ -541,6 +543,20 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
      */
     function getCash() public view returns (uint256) {
         return IERC20(_getPTokenStorage().underlying).balanceOf(address(this));
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IPToken).interfaceId
+            || super.supportsInterface(interfaceId);
     }
 
     /**
@@ -1140,9 +1156,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     }
 
     function _setRiskEngine(IRiskEngine newRiskEngine) internal {
+        if (!address(newRiskEngine).supportsInterface(_RISK_ENGINE_INTERFACE_ID)) {
+            revert CommonError.UnsupportedInterface();
+        }
         IRiskEngine oldRiskEngine = _getPTokenStorage().riskEngine;
-
-        /// TODO: add erc165 checker
 
         // Set market's riskEngine to newRiskEngine
         _getPTokenStorage().riskEngine = newRiskEngine;

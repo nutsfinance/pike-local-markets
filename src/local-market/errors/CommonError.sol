@@ -13,6 +13,11 @@ library CommonError {
     error AlreadyInitialized();
 
     /**
+     * @dev Reverted on unsupported interface detection
+     */
+    error UnsupportedInterface();
+
+    /**
      * @dev Thrown when a zero value is encountered.
      */
     error ZeroValue();
