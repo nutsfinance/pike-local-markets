@@ -104,8 +104,6 @@ contract RiskEngineStorage {
 
     uint256 internal constant _MANTISSA_ONE = 1e18;
 
-    bytes4 internal constant _PTOKEN_INTERFACE_ID = type(IPToken).interfaceId;
-
     function _getRiskEngineStorage()
         internal
         pure

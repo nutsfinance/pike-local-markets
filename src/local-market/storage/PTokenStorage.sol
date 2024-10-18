@@ -104,8 +104,6 @@ contract PTokenStorage {
     // Maximum fraction of interest that can be set aside for reserves
     uint256 internal constant _RESERVE_FACTOR_MAX_MANTISSA = 1e18;
 
-    bytes4 internal constant _RISK_ENGINE_INTERFACE_ID = type(IRiskEngine).interfaceId;
-
     function _getPTokenStorage() internal pure returns (PTokenData storage data) {
         bytes32 s = _SLOT_PTOKEN_STORAGE;
         assembly {

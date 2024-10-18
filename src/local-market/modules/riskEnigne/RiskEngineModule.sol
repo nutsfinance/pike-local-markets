@@ -9,12 +9,10 @@ import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
 import {RiskEngineError} from "@errors/RiskEngineError.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
-import {ERC165, ERC165Checker} from "@utils/ERC165.sol";
 
-contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, ERC165 {
+contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
     using ExponentialNoError for ExponentialNoError.Exp;
     using ExponentialNoError for uint256;
-    using ERC165Checker for address;
 
     /**
      * @inheritdoc IRiskEngine
@@ -107,9 +105,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, ERC16
             revert RiskEngineError.AlreadyListed();
         }
 
-        if (!address(pToken).supportsInterface(_PTOKEN_INTERFACE_ID)) {
-            revert CommonError.UnsupportedInterface();
-        }
+        /// TODO: ERC165 check compliance
 
         // Note that isComped is not in active use anymore
         Market storage newMarket = _getRiskEngineStorage().markets[address(pToken)];
@@ -722,20 +718,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, ERC16
         return _getRiskEngineStorage().markets[address(pToken)].collateralFactorMantissa
             == 0 && _getRiskEngineStorage().borrowGuardianPaused[address(pToken)] == true
             && pToken.reserveFactorMantissa() == 1e18;
-    }
-
-    /**
-     * @dev See {IERC165-supportsInterface}.
-     */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165)
-        returns (bool)
-    {
-        return interfaceId == type(IRiskEngine).interfaceId
-            || super.supportsInterface(interfaceId);
     }
 
     function _addMarketInternal(address pToken) internal {
