@@ -89,12 +89,6 @@ contract PTokenStorage {
         uint256 interestIndex;
     }
 
-    /**
-     * @notice Struct for real-time data related with pending accrued interest
-     * @param totalBorrow The total outstanding borrowed amount, including all accrued interest.
-     * @param totalReserve The total amount of reserves held, typically a portion of interest is set aside by the protocol
-     * @param accBorrowIndex The global borrow index used for tracking how much interest has accrued since the last update
-     */
     struct PendingSnapshot {
         uint256 totalBorrow;
         uint256 totalReserve;

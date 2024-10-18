@@ -39,13 +39,9 @@ contract RiskEngineStorage {
         address supplyCapGuardian;
         bool _mintGuardianPaused;
         bool _borrowGuardianPaused;
-        /// @notice A flag indicating whether transfers are paused by guardian.
         bool transferGuardianPaused;
-        /// @notice A flag indicating whether the seize function is paused by guardian.
         bool seizeGuardianPaused;
-        /// @notice A flag indicating whether the mint is paused for specific ptoken by guardian.
         mapping(address => bool) mintGuardianPaused;
-        /// @notice A flag indicating whether the borrow is paused for specific ptoken by guardian.
         mapping(address => bool) borrowGuardianPaused;
         /// @notice Borrow caps enforced by borrowAllowed for each pToken address.
         ///  Defaults to zero which corresponds to unlimited borrowing.
