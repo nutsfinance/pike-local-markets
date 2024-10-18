@@ -713,26 +713,25 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin, ERC165
             ExponentialNoError.Exp({mantissa: exchangeRateStoredInternal()});
 
         uint256 redeemTokens;
-        uint256 redeemAmount;
-
         /* If redeemTokensIn > 0: */
         if (redeemTokensIn > 0) {
             /*
-             * We calculate the exchange rate and the amount of underlying to be redeemed:
+             * We calculate the amount of ptoken to be redeemed:
              *  redeemTokens = redeemTokensIn
-             *  redeemAmount = redeemTokensIn x exchangeRateCurrent
              */
             redeemTokens = redeemTokensIn;
-            redeemAmount = exchangeRate.mul_ScalarTruncate(redeemTokensIn);
         } else {
             /*
              * We get the current exchange rate and calculate the amount to be redeemed:
              *  redeemTokens = redeemAmountIn / exchangeRate
-             *  redeemAmount = redeemAmountIn
              */
             redeemTokens = redeemAmountIn.div_(exchangeRate);
-            redeemAmount = redeemAmountIn;
+            uint256 _redeemAmount = redeemTokens.mul_(exchangeRate);
+            if (_redeemAmount != 0 && _redeemAmount != redeemAmountIn) redeemTokens++;
         }
+
+        /* redeemAmount = redeemTokens x exchangeRateCurrent */
+        uint256 redeemAmount = exchangeRate.mul_ScalarTruncate(redeemTokens);
 
         /* Fail if redeem not allowed */
         uint256 allowed = _getPTokenStorage().riskEngine.redeemAllowed(
