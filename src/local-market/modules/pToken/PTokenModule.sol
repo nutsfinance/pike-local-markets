@@ -1146,8 +1146,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     function _setRiskEngine(IRiskEngine newRiskEngine) internal {
         IRiskEngine oldRiskEngine = _getPTokenStorage().riskEngine;
 
-        /// TODO: add erc165 checker
-
         // Set market's riskEngine to newRiskEngine
         _getPTokenStorage().riskEngine = newRiskEngine;
 
