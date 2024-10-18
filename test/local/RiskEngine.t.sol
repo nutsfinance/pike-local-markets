@@ -3,6 +3,7 @@ pragma solidity 0.8.25;
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
 import {IRBAC} from "@modules/common/RBACModule.sol";
+import {PTokenModule} from "@modules/pToken/PTokenModule.sol";
 import {IPToken, IERC20} from "@interfaces/IPToken.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
@@ -231,12 +232,17 @@ contract LocalRiskEngine is TestLocal {
         re.setCollateralFactor(pUSDC, 0.8e18, 0.7e18);
     }
 
-    function testSupportMarket_FailIfAlreadyListed() public {
+    function testSupportMarket_FailIfAlreadyListedOrUnsupported() public {
+        IPToken mockPToken = IPToken(makeAddr("mockPToken"));
         vm.startPrank(getAdmin());
 
         // "AlreadyListed()" selector
         vm.expectRevert(0xa3d582ec);
         re.supportMarket(pUSDC);
+
+        // "UnsupportedInterface()" selector
+        vm.expectRevert(0x63aaf066);
+        re.supportMarket(mockPToken);
 
         changeList(address(pUSDC), false);
 
