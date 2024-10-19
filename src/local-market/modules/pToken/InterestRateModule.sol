@@ -3,6 +3,7 @@ pragma solidity 0.8.20;
 
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {InterestRateStorage} from "@storage/InterestRateStorage.sol";
+import {CommonError} from "@errors/CommonError.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
 
 contract InterestRateModule is IInterestRateModel, InterestRateStorage, OwnableMixin {
@@ -20,6 +21,9 @@ contract InterestRateModule is IInterestRateModel, InterestRateStorage, OwnableM
         uint256 kink
     ) external onlyOwner {
         InterestRateData storage data = _getIRMStorage();
+        if (data.kink != 0) {
+            revert CommonError.AlreadyInitialized();
+        }
         data.baseRatePerSecond = baseRatePerYear / SECONDS_PER_YEAR;
         data.multiplierPerSecond = multiplierPerYear / SECONDS_PER_YEAR;
         data.jumpMultiplierPerSecond = jumpMultiplierPerYear / SECONDS_PER_YEAR;

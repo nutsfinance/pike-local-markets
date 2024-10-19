@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import {UpgradeStorage} from "@storage/UpgradeStorage.sol";
 import {OwnableStorage} from "@storage/OwnableStorage.sol";
-import {AddressError} from "@errors/AddressError.sol";
+import {CommonError} from "@errors/CommonError.sol";
 import {IUpgrade} from "@interfaces/IUpgrade.sol";
 
 contract UpgradeModule is IUpgrade, UpgradeStorage, OwnableStorage {
@@ -52,11 +52,11 @@ contract UpgradeModule is IUpgrade, UpgradeStorage, OwnableStorage {
 
     function _upgradeTo(address newImplementation) internal virtual {
         if (newImplementation == address(0)) {
-            revert AddressError.ZeroAddress();
+            revert CommonError.ZeroAddress();
         }
 
         if (!isContract(newImplementation)) {
-            revert AddressError.NotAContract(newImplementation);
+            revert CommonError.NotAContract(newImplementation);
         }
 
         ProxyData storage data = _getImplementationStorage();

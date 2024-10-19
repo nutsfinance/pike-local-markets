@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import {IOwnable} from "@interfaces/IOwnable.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
-import {AddressError} from "@errors/AddressError.sol";
+import {CommonError} from "@errors/CommonError.sol";
 
 /**
  * @title Contract for facilitating ownership by a single address with 2 steps.
@@ -60,7 +60,7 @@ contract OwnableModule is IOwnable, OwnableMixin {
         Ownable2StepStorage storage data = _getOwnableStorage();
 
         if (newNominatedOwner == address(0)) {
-            revert AddressError.ZeroAddress();
+            revert CommonError.ZeroAddress();
         }
 
         if (newNominatedOwner == data.pendingOwner) {

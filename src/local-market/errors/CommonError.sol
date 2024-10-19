@@ -21,4 +21,19 @@ library CommonError {
      * @dev Unauthorized reentrant call.
      */
     error ReentrancyGuardReentrantCall();
+
+    /**
+     * @dev Thrown for arrays without parity.
+     */
+    error NoArrayParity();
+
+    /**
+     * @dev Thrown when an address representing a contract is expected, but no code is found at the address.
+     */
+    error NotAContract(address);
+
+    /**
+     * @dev Thrown when a zero address was passed as a function parameter (0x0000000000000000000000000000000000000000).
+     */
+    error ZeroAddress();
 }
