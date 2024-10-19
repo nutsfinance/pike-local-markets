@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 interface IUpgrade {
     /**
@@ -8,11 +8,6 @@ interface IUpgrade {
      * @param implementation The address of the proxy's new implementation.
      */
     event Upgraded(address indexed self, address implementation);
-
-    /**
-     * @notice Thrown when an implementation is already upgraded.
-     */
-    error AlreadyUpgraded();
 
     /**
      * @notice Thrown when an incoming implementation will not be able to receive future upgrades.

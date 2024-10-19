@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
-contract InterestRateStorage {
+contract DoubleJumpRateStorage {
     struct InterestRateData {
         /**
          * @notice The multiplier of utilization rate that gives the slope of the interest rate
@@ -12,18 +12,26 @@ contract InterestRateStorage {
          */
         uint256 baseRatePerSecond;
         /**
-         * @notice The multiplierPerSecond after hitting a specified utilization point
+         * @notice The multiplierPerSecond after hitting first specified utilization point
          */
-        uint256 jumpMultiplierPerSecond;
+        uint256 firstJumpMultiplierPerSecond;
         /**
-         * @notice The utilization point at which the jump multiplier is applied
+         * @notice The multiplierPerSecond after hitting second specified utilization point
          */
-        uint256 kink;
+        uint256 secondJumpMultiplierPerSecond;
+        /**
+         * @notice The first utilization point at which the first jump multiplier is applied
+         */
+        uint256 firstKink;
+        /**
+         * @notice The second utilization point at which the second jump multiplier is applied
+         */
+        uint256 secondKink;
     }
 
-    /// keccak256(abi.encode(uint256(keccak256("pike.LM.IRM")) - 1)) & ~bytes32(uint256(0xff))
+    /// keccak256(abi.encode(uint256(keccak256("pike.LM.DJR")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 internal constant _SLOT_IRM_STORAGE =
-        0x3851e8953f711665c6e7a2d0c4292cf1c4ce81f861601a91328edb40c914a000;
+        0xed48eb0ad35ca178ca1b2fcca15fd54561240eeda787bde1429143f97eac7300;
 
     uint256 internal constant BASE = 1e18;
 

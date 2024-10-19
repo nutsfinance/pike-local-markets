@@ -1091,6 +1091,10 @@ camelcase@^5.3.1:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-5.3.1.tgz#e3c9b31569e106811df242f715725a1f4c494320"
   integrity sha512-L28STB170nwWS63UjtlEOE3dldQApaJXZkOI1uMFfzf3rRuPegHaHesyee+YxQ+W6SvRDQV6UrdOdRiR153wJg==
 
+"cannon-std@git+https://github.com/usecannon/cannon-std.git#master":
+  version "0.0.0"
+  resolved "git+https://github.com/usecannon/cannon-std.git#af3a5aa6714a209ee6b10a87141f72c97fc87df4"
+
 chai@^4.3.4:
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/chai/-/chai-4.5.0.tgz#707e49923afdd9b13a8b0b47d33d732d13812fd8"

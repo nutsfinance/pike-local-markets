@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 /**
  * @title Library for riskEngine errors.
@@ -25,7 +25,6 @@ library RiskEngineError {
     error SeizePaused();
     error TransferPaused();
 
-    error InvalidRedeemTokens();
     error SenderNotPToken();
     error RepayMoreThanBorrowed();
 
@@ -35,10 +34,6 @@ library RiskEngineError {
     error InvalidLiquidationThreshold();
 
     error AlreadyListed();
-
-    error NotBorrowCapGaurdian();
-    error NotSupplyCapGaurdian();
-    error NotPauseGaurdian();
 
     error DelegationStatusUnchanged();
 }

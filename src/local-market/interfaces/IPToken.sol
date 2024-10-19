@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
@@ -13,18 +13,23 @@ interface IPToken is IERC20 {
     /**
      * @notice Event emitted when tokens are minted
      */
-    event Mint(address minter, uint256 mintAmount, uint256 mintTokens);
+    event Mint(
+        address minter, address onBehalfOf, uint256 mintAmount, uint256 mintTokens
+    );
 
     /**
      * @notice Event emitted when tokens are redeemed
      */
-    event Redeem(address redeemer, uint256 redeemAmount, uint256 redeemTokens);
+    event Redeem(
+        address redeemer, address onBehalfOf, uint256 redeemAmount, uint256 redeemTokens
+    );
 
     /**
      * @notice Event emitted when underlying is borrowed
      */
     event Borrow(
         address borrower,
+        address onBehalfOf,
         uint256 borrowAmount,
         uint256 accountBorrows,
         uint256 totalBorrows
@@ -46,6 +51,13 @@ interface IPToken is IERC20 {
      */
     event NewReserveFactor(
         uint256 oldReserveFactorMantissa, uint256 newReserveFactorMantissa
+    );
+
+    /**
+     * @notice Event emitted when the seize share is changed
+     */
+    event NewProtocolSeizeShare(
+        uint256 oldProtocolSeizeShareMantissa, uint256 newProtocolSeizeShareMantissa
     );
 
     /**
@@ -206,6 +218,12 @@ interface IPToken is IERC20 {
     function setReserveFactor(uint256 newReserveFactorMantissa) external;
 
     /**
+     * @notice sets a new seize share for the protocol
+     * @dev Admin function to set a new seize share
+     */
+    function setProtocolSeizeShare(uint256 newProtocolSeizeShareMantissa) external;
+
+    /**
      * @notice Accrues interest and reduces reserves by transferring to reserve protocol contract
      * @param reduceAmount Amount of reduction to reserves
      */
@@ -257,6 +275,12 @@ interface IPToken is IERC20 {
     function totalBorrowsCurrent() external view returns (uint256);
 
     /**
+     * @notice Returns the current total reserves plus pending accrued interest
+     * @return The total reserves with interest
+     */
+    function totalReservesCurrent() external view returns (uint256);
+
+    /**
      * @notice Calculate account's borrow balance using the pending updated borrowIndex
      * @param account The address whose balance should be calculated
      * @return The calculated balance
@@ -301,6 +325,11 @@ interface IPToken is IERC20 {
     function totalBorrows() external view returns (uint256);
 
     /**
+     * @notice Returns the last updated total reserve without pending interest
+     */
+    function totalReserves() external view returns (uint256);
+
+    /**
      * @notice Returns the last stored borrow index
      */
     function borrowIndex() external view returns (uint256);
@@ -321,7 +350,27 @@ interface IPToken is IERC20 {
     function totalSupply() external view returns (uint256);
 
     /**
-     * @notice Returns the underlying asset
+     * @notice Returns the pToken name
      */
-    function getUnderlying() external view returns (address);
+    function name() external view returns (string memory);
+
+    /**
+     * @notice Returns the pToken symbol
+     */
+    function symbol() external view returns (string memory);
+
+    /**
+     * @notice Returns the pToken decimals
+     */
+    function decimals() external view returns (uint8);
+
+    /**
+     * @notice Returns the pToken underlying token address
+     */
+    function underlying() external view returns (address);
+
+    /**
+     * @notice Returns the protocol seize share
+     */
+    function protocolSeizeShareMantissa() external view returns (uint256);
 }

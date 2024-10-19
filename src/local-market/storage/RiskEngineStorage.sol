@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import {IPToken} from "@interfaces/IPToken.sol";
 import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
@@ -27,18 +27,8 @@ contract RiskEngineStorage {
          * @dev Used e.g. to determine if a market is supported
          */
         mapping(address => Market) markets;
-        /**
-         * @notice The Pause Guardian can pause certain actions as a safety mechanism.
-         *  Actions which allow users to remove their own assets cannot be paused.
-         *  Liquidation / seizing / transfer can only be paused globally, not by market.
-         */
-        address pauseGuardian;
-        // @notice The borrowCapGuardian can set borrowCaps to any number for any market.
-        address borrowCapGuardian;
-        // @notice The supplyCapGuardian can set supplyCaps to any number for any market.
-        address supplyCapGuardian;
-        bool _mintGuardianPaused;
-        bool _borrowGuardianPaused;
+        /// @notice oracle engine address
+        address oracle;
         /// @notice A flag indicating whether transfers are paused by guardian.
         bool transferGuardianPaused;
         /// @notice A flag indicating whether the seize function is paused by guardian.

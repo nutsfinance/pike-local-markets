@@ -1,14 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 interface IInterestRateModel {
-    event NewInterestParams(
-        uint256 baseRatePerSecond,
-        uint256 multiplierPerSecond,
-        uint256 jumpMultiplierPerSecond,
-        uint256 kink
-    );
-
     /**
      * @notice Calculates the utilization rate of the market: `borrows / (cash + borrows - reserves)`
      */

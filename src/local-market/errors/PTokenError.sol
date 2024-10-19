@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 /**
  * @title Library for pToken errors.
@@ -17,6 +17,7 @@ library PTokenError {
     error RedeemRiskEngineRejection(uint256 errorCode);
     error RedeemFreshnessCheck();
     error RedeemTransferOutNotPossible();
+    error InvalidRedeemTokens();
 
     error BorrowRiskEngineRejection(uint256 errorCode);
     error BorrowFreshnessCheck();
@@ -37,7 +38,6 @@ library PTokenError {
     error LiquidateSeizeTooMuch();
 
     error LiquidateSeizeRiskEngineRejection(uint256 errorCode);
-    error LiquidateSeizeLiquidatorIsBorrower();
 
     error AddReservesFactorFreshCheck();
     error ReduceReservesFreshCheck();
@@ -45,6 +45,7 @@ library PTokenError {
     error ReduceReservesCashValidation();
 
     error TransferNotAllowed();
+    error TransferRiskEngineRejection(uint256 errorCode);
     error SweepNotAllowed();
 
     error DelegateNotAllowed();

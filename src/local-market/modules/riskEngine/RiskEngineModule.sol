@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
@@ -9,15 +9,30 @@ import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
 import {RiskEngineError} from "@errors/RiskEngineError.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
+import {RBACMixin} from "@utils/RBACMixin.sol";
 
-contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
+/**
+ * @title Pike Markets RiskEngine Contract
+ * @author NUTS Finance (hello@pike.finance)
+ */
+contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACMixin {
     using ExponentialNoError for ExponentialNoError.Exp;
     using ExponentialNoError for uint256;
 
     /**
      * @inheritdoc IRiskEngine
      */
-    function setCloseFactor(uint256 newCloseFactorMantissa) external onlyOwner {
+    function setOracle(address newOracle) external {
+        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
+        emit NewOracleEngine(_getRiskEngineStorage().oracle, newOracle);
+        _getRiskEngineStorage().oracle = newOracle;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function setCloseFactor(uint256 newCloseFactorMantissa) external {
+        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
         uint256 oldCloseFactorMantissa = _getRiskEngineStorage().closeFactorMantissa;
         _getRiskEngineStorage().closeFactorMantissa = newCloseFactorMantissa;
         emit NewCloseFactor(oldCloseFactorMantissa, newCloseFactorMantissa);
@@ -30,7 +45,8 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         IPToken pToken,
         uint256 newCollateralFactorMantissa,
         uint256 newLiquidationThresholdMantissa
-    ) external onlyOwner {
+    ) external {
+        checkNestedPermission(_CONFIGURATOR_PERMISSION, address(pToken), msg.sender);
         // Verify market is listed
         Market storage market = _getRiskEngineStorage().markets[address(pToken)];
         if (!market.isListed) {
@@ -61,15 +77,14 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         uint256 oldCollateralFactorMantissa = market.collateralFactorMantissa;
         market.collateralFactorMantissa = newCollateralFactorMantissa;
 
-        // Emit event with asset, old collateral factor, and new collateral factor
-        emit NewCollateralFactor(
-            pToken, oldCollateralFactorMantissa, newCollateralFactorMantissa
-        );
-
         // Set market's liquidation threshold to new liquidation threshold, remember old value
         uint256 oldLiquidationThresholdMantissa = market.liquidationThresholdMantissa;
         market.liquidationThresholdMantissa = newLiquidationThresholdMantissa;
 
+        // Emit event with asset, old collateral factor, and new collateral factor
+        emit NewCollateralFactor(
+            pToken, oldCollateralFactorMantissa, newCollateralFactorMantissa
+        );
         // Emit event with asset, old liquidation threshold, and new liquidation threshold
         emit NewLiquidationThreshold(
             pToken, oldLiquidationThresholdMantissa, newLiquidationThresholdMantissa
@@ -79,10 +94,8 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
     /**
      * @inheritdoc IRiskEngine
      */
-    function setLiquidationIncentive(uint256 newLiquidationIncentiveMantissa)
-        external
-        onlyOwner
-    {
+    function setLiquidationIncentive(uint256 newLiquidationIncentiveMantissa) external {
+        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
         // Save current value for use in log
         uint256 oldLiquidationIncentiveMantissa =
             _getRiskEngineStorage().liquidationIncentiveMantissa;
@@ -100,7 +113,8 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
     /**
      * @inheritdoc IRiskEngine
      */
-    function supportMarket(IPToken pToken) external onlyOwner {
+    function supportMarket(IPToken pToken) external {
+        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
         if (_getRiskEngineStorage().markets[address(pToken)].isListed) {
             revert RiskEngineError.AlreadyListed();
         }
@@ -123,10 +137,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         IPToken[] calldata pTokens,
         uint256[] calldata newBorrowCaps
     ) external {
-        if (msg.sender != _getRiskEngineStorage().borrowCapGuardian) {
-            revert RiskEngineError.NotBorrowCapGaurdian();
-        }
-
         uint256 numMarkets = pTokens.length;
         uint256 numBorrowCap = newBorrowCaps.length;
 
@@ -135,6 +145,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         }
 
         for (uint256 i = 0; i < numMarkets; ++i) {
+            checkNestedPermission(
+                _BORROW_CAP_GUARDIAN_PERMISSION, address(pTokens[i]), msg.sender
+            );
             _getRiskEngineStorage().borrowCaps[address(pTokens[i])] = newBorrowCaps[i];
             emit NewBorrowCap(pTokens[i], newBorrowCaps[i]);
         }
@@ -147,10 +160,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         IPToken[] calldata pTokens,
         uint256[] calldata newSupplyCaps
     ) external {
-        if (msg.sender != _getRiskEngineStorage().supplyCapGuardian) {
-            revert RiskEngineError.NotSupplyCapGaurdian();
-        }
-
         uint256 numMarkets = pTokens.length;
         uint256 newSupplyCap = newSupplyCaps.length;
 
@@ -159,6 +168,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         }
 
         for (uint256 i; i < numMarkets; ++i) {
+            checkNestedPermission(
+                _SUPPLY_CAP_GUARDIAN_PERMISSION, address(pTokens[i]), msg.sender
+            );
             _getRiskEngineStorage().supplyCaps[address(pTokens[i])] = newSupplyCaps[i];
             emit NewSupplyCap(pTokens[i], newSupplyCaps[i]);
         }
@@ -167,54 +179,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
     /**
      * @inheritdoc IRiskEngine
      */
-    function setBorrowCapGuardian(address newBorrowCapGuardian) external onlyOwner {
-        // Save current value for inclusion in log
-        address oldBorrowCapGuardian = _getRiskEngineStorage().borrowCapGuardian;
-
-        // Store borrowCapGuardian with value newBorrowCapGuardian
-        _getRiskEngineStorage().borrowCapGuardian = newBorrowCapGuardian;
-
-        // Emit NewBorrowCapGuardian(OldBorrowCapGuardian, NewBorrowCapGuardian)
-        emit NewBorrowCapGuardian(oldBorrowCapGuardian, newBorrowCapGuardian);
-    }
-
-    /**
-     * @inheritdoc IRiskEngine
-     */
-    function setSupplyCapGuardian(address newSupplyCapGuardian) external onlyOwner {
-        // Save current value for inclusion in log
-        address oldSupplyCapGuardian = _getRiskEngineStorage().supplyCapGuardian;
-
-        // Store supplyCapGuardian with value newSupplyCapGuardian
-        _getRiskEngineStorage().supplyCapGuardian = newSupplyCapGuardian;
-
-        // Emit NewSupplyCapGuardian(oldSupplyCapGuardian, newSupplyCapGuardian)
-        emit NewSupplyCapGuardian(oldSupplyCapGuardian, newSupplyCapGuardian);
-    }
-
-    /**
-     * @inheritdoc IRiskEngine
-     */
-    function setPauseGuardian(address newPauseGuardian) external onlyOwner {
-        // Save current value for inclusion in log
-        address oldPauseGuardian = _getRiskEngineStorage().pauseGuardian;
-
-        // Store pauseGuardian with value newPauseGuardian
-        _getRiskEngineStorage().pauseGuardian = newPauseGuardian;
-
-        // Emit NewPauseGuardian(OldPauseGuardian, NewPauseGuardian)
-        emit NewPauseGuardian(oldPauseGuardian, newPauseGuardian);
-    }
-
-    /**
-     * @inheritdoc IRiskEngine
-     */
     function setMintPaused(IPToken pToken, bool state) external returns (bool) {
+        checkPermission(_PAUSE_GUARDIAN_PERMISSION, msg.sender);
         if (!_getRiskEngineStorage().markets[address(pToken)].isListed) {
             revert RiskEngineError.MarketNotListed();
-        }
-        if (msg.sender != _getRiskEngineStorage().pauseGuardian) {
-            revert RiskEngineError.NotPauseGaurdian();
         }
 
         _getRiskEngineStorage().mintGuardianPaused[address(pToken)] = state;
@@ -226,11 +194,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
      * @inheritdoc IRiskEngine
      */
     function setBorrowPaused(IPToken pToken, bool state) external returns (bool) {
+        checkPermission(_PAUSE_GUARDIAN_PERMISSION, msg.sender);
         if (!_getRiskEngineStorage().markets[address(pToken)].isListed) {
             revert RiskEngineError.MarketNotListed();
-        }
-        if (msg.sender != _getRiskEngineStorage().pauseGuardian) {
-            revert RiskEngineError.NotPauseGaurdian();
         }
 
         _getRiskEngineStorage().borrowGuardianPaused[address(pToken)] = state;
@@ -242,10 +208,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
      * @inheritdoc IRiskEngine
      */
     function setTransferPaused(bool state) external returns (bool) {
-        if (msg.sender != _getRiskEngineStorage().pauseGuardian) {
-            revert RiskEngineError.NotPauseGaurdian();
-        }
-
+        checkPermission(_PAUSE_GUARDIAN_PERMISSION, msg.sender);
         _getRiskEngineStorage().transferGuardianPaused = state;
         emit ActionPaused("Transfer", state);
         return state;
@@ -255,10 +218,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
      * @inheritdoc IRiskEngine
      */
     function setSeizePaused(bool state) external returns (bool) {
-        if (msg.sender != _getRiskEngineStorage().pauseGuardian) {
-            revert RiskEngineError.NotPauseGaurdian();
-        }
-
+        checkPermission(_PAUSE_GUARDIAN_PERMISSION, msg.sender);
         _getRiskEngineStorage().seizeGuardianPaused = state;
         emit ActionPaused("Seize", state);
         return state;
@@ -372,26 +332,27 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
             }
 
             // attempt to add borrower to the market
-            RiskEngineError.Error addErr =
-                addToMarketInternal(IPToken(msg.sender), borrower);
-            if (addErr != RiskEngineError.Error.NO_ERROR) {
-                return uint256(addErr);
-            }
+            // already checked if market is listed
+            addToMarketInternal(IPToken(msg.sender), borrower);
 
             // it should be impossible to break the important invariant
             assert(_getRiskEngineStorage().markets[pToken].accountMembership[borrower]);
         }
 
-        if (IOracleEngine(address(this)).getUnderlyingPrice(IPToken(pToken)) == 0) {
+        if (
+            IOracleEngine(_getRiskEngineStorage().oracle).getUnderlyingPrice(
+                IPToken(pToken)
+            ) == 0
+        ) {
             return uint256(RiskEngineError.Error.PRICE_ERROR);
         }
 
-        uint256 borrowCap = _getRiskEngineStorage().borrowCaps[pToken];
+        uint256 cap = _getRiskEngineStorage().borrowCaps[pToken];
         // Borrow cap of type(uint256).max corresponds to unlimited borrowing
-        if (borrowCap != type(uint256).max) {
+        if (cap != type(uint256).max) {
             uint256 totalBorrows = IPToken(pToken).totalBorrows();
             uint256 nextTotalBorrows = totalBorrows.add_(borrowAmount);
-            if (nextTotalBorrows > borrowCap) {
+            if (nextTotalBorrows > cap) {
                 return uint256(RiskEngineError.Error.BORROW_CAP_EXCEEDED);
             }
         }
@@ -427,15 +388,15 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
             return uint256(RiskEngineError.Error.MARKET_NOT_LISTED);
         }
 
-        uint256 supplyCap = _getRiskEngineStorage().supplyCaps[pToken];
+        uint256 cap = _getRiskEngineStorage().supplyCaps[pToken];
         // Skipping the cap check for uncapped coins to save some gas
-        if (supplyCap != type(uint256).max) {
+        if (cap != type(uint256).max) {
             uint256 pTokenSupply = IPToken(pToken).totalSupply();
             ExponentialNoError.Exp memory exchangeRate =
                 ExponentialNoError.Exp({mantissa: IPToken(pToken).exchangeRateStored()});
             uint256 nextTotalSupply =
                 exchangeRate.mul_ScalarTruncateAddUInt(pTokenSupply, mintAmount);
-            if (nextTotalSupply > supplyCap) {
+            if (nextTotalSupply > cap) {
                 return uint256(RiskEngineError.Error.SUPPLY_CAP_EXCEEDED);
             }
         }
@@ -647,11 +608,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
         uint256 actualRepayAmount
     ) external view returns (uint256, uint256) {
         /* Read oracle prices for borrowed and collateral markets */
-        uint256 priceBorrowedMantissa =
-            IOracleEngine(address(this)).getUnderlyingPrice(IPToken(pTokenBorrowed));
-        uint256 priceCollateralMantissa =
-            IOracleEngine(address(this)).getUnderlyingPrice(IPToken(pTokenCollateral));
-
+        uint256 priceBorrowedMantissa = IOracleEngine(_getRiskEngineStorage().oracle)
+            .getUnderlyingPrice(IPToken(pTokenBorrowed));
+        uint256 priceCollateralMantissa = IOracleEngine(_getRiskEngineStorage().oracle)
+            .getUnderlyingPrice(IPToken(pTokenCollateral));
         if (priceBorrowedMantissa == 0 || priceCollateralMantissa == 0) {
             return (uint256(RiskEngineError.Error.PRICE_ERROR), 0);
         }
@@ -702,11 +662,50 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
     /**
      * @inheritdoc IRiskEngine
      */
-    function redeemVerify(uint256 redeemAmount, uint256 redeemTokens) external pure {
-        // Require tokens is zero or amount is also zero
-        if (redeemTokens == 0 && redeemAmount > 0) {
-            revert RiskEngineError.InvalidRedeemTokens();
-        }
+    function oracle() external view returns (address) {
+        return _getRiskEngineStorage().oracle;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function collateralFactor(IPToken pToken) external view returns (uint256) {
+        return _getCollateralFactor(pToken).mantissa;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function liquidationThreshold(IPToken pToken) external view returns (uint256) {
+        return _getLiquidationThreshold(pToken).mantissa;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function liquidationIncentive() external view returns (uint256) {
+        return _getRiskEngineStorage().liquidationIncentiveMantissa;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function closeFactor() external view returns (uint256) {
+        return _getRiskEngineStorage().closeFactorMantissa;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function supplyCap(address pToken) external view returns (uint256) {
+        return _getRiskEngineStorage().supplyCaps[pToken];
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function borrowCap(address pToken) external view returns (uint256) {
+        return _getRiskEngineStorage().borrowCaps[pToken];
     }
 
     /**
@@ -843,8 +842,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin {
 
             // Get the normalized price of the asset
             vars.oraclePriceMantissa =
-                IOracleEngine(address(this)).getUnderlyingPrice(asset);
-
+                IOracleEngine(_getRiskEngineStorage().oracle).getUnderlyingPrice(asset);
             if (vars.oraclePriceMantissa == 0) {
                 return (RiskEngineError.Error.PRICE_ERROR, 0, 0);
             }

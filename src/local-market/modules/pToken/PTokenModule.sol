@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import {
     SafeERC20, IERC20
@@ -8,12 +8,18 @@ import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
 import {PTokenStorage} from "@storage/PTokenStorage.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
+import {RBACMixin} from "@utils/RBACMixin.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {PTokenError} from "@errors/PTokenError.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
 
-contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
+/**
+ * @title Pike Markets PToken Contract
+ * @notice ERC20 Compatible PTokens
+ * @author NUTS Finance (hello@pike.finance)
+ */
+contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
     using ExponentialNoError for ExponentialNoError.Exp;
     using ExponentialNoError for uint256;
     using SafeERC20 for IERC20;
@@ -22,12 +28,17 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
      * @dev Prevents a contract from calling itself, directly or indirectly.
      */
     modifier nonReentrant() {
-        if (!_getPTokenStorage()._notEntered) {
+        if (_reentrancyGuardEntered()) {
             revert CommonError.ReentrancyGuardReentrantCall();
         }
-        _getPTokenStorage()._notEntered = false;
+
+        assembly ("memory-safe") {
+            tstore(_SLOT_PTOKEN_STORAGE, 1)
+        }
         _;
-        _getPTokenStorage()._notEntered = true;
+        assembly ("memory-safe") {
+            tstore(_SLOT_PTOKEN_STORAGE, 0)
+        }
     }
 
     /**
@@ -67,7 +78,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
         // Set initial exchange rate
         _getPTokenStorage().initialExchangeRateMantissa = initialExchangeRateMantissa_;
 
-        _getPTokenStorage().protocolSeizeShareMantissa = protocolSeizeShareMantissa_;
+        _setProtocolSeizeShareMantissa(protocolSeizeShareMantissa_);
 
         _getPTokenStorage().borrowRateMaxMantissa = borrowRateMaxMantissa_;
 
@@ -84,9 +95,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
         _getPTokenStorage().symbol = symbol_;
         _getPTokenStorage().decimals = decimals_;
 
-        // The counter starts true to prevent changing it from zero to non-zero (i.e. smaller cost/refund)
-        _getPTokenStorage()._notEntered = true;
-
         // Set underlying and sanity check it
         _getPTokenStorage().underlying = underlying_;
         IERC20(underlying_).totalSupply();
@@ -102,10 +110,20 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
-    function setReserveFactor(uint256 newReserveFactorMantissa) external onlyOwner {
+    function setReserveFactor(uint256 newReserveFactorMantissa) external {
+        checkPermission(_RESERVE_MANAGER_PERMISSION, msg.sender);
         accrueInterest();
         // _setReserveFactorFresh emits reserve-factor-specific logs on errors, so we don't need to.
         _setReserveFactorFresh(newReserveFactorMantissa);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function setProtocolSeizeShare(uint256 newProtocolSeizeShareMantissa) external {
+        checkPermission(_RESERVE_MANAGER_PERMISSION, msg.sender);
+
+        _setProtocolSeizeShareMantissa(newProtocolSeizeShareMantissa);
     }
 
     /**
@@ -121,7 +139,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
-    function reduceReserves(uint256 reduceAmount) external onlyOwner nonReentrant {
+    function reduceReserves(uint256 reduceAmount) external nonReentrant {
+        checkPermission(_RESERVE_WITHDRAWER_PERMISSION, msg.sender);
         accrueInterest();
         // _reduceReservesFresh emits reserve-reduction-specific logs on errors, so we don't need to.
         _reduceReservesFresh(reduceAmount);
@@ -348,14 +367,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     }
 
     /**
-     * @notice Get the address of the underlying asset
-     * @return The address of the underlying asset
-     */
-    function getUnderlying() external view override returns (address) {
-        return _getPTokenStorage().underlying;
-    }
-
-    /**
      * @notice Get the token balance of the `owner`
      * @param owner The address of the account to query
      * @return The number of tokens owned by `owner`
@@ -402,8 +413,36 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
+    function totalReserves() external view returns (uint256) {
+        return _getPTokenStorage().totalReserves;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function totalSupply() external view returns (uint256) {
         return _getPTokenStorage().totalSupply;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function name() external view returns (string memory) {
+        return _getPTokenStorage().name;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function symbol() external view returns (string memory) {
+        return _getPTokenStorage().symbol;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function decimals() external view returns (uint8) {
+        return _getPTokenStorage().decimals;
     }
 
     /**
@@ -448,8 +487,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
      * @inheritdoc IPToken
      */
     function borrowRatePerSecond() external view returns (uint256) {
+        PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+
         return IInterestRateModel(address(this)).getBorrowRate(
-            getCash(), _getPTokenStorage().totalBorrows, _getPTokenStorage().totalReserves
+            getCash(), snapshot.totalBorrow, snapshot.totalReserve
         );
     }
 
@@ -457,10 +498,12 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
      * @inheritdoc IPToken
      */
     function supplyRatePerSecond() external view returns (uint256) {
+        PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+
         return IInterestRateModel(address(this)).getSupplyRate(
             getCash(),
-            _getPTokenStorage().totalBorrows,
-            _getPTokenStorage().totalReserves,
+            snapshot.totalBorrow,
+            snapshot.totalReserve,
             _getPTokenStorage().reserveFactorMantissa
         );
     }
@@ -476,14 +519,36 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
     /**
      * @inheritdoc IPToken
      */
+    function totalReservesCurrent() external view returns (uint256) {
+        PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+        return snapshot.totalReserve;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function borrowBalanceCurrent(address account) external view returns (uint256) {
         PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
         BorrowSnapshot memory borrowSnapshot = _getPTokenStorage().accountBorrows[account];
 
         if (borrowSnapshot.principal == 0) return 0;
 
-        uint256 principalTimesIndex = borrowSnapshot.principal * snapshot.accBorrowIndex;
-        return principalTimesIndex / borrowSnapshot.interestIndex;
+        return borrowSnapshot.principal * snapshot.accBorrowIndex
+            / borrowSnapshot.interestIndex;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function underlying() external view returns (address) {
+        return _getPTokenStorage().underlying;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function protocolSeizeShareMantissa() external view returns (uint256) {
+        return _getPTokenStorage().protocolSeizeShareMantissa;
     }
 
     /**
@@ -501,7 +566,11 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
         /// Get accrued snapshot
         PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
 
-        if (snapshot.accBorrowIndex > _getPTokenStorage().borrowRateMaxMantissa) {
+        if (
+            IInterestRateModel(address(this)).getBorrowRate(
+                getCash(), snapshot.totalBorrow, snapshot.totalReserve
+            ) > _getPTokenStorage().borrowRateMaxMantissa
+        ) {
             revert PTokenError.BorrowRateBoundsCheck();
         }
 
@@ -534,10 +603,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
             return _getPTokenStorage().initialExchangeRateMantissa;
         }
         PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
-        uint256 totalCash = getCash();
-        uint256 cashPlusBorrowsMinusReserves =
-            totalCash + snapshot.totalBorrow - snapshot.totalReserve;
-        return cashPlusBorrowsMinusReserves * ExponentialNoError.expScale / _totalSupply;
+
+        return (getCash() + snapshot.totalBorrow - snapshot.totalReserve)
+            * ExponentialNoError.expScale / _totalSupply;
     }
 
     /**
@@ -601,7 +669,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
             _getPTokenStorage().accountTokens[onBehalfOf] + mintTokens;
 
         /* We emit a Mint event, and a Transfer event */
-        emit Mint(onBehalfOf, actualMintAmount, mintTokens);
+        emit Mint(minter, onBehalfOf, actualMintAmount, mintTokens);
         emit Transfer(address(0), onBehalfOf, mintTokens);
     }
 
@@ -686,12 +754,13 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
          */
         doTransferOut(redeemer, redeemAmount);
 
+        if (redeemTokens == 0 && redeemAmount > 0) {
+            revert PTokenError.InvalidRedeemTokens();
+        }
+
         /* We emit a Transfer event, and a Redeem event */
         emit Transfer(onBehalfOf, address(0), redeemTokens);
-        emit Redeem(onBehalfOf, redeemAmount, redeemTokens);
-
-        /* We call the defense hook */
-        _getPTokenStorage().riskEngine.redeemVerify(redeemAmount, redeemTokens);
+        emit Redeem(redeemer, onBehalfOf, redeemAmount, redeemTokens);
     }
 
     /**
@@ -751,7 +820,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
         doTransferOut(borrower, borrowAmount);
 
         /* We emit a Borrow event */
-        emit Borrow(onBehalfOf, borrowAmount, accountBorrowsNew, totalBorrowsNew);
+        emit Borrow(
+            borrower, onBehalfOf, borrowAmount, accountBorrowsNew, totalBorrowsNew
+        );
     }
 
     /**
@@ -926,11 +997,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
             revert PTokenError.LiquidateSeizeRiskEngineRejection(allowed);
         }
 
-        /* Fail if borrower = liquidator */
-        if (borrower == liquidator) {
-            revert PTokenError.LiquidateSeizeLiquidatorIsBorrower();
-        }
-
         /*
          * We calculate the new borrower and liquidator token balances, failing on underflow/overflow:
          *  borrowerTokensNew = accountTokens[borrower] - seizeTokens
@@ -1009,7 +1075,11 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
         internal
     {
         /* Fail if transfer not allowed */
-        _getPTokenStorage().riskEngine.transferAllowed(address(this), src, tokens);
+        uint256 allowed =
+            _getPTokenStorage().riskEngine.transferAllowed(address(this), src, tokens);
+        if (allowed != 0) {
+            revert PTokenError.TransferRiskEngineRejection(allowed);
+        }
 
         /* Do not allow self-transfers */
         if (src == dst) {
@@ -1043,6 +1113,21 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
 
         /* We emit a Transfer event */
         emit Transfer(src, dst, tokens);
+    }
+
+    /**
+     * @notice Sets a new protocol seize share for the protocol
+     */
+    function _setProtocolSeizeShareMantissa(uint256 newProtocolSeizeShareMantissa)
+        internal
+    {
+        uint256 oldProtocolSeizeShareMantissa =
+            _getPTokenStorage().protocolSeizeShareMantissa;
+        _getPTokenStorage().protocolSeizeShareMantissa = newProtocolSeizeShareMantissa;
+
+        emit NewProtocolSeizeShare(
+            oldProtocolSeizeShareMantissa, newProtocolSeizeShareMantissa
+        );
     }
 
     /**
@@ -1218,9 +1303,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
         /* Calculate new borrow balance using the interest index:
          *  recentBorrowBalance = borrower.borrowBalance * market.borrowIndex / borrower.borrowIndex
          */
-        uint256 principalTimesIndex =
-            borrowSnapshot.principal * _getPTokenStorage().borrowIndex;
-        return principalTimesIndex / borrowSnapshot.interestIndex;
+        return borrowSnapshot.principal * _getPTokenStorage().borrowIndex
+            / borrowSnapshot.interestIndex;
     }
 
     /**
@@ -1241,8 +1325,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
              * Otherwise:
              *  exchangeRate = (totalCash + totalBorrows - totalReserves) / totalSupply
              */
-            uint256 totalCash = getCash();
-            uint256 cashPlusBorrowsMinusReserves = totalCash
+            uint256 cashPlusBorrowsMinusReserves = getCash()
                 + _getPTokenStorage().totalBorrows - _getPTokenStorage().totalReserves;
             return
                 cashPlusBorrowsMinusReserves * ExponentialNoError.expScale / _totalSupply;
@@ -1264,5 +1347,15 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin {
      */
     function _getBlockTimestamp() internal view returns (uint256) {
         return block.timestamp;
+    }
+
+    /**
+     * @dev Returns true if the reentrancy guard is currently set to "entered", which indicates there is a
+     * `nonReentrant` function in the call stack.
+     */
+    function _reentrancyGuardEntered() internal view returns (bool result) {
+        assembly ("memory-safe") {
+            result := tload(_SLOT_PTOKEN_STORAGE)
+        }
     }
 }

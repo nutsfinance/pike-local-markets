@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import {IOwnable} from "@interfaces/IOwnable.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
@@ -17,7 +17,7 @@ contract OwnableModule is IOwnable, OwnableMixin {
         Ownable2StepStorage storage data = _getOwnableStorage();
 
         if (data.pendingOwner != msg.sender) {
-            revert NotNominated(msg.sender);
+            revert NotNominated();
         }
 
         data.pendingOwner = address(0);

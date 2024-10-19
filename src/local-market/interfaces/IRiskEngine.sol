@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import {IPToken} from "@interfaces/IPToken.sol";
 
 interface IRiskEngine {
+    /// @notice Emitted when a new oracle engine is set
+    event NewOracleEngine(address oldOracleEngine, address newOracleEngine);
+
     /// @notice Emitted when an admin supports a market
     event MarketListed(IPToken pToken);
 
@@ -35,9 +38,6 @@ interface IRiskEngine {
         uint256 oldLiquidationIncentiveMantissa, uint256 newLiquidationIncentiveMantissa
     );
 
-    /// @notice Emitted when pause guardian is changed
-    event NewPauseGuardian(address oldPauseGuardian, address newPauseGuardian);
-
     /// @notice Emitted when an action is paused globally
     event ActionPaused(string action, bool pauseState);
 
@@ -47,18 +47,8 @@ interface IRiskEngine {
     /// @notice Emitted when borrow cap for a pToken is changed
     event NewBorrowCap(IPToken indexed pToken, uint256 newBorrowCap);
 
-    /// @notice Emitted when borrow cap guardian is changed
-    event NewBorrowCapGuardian(
-        address oldBorrowCapGuardian, address newBorrowCapGuardian
-    );
-
     /// @notice Emitted when supply cap for a pToken is changed
     event NewSupplyCap(IPToken indexed pToken, uint256 newSupplyCap);
-
-    /// @notice Emitted when supply cap guardian is changed
-    event NewSupplyCapGuardian(
-        address oldSupplyCapGuardian, address newSupplyCapGuardian
-    );
 
     /// @notice Emitted when the borrowing or redeeming delegate rights are updated for an account
     event DelegateUpdated(
@@ -108,6 +98,13 @@ interface IRiskEngine {
     /// *** Admin Functions ***
 
     /**
+     * @notice Sets the oracle engine for a the risk engine
+     * @dev Admin function to set oracle
+     * @param newOracle The address of the new oracle
+     */
+    function setOracle(address newOracle) external;
+
+    /**
      * @notice Sets the closeFactor for a market used when liquidating borrows
      * @dev Admin function to set closeFactor
      * @param newCloseFactorMantissa New close factor, scaled by 1e18
@@ -143,7 +140,7 @@ interface IRiskEngine {
     /**
      * @notice Set the given borrow caps for the given pToken markets.
      * Borrowing that brings total borrows to or above borrow cap will revert.
-     * @dev Admin or borrowCapGuardian function to set the borrow caps.
+     * @dev borrowCapGuardian function to set the borrow caps.
      * A borrow cap of type(uint256).max corresponds to unlimited borrowing.
      * @param pTokens The addresses of the markets (tokens) to change the borrow caps for
      * @param newBorrowCaps The new borrow cap values in underlying to be set.
@@ -157,7 +154,7 @@ interface IRiskEngine {
     /**
      * @notice Set the given supply caps for the given pToken markets.
      * Supplying that brings total supply to or above supply cap will revert.
-     * @dev Admin or supplyCapGuardian function to set the supply caps.
+     * @dev supplyCapGuardian function to set the supply caps.
      * A supply cap of type(uint256).max corresponds to unlimited supplying.
      * @param pTokens The addresses of the markets (tokens) to change the supply caps for
      * @param newSupplyCaps The new supply cap values in underlying to be set.
@@ -167,24 +164,6 @@ interface IRiskEngine {
         IPToken[] calldata pTokens,
         uint256[] calldata newSupplyCaps
     ) external;
-
-    /**
-     * @notice Admin function to change the Borrow Cap Guardian
-     * @param newBorrowCapGuardian The address of the new Borrow Cap Guardian
-     */
-    function setBorrowCapGuardian(address newBorrowCapGuardian) external;
-
-    /**
-     * @notice Admin function to change the Supply Cap Guardian
-     * @param newSupplyCapGuardian The address of the new Supply Cap Guardian
-     */
-    function setSupplyCapGuardian(address newSupplyCapGuardian) external;
-
-    /**
-     * @notice Admin function to change the Pause Guardian
-     * @param newPauseGuardian The address of the new Pause Guardian
-     */
-    function setPauseGuardian(address newPauseGuardian) external;
 
     /**
      * @notice Admin function to pause mint
@@ -373,9 +352,37 @@ interface IRiskEngine {
         returns (uint256);
 
     /**
-     * @notice Validates redeem and reverts on rejection.
-     * @param redeemAmount The amount of the underlying asset being redeemed
-     * @param redeemTokens The number of tokens being redeemed
+     * @return the oracle engine address
      */
-    function redeemVerify(uint256 redeemAmount, uint256 redeemTokens) external pure;
+    function oracle() external view returns (address);
+
+    /**
+     * @return the collateral factor of a pToken
+     */
+    function collateralFactor(IPToken pToken) external view returns (uint256);
+
+    /**
+     * @return the liquidation threshold of a pToken
+     */
+    function liquidationThreshold(IPToken pToken) external view returns (uint256);
+
+    /**
+     * @return the liquidation incentives of pTokens
+     */
+    function liquidationIncentive() external view returns (uint256);
+
+    /**
+     * @return the close factor percentage for liquidation
+     */
+    function closeFactor() external view returns (uint256);
+
+    /**
+     * @return the supply cap for the pToken
+     */
+    function supplyCap(address pToken) external view returns (uint256);
+
+    /**
+     * @return the borrow cap for the pToken
+     */
+    function borrowCap(address pToken) external view returns (uint256);
 }

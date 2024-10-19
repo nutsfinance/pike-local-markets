@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import {IOracleProvider} from "@oracles/interfaces/IOracleProvider.sol";
-import {IPyth, PythStructs} from "@pythnetwork//IPyth.sol";
+import {IPyth, PythStructs} from "@pythnetwork/IPyth.sol";
 import {OwnableUpgradeable} from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IERC20Metadata} from
@@ -46,11 +46,6 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
      * @notice Error emitted when max stale period is invalid
      */
     error InvalidMaxStalePeriod();
-
-    /**
-     * @notice Error emitted when price is invalid
-     */
-    error InvalidPrice();
 
     /**
      * @notice Contract constructor

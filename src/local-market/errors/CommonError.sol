@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 /**
  * @title Library for common errors.
@@ -36,4 +36,9 @@ library CommonError {
      * @dev Thrown when a zero address was passed as a function parameter (0x0000000000000000000000000000000000000000).
      */
     error ZeroAddress();
+
+    /**
+     * @dev Thrown when a permission is invalid
+     */
+    error InvalidPermission();
 }

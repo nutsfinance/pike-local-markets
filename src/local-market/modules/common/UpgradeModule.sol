@@ -1,11 +1,15 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import {UpgradeStorage} from "@storage/UpgradeStorage.sol";
 import {OwnableStorage} from "@storage/OwnableStorage.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {IUpgrade} from "@interfaces/IUpgrade.sol";
 
+/**
+ * @title Contract for managing upgradeability
+ * See IUpgrade.
+ */
 contract UpgradeModule is IUpgrade, UpgradeStorage, OwnableStorage {
     /**
      * @inheritdoc IUpgrade
@@ -60,10 +64,6 @@ contract UpgradeModule is IUpgrade, UpgradeStorage, OwnableStorage {
         }
 
         ProxyData storage data = _getImplementationStorage();
-
-        if (newImplementation == data.implementation) {
-            revert AlreadyUpgraded();
-        }
 
         if (!data.simulatingUpgrade && _implementationIsSterile(newImplementation)) {
             revert ImplementationIsSterile(newImplementation);

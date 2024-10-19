@@ -9,6 +9,8 @@ out/
 
 node_modules
 
+certora
+
 # Docs
 docs/
 
@@ -16,3 +18,8 @@ docs/
 .env
 
 .DS_Store
+
+deployments
+
+coverage
+lcov.info

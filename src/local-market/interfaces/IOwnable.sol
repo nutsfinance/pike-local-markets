@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 interface IOwnable {
     /**
@@ -18,7 +18,7 @@ interface IOwnable {
     /**
      * @notice Thrown when an address tries to accept ownership but has not been nominated.
      */
-    error NotNominated(address);
+    error NotNominated();
 
     /**
      * @notice Thrown when caller is not a pending nominated owner.

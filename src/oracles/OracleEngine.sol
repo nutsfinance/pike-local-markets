@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.20;
+pragma solidity 0.8.25;
 
 import {IPToken} from "@interfaces/IPToken.sol";
 import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
@@ -142,7 +142,7 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
         override
         returns (uint256)
     {
-        return getPrice(pToken.getUnderlying());
+        return getPrice(pToken.underlying());
     }
 
     /**
