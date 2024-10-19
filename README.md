@@ -54,6 +54,10 @@ The OracleEngine aggregates real-time asset price data from various sources usin
 
 The OracleProvider is responsible for retrieving price data from specific external sources. Each provider implements its own logic for fetching and managing this data, which is then supplied to the OracleEngine to ensure accurate pricing across the platform.
 
+## Security and Audit Information
+
+For detailed security assumptions and contracts scope, please refer to the [Audit Scope](./AUDIT.md).
+
 ### Installation
 
 To run the Pike Local Market, clone the repository and install the necessary dependencies. Ensure you have [yarn](https://yarnpkg.com/lang/en/docs/install/) or [npm](https://docs.npmjs.com/cli/install) installed.
