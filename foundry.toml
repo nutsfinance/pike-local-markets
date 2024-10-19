@@ -12,7 +12,8 @@ remappings = [
   "@interfaces/=src/interfaces/",
   "@storage/=src/storage/",
   "@modules/=src/modules/",
-  "@errors/=src/errors/"
+  "@errors/=src/errors/",
+  "@utils/=src/utils/"
 ]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
