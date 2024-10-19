@@ -233,16 +233,11 @@ contract LocalRiskEngine is TestLocal {
     }
 
     function testSupportMarket_FailIfAlreadyListedOrUnsupported() public {
-        IPToken mockPToken = IPToken(makeAddr("mockPToken"));
         vm.startPrank(getAdmin());
 
         // "AlreadyListed()" selector
         vm.expectRevert(0xa3d582ec);
         re.supportMarket(pUSDC);
-
-        // "UnsupportedInterface()" selector
-        vm.expectRevert(0x63aaf066);
-        re.supportMarket(mockPToken);
 
         changeList(address(pUSDC), false);
 

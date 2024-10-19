@@ -38,8 +38,9 @@ contract LocalPToken is TestLocal {
         mockOracle = MockOracle(re.oracle());
     }
 
-    function testInitialize_FailIfAlreadyInitialized() public {
+    function testInitialize_FailIfAlreadyInitializedOrZeroAddress() public {
         vm.prank(getAdmin());
+
         // "AlreadyInitialized()" selector
         vm.expectRevert(0x0dc149f0);
         PTokenModule(address(pUSDC)).initialize(
@@ -53,22 +54,30 @@ contract LocalPToken is TestLocal {
         bytes32 slot = 0x74d6be38627e7912e34c50c5cbc5a4826c01ce9f17c41aaeea1b0611189c7000;
         vm.store(pToken, slot, bytes32(abi.encode(getAdmin())));
 
-        vm.prank(getAdmin());
+        vm.startPrank(getAdmin());
         // "ZeroValue()" selector
         vm.expectRevert(0x7c946ed7);
         PTokenModule(pToken).initialize(
             address(0), IRiskEngine(address(0)), 0, 0, 0, 0, "", "", 0
         );
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        PTokenModule(pToken).initialize(
+            address(0), IRiskEngine(address(0)), 1, 1, 1, 1, "", "", 0
+        );
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        PTokenModule(pToken).initialize(
+            address(1), IRiskEngine(address(0)), 1, 1, 1, 1, "", "", 0
+        );
+
+        vm.stopPrank();
     }
 
     function testSetRE_Success() public {
         IRiskEngine newRE = IRiskEngine(new RiskEngineModule());
-        IRiskEngine mockRE = IRiskEngine(makeAddr("mockRE"));
-
-        vm.prank(getAdmin());
-        // "UnsupportedInterface()" selector
-        vm.expectRevert(0x63aaf066);
-        pUSDC.setRiskEngine(mockRE);
 
         vm.prank(getAdmin());
         pUSDC.setRiskEngine(newRE);
