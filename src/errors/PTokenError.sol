@@ -9,5 +9,43 @@ library PTokenError {
 
     error SetReserveFactorBoundsCheck();
 
+    error BorrowRateBoundsCheck();
+
+    error MintRiskEngineRejection(uint256 errorCode);
+    error MintFreshnessCheck();
+
+    error RedeemRiskEngineRejection(uint256 errorCode);
+    error RedeemFreshnessCheck();
+    error RedeemTransferOutNotPossible();
+
+    error BorrowRiskEngineRejection(uint256 errorCode);
+    error BorrowFreshnessCheck();
+    error BorrowCashNotAvailable();
+
+    error RepayBorrowRiskEngineRejection(uint256 errorCode);
+    error RepayBorrowFreshnessCheck();
+
+    error LiquidateAccrueCollateralInterestFailed();
+
+    error LiquidateRiskEngineRejection(uint256 errorCode);
+    error LiquidateFreshnessCheck();
+    error LiquidateCollateralFreshnessCheck();
+    error LiquidateLiquidatorIsBorrower();
+    error LiquidateCloseAmountIsZero();
+    error LiquidateCloseAmountIsUintMax();
+    error LiquidateCalculateAmountSeizeFailed(uint256 errorCode);
+    error LiquidateSeizeTooMuch();
+
+    error LiquidateSeizeRiskEngineRejection(uint256 errorCode);
+    error LiquidateSeizeLiquidatorIsBorrower();
+
+    error AddReservesFactorFreshCheck();
+    error ReduceReservesFreshCheck();
+    error ReduceReservesCashNotAvailable();
+    error ReduceReservesCashValidation();
+
     error TransferNotAllowed();
+    error SweepNotAllowed();
+
+    error DelegateNotAllowed();
 }

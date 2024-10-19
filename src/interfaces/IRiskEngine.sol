@@ -401,6 +401,17 @@ interface IRiskEngine {
     ) external view returns (uint256, uint256);
 
     /**
+     * @notice Checks if a delegate has been approved by a user for all markets.
+     * @param user The address of the user who may have approved a delegatee.
+     * @param delegate The address of the delegatee to check for approval.
+     * @return True if the delegate is approved by the user, false otherwise.
+     */
+    function delegateAllowed(address user, address delegate)
+        external
+        view
+        returns (bool);
+
+    /**
      * @notice Return all of the markets
      * @dev The automatic getter may be used to access an individual market.
      * @return The list of market addresses

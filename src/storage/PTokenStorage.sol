@@ -34,9 +34,17 @@ contract PTokenStorage {
          */
         uint256 initialExchangeRateMantissa;
         /**
+         * @notice Share of seized collateral that is added to reserves
+         */
+        uint256 protocolSeizeShareMantissa;
+        /**
          * @notice Fraction of interest currently set aside for reserves
          */
         uint256 reserveFactorMantissa;
+        /**
+         * @notice Maximum borrow rate that can ever be applied per second (.0005e16 = .0005%)
+         */
+        uint256 borrowRateMaxMantissa;
         /**
          * @notice Block timestamp that interest was last accrued at
          */
@@ -79,6 +87,12 @@ contract PTokenStorage {
     struct BorrowSnapshot {
         uint256 principal;
         uint256 interestIndex;
+    }
+
+    struct PendingSnapshot {
+        uint256 totalBorrow;
+        uint256 totalReserve;
+        uint256 accBorrowIndex;
     }
 
     /// keccak256(abi.encode(uint256(keccak256("pike.LM.PToken")) - 1)) & ~bytes32(uint256(0xff))
