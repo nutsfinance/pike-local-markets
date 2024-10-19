@@ -30,9 +30,17 @@ The pToken module for managing supplied and borrowed assets. Each pToken (e.g., 
 - **Borrow**: Borrow assets against your supplied collateral.
 - **Repay**: Repay borrowed assets to reclaim your collateral.
 
-### InterestRateModel
+### InterestRateModel (DoubleJumpRate)
 
-This module dynamically adjusts interest rates for borrowers based on the utilization rate of each market.
+The DoubleJumpRate model is a dynamic interest rate system that adjusts borrowing costs based on the utilization rate of the market. It operates with two “kinks” or inflection points, and three distinct ranges of utilization:
+
+- Encourage Range: In the initial low-utilization phase (e.g., up to 5%), the borrowing interest rate, incentivizing liquidity supply without immediate borrowing costs.
+- Normal Range: Between the first and second kink (e.g., 5% to 95% utilization), the interest rate increases steadily as utilization rises. This gradual rate adjustment ensures a balanced cost of borrowing, responding to market demand without causing sudden price spikes.
+- Discourage Range: Once the second kink is passed (e.g., beyond 95% utilization), the interest rate jumps sharply, discouraging further borrowing. This sharp increase helps protect the protocol from excessive borrowing and keeps liquidity available for withdrawals.
+
+![3 Slope Model](https://i.imgur.com/LZdPUjs.png)
+
+This flexible model allows the protocol to efficiently balance the demand for loans with the need to ensure sufficient liquidity, optimizing for both borrower and supplier incentives across different utilization ranges.
 
 ### RiskEngine
 
