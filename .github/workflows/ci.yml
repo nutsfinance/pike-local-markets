@@ -106,7 +106,7 @@ jobs:
   diagram:
     name: Diagrams
     runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.pull_request.labels.*.name, 'early-stage') }}
+    if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' }}
 
     permissions:
       # Give the default GITHUB_TOKEN write permission to commit and push the
@@ -137,7 +137,7 @@ jobs:
           find src/local-market/modules -name "*.sol" | while read contract; do
             contract_name=$(basename "$contract" .sol)
             forge flatten "$contract" --output "public/flatten/$contract_name.flatten.sol"
-            sol2uml class "public/flatten/$contract_name.flatten.sol" -f svg "public/uml/${contract_name}_${short_commit_hash}.svg"
+            sol2uml class "public/flatten/$contract_name.flatten.sol" -f svg -o "public/uml/${contract_name}_${short_commit_hash}.svg"
           done
           find src/oracles -maxdepth 1 -name "*.sol" | while read contract; do
           contract_name=$(basename "$contract" .sol)
