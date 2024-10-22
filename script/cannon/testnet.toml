@@ -1,4 +1,4 @@
-name = "pike-market"
+name = "pike-local-market"
 version = "0.1.0"
 description = "Local markets for Pike testnet deployment"
 
@@ -96,42 +96,42 @@ contracts = [
 ]
 
 [clone.oracleEngine]
-source = "universal-upgradeable-proxy:0.1.0@erc1967-upgrade"
+source = "pike-upgradeable-proxy:0.1.0@oz"
 options.implementation = "<%= contracts.OracleEngine.address %>"
 options.owner = "<%= settings.owner %>"
 options.abi = "<%= JSON.stringify(contracts.OracleEngine.abi) %>"
 options.salt = "oracleEngine"
 
 [clone.chainlinkOracleProvider]
-source = "universal-upgradeable-proxy:0.1.0@erc1967-upgrade"
+source = "pike-upgradeable-proxy:0.1.0@oz"
 options.implementation = "<%= contracts.ChainlinkOracleProvider.address %>"
 options.owner = "<%= settings.owner %>"
 options.abi = "<%= JSON.stringify(contracts.ChainlinkOracleProvider.abi) %>"
 options.salt = "chainlinkOracleProvider"
 
 [clone.pythOracleProvider]
-source = "universal-upgradeable-proxy:0.1.0@erc1967-upgrade"
+source = "pike-upgradeable-proxy:0.1.0@oz"
 options.implementation = "<%= contracts.PythOracleProvider.address %>"
 options.owner = "<%= settings.owner %>"
 options.abi = "<%= JSON.stringify(contracts.PythOracleProvider.abi) %>"
 options.salt = "pythOracleProvider"
 
 [clone.pUSDC]
-source = "universal-upgradeable-proxy:0.1.0@module-upgrade"
+source = "pike-upgradeable-proxy:0.1.0@main"
 options.implementation = "<%= contracts.PTokenRouter.address %>"
 options.owner = "<%= settings.owner %>"
 options.abi = "<%= JSON.stringify(contracts.PTokenRouter.abi) %>"
 options.salt = "pUSDC"
 
 [clone.pWETH]
-source = "universal-upgradeable-proxy:0.1.0@module-upgrade"
+source = "pike-upgradeable-proxy:0.1.0@main"
 options.implementation = "<%= contracts.PTokenRouter.address %>"
 options.owner = "<%= settings.owner %>"
 options.abi = "<%= JSON.stringify(contracts.PTokenRouter.abi) %>"
 options.salt = "pWETH"
 
 [clone.core]
-source = "universal-upgradeable-proxy:0.1.0@module-upgrade"
+source = "pike-upgradeable-proxy:0.1.0@main"
 options.implementation = "<%= contracts.CoreRouter.address %>"
 options.owner = "<%= settings.owner %>"
 options.abi = "<%= JSON.stringify(contracts.CoreRouter.abi) %>"

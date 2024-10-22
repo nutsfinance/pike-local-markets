@@ -1,0 +1,123 @@
+[clone.pUSDC]
+source = "pike-upgradeable-proxy:0.1.0@main"
+options.implementation = "<%= contracts.PTokenRouter.address %>"
+options.owner = "<%= settings.usdc_owner %>"
+options.abi = "<%= JSON.stringify(contracts.PTokenRouter.abi) %>"
+options.salt = "pUSDC"
+
+[invoke.chainlink_set_usdc]
+target = ["chainlinkOracleProvider.Proxy"]
+func = "setAssetConfig"
+from = "<%= settings.chainlinkProvider_owner %>"
+args = ["<%= settings.usdc_address %>", "<%= settings.usdc_chainlinkFeed %>", "<%= settings.usdc_maxStale %>"]
+depends = [ "invoke.initialize_chainlink"]
+
+[invoke.pyth_set_usdc]
+target = ["pythOracleProvider.Proxy"]
+func = "setAssetConfig"
+from = "<%= settings.pythProvider_owner %>"
+args = ["<%= settings.usdc_address %>", "<%= settings.usdc_pythID %>", "<%= settings.usdc_maxStale %>"]
+depends = [ "invoke.initialize_pyth"]
+
+[invoke.oe_set_usdc]
+target = ["oracleEngine.Proxy"]
+func = "setAssetConfig"
+from = "<%= settings.oracleEngine_owner %>"
+args = ["<%= settings.usdc_address %>", "<%= chainlinkOracleProvider.Proxy.address %>", "<%= pythOracleProvider.Proxy.address %>", "0", "0"]
+depends = [ "invoke.pyth_set_usdc", "invoke.chainlink_set_usdc"]
+
+[invoke.initialize_pUSDC]
+target = [ "pUSDC.Proxy" ]
+abi = "<%= JSON.stringify(contracts.PTokenModule.abi) %>"
+from = "<%= settings.usdc_owner %>"
+func = "initialize"
+args = ["<%= settings.usdc_address %>", "<%= core.Proxy.address %>", "<%= settings.usdc_initial_exchange_rate %>", "<%= settings.usdc_reserve_factor %>", "<%= settings.usdc_protocol_seize_factor %>", "<%= settings.usdc_max_borrow_rate %>", "pike-usdc", "pUSDC", "<%= settings.usdc_decimals %>"]
+depends = [ "clone.pUSDC",  "clone.core"]
+
+[invoke.pUSDC_reserve_manager]
+target = [ "pUSDC.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.usdc_owner %>"
+func = "grantPermission"
+args = ["<%= settings.roles_reserveManagerRole %>", "<%= settings.usdc_reserveManager %>"]
+depends = [ "clone.pUSDC" ]
+
+[invoke.pUSDC_reserve_withdrawer]
+target = [ "pUSDC.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.usdc_owner %>"
+func = "grantPermission"
+args = ["<%= settings.roles_reserveWithdrawerRole %>", "<%= settings.usdc_reserveWithdrawer %>"]
+depends = [ "clone.pUSDC" ]
+
+[invoke.set_pUSDC_local_configurator]
+target = [ "pUSDC.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.usdc_owner %>"
+func = "grantPermission"
+args = ["<%= settings.roles_confRole %>", "<%= settings.usdc_configurator %>"]
+depends = [ "clone.pUSDC" ]
+
+[invoke.config_pUSDC_IRM]
+target = [ "pUSDC.Proxy" ]
+abi = "<%= JSON.stringify(contracts.DoubleJumpRateModel.abi) %>"
+from = "<%= settings.usdc_owner %>"
+func = "configureInterestRateModel"
+args = ["<%= settings.usdc_baseRate %>", "<%= settings.usdc_multiplier %>", "<%= settings.usdc_firstJumpMultiplier %>", "<%= settings.usdc_secondJumpMultiplier %>", "<%= settings.usdc_firstKink %>", "<%= settings.usdc_secondKink %>"]
+depends = [ "clone.pUSDC", "invoke.set_pUSDC_local_configurator" ]
+
+[invoke.set_core_supply_guard_pUSDC]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "grantNestedPermission"
+args = ["<%= settings.roles_supGuardRole %>", "<%= pUSDC.Proxy.address %>", "<%= settings.usdc_supplyGuard %>"]
+depends = [ "clone.pUSDC"]
+
+[invoke.set_core_borrow_guard_pUSDC]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "grantNestedPermission"
+args = ["<%= settings.roles_borGuardRole %>", "<%= pUSDC.Proxy.address %>", "<%= settings.usdc_borrowGuard %>"]
+
+[invoke.set_pUSDC_configurator]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "grantNestedPermission"
+args = ["<%= settings.roles_confRole %>", "<%= pUSDC.Proxy.address %>","<%= settings.usdc_configurator %>"]
+
+[invoke.support_pUSDC]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "supportMarket"
+args = ["<%= pUSDC.Proxy.address %>"]
+depends = ["invoke.set_core_configurator"]
+
+[invoke.set_pUSDC_collateral_factor]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "setCollateralFactor"
+args = ["<%= pUSDC.Proxy.address %>", "<%= settings.usdc_maxLTV %>", "<%= settings.usdc_LLTV %>"]
+depends = [ "invoke.support_pUSDC" ]
+
+[invoke.set_borrow_cap]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "setMarketBorrowCaps"
+args = [["<%= pUSDC.Proxy.address %>"], ["<%= settings.usdc_borrowCap %>"]]
+depends = [ "invoke.set_core_borrow_guard_pUSDC" ]
+
+[invoke.set_supply_cap]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "setMarketSupplyCaps"
+args = [["<%= pUSDC.Proxy.address %>"], ["<%= settings.usdc_supplyCap %>"]]
+depends = [ "invoke.set_core_supply_guard_pUSDC" ]
+
+

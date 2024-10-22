@@ -1,4 +1,4 @@
-name = "pike-market"
+name = "pike-local-market"
 version = "0.1.0"
 description = "Local markets for Pike mainnet fork deployment"
 include = ["testnet.toml"]

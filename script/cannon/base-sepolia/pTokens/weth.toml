@@ -1,0 +1,121 @@
+[clone.pWETH]
+source = "pike-upgradeable-proxy:0.1.0@main"
+options.implementation = "<%= contracts.PTokenRouter.address %>"
+options.owner = "<%= settings.weth_owner %>"
+options.abi = "<%= JSON.stringify(contracts.PTokenRouter.abi) %>"
+options.salt = "pWETH"
+
+[invoke.chainlink_set_weth]
+target = ["chainlinkOracleProvider.Proxy"]
+func = "setAssetConfig"
+from = "<%= settings.chainlinkProvider_owner %>"
+args = ["<%= settings.weth_address %>", "<%= settings.weth_chainlinkFeed %>", "<%= settings.weth_maxStale %>"]
+depends = [ "invoke.initialize_chainlink"]
+
+[invoke.pyth_set_weth]
+target = ["pythOracleProvider.Proxy"]
+func = "setAssetConfig"
+from = "<%= settings.pythProvider_owner %>"
+args = ["<%= settings.weth_address %>", "<%= settings.weth_pythID %>", "<%= settings.weth_maxStale %>"]
+depends = [ "invoke.initialize_pyth"]
+
+[invoke.oe_set_weth]
+target = ["oracleEngine.Proxy"]
+func = "setAssetConfig"
+from = "<%= settings.oracleEngine_owner %>"
+args = ["<%= settings.weth_address %>", "<%= chainlinkOracleProvider.Proxy.address %>", "<%= pythOracleProvider.Proxy.address %>", "0", "0"]
+depends = [ "invoke.pyth_set_weth", "invoke.chainlink_set_weth"]
+
+[invoke.initialize_pWETH]
+target = [ "pWETH.Proxy" ]
+abi = "<%= JSON.stringify(contracts.PTokenModule.abi) %>"
+from = "<%= settings.weth_owner %>"
+func = "initialize"
+args = ["<%= settings.weth_address %>", "<%= core.Proxy.address %>", "<%= settings.weth_initial_exchange_rate %>", "<%= settings.weth_reserve_factor %>", "<%= settings.weth_protocol_seize_factor %>", "<%= settings.weth_max_borrow_rate %>", "pike-weth", "pWETH", "<%= settings.weth_decimals %>"]
+depends = [ "clone.pWETH", "clone.core" ]
+
+[invoke.pWETH_reserve_manager]
+target = [ "pWETH.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.weth_owner %>"
+func = "grantPermission"
+args = ["<%= settings.roles_reserveManagerRole %>", "<%= settings.weth_reserveManager %>"]
+depends = [ "clone.pWETH" ]
+
+[invoke.pWETH_reserve_withdrawer]
+target = [ "pWETH.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.weth_owner %>"
+func = "grantPermission"
+args = ["<%= settings.roles_reserveWithdrawerRole %>", "<%= settings.weth_reserveWithdrawer %>"]
+depends = [ "clone.pWETH" ]
+
+[invoke.set_pWETH_local_configurator]
+target = [ "pWETH.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.weth_owner %>"
+func = "grantPermission"
+args = ["<%= settings.roles_confRole %>", "<%= settings.weth_configurator %>"]
+depends = [ "clone.pWETH" ]
+
+[invoke.config_pWETH_IRM]
+target = [ "pWETH.Proxy" ]
+abi = "<%= JSON.stringify(contracts.DoubleJumpRateModel.abi) %>"
+from = "<%= settings.weth_owner %>"
+func = "configureInterestRateModel"
+args = ["<%= settings.weth_baseRate %>", "<%= settings.weth_multiplier %>", "<%= settings.weth_firstJumpMultiplier %>", "<%= settings.weth_secondJumpMultiplier %>", "<%= settings.weth_firstKink %>", "<%= settings.weth_secondKink %>"]
+depends = [ "clone.pWETH", "invoke.set_pWETH_local_configurator" ]
+
+[invoke.set_core_supply_guard_pWETH]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "grantNestedPermission"
+args = ["<%= settings.roles_supGuardRole %>", "<%= pWETH.Proxy.address %>", "<%= settings.weth_supplyGuard %>"]
+depends = [ "clone.pWETH"]
+
+[invoke.set_core_borrow_guard_pWETH]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "grantNestedPermission"
+args = ["<%= settings.roles_borGuardRole %>", "<%= pWETH.Proxy.address %>", "<%= settings.weth_borrowGuard %>"]
+
+[invoke.set_pWETH_configurator]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "grantNestedPermission"
+args = ["<%= settings.roles_confRole %>", "<%= pWETH.Proxy.address %>","<%= settings.weth_configurator %>"]
+
+[invoke.support_pWETH]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "supportMarket"
+args = ["<%= pWETH.Proxy.address %>"]
+depends = ["invoke.set_core_configurator"]
+
+[invoke.set_pWETH_collateral_factor]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "setCollateralFactor"
+args = ["<%= pWETH.Proxy.address %>", "<%= settings.weth_maxLTV %>", "<%= settings.weth_LLTV %>"]
+depends = [ "invoke.support_pWETH" ]
+
+[invoke.set_borrow_cap]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "setMarketBorrowCaps"
+args = [["<%= pWETH.Proxy.address %>"], ["<%= settings.weth_borrowCap %>"]]
+depends = [ "invoke.set_core_borrow_guard_pWETH" ]
+
+[invoke.set_supply_cap]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
+from = "<%= settings.core_owner %>"
+func = "setMarketSupplyCaps"
+args = [["<%= pWETH.Proxy.address %>"], ["<%= settings.weth_supplyCap %>"]]
+depends = [ "invoke.set_core_supply_guard_pWETH" ]

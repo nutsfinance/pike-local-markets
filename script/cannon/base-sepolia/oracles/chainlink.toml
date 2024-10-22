@@ -1,0 +1,12 @@
+[clone.chainlinkOracleProvider]
+source = "pike-upgradeable-proxy:0.1.0@oz"
+options.implementation = "<%= contracts.ChainlinkOracleProvider.address %>"
+options.owner = "<%= settings.chainlinkProvider_owner %>"
+options.abi = "<%= JSON.stringify(contracts.ChainlinkOracleProvider.abi) %>"
+options.salt = "chainlinkOracleProvider"
+
+[invoke.initialize_chainlink]
+target = ["chainlinkOracleProvider.Proxy"]
+func = "initialize"
+args = ["<%= settings.chainlinkProvider_owner %>"]
+depends = [ "clone.chainlinkOracleProvider"]
