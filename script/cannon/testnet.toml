@@ -379,7 +379,7 @@ target = [ "core.Proxy" ]
 abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
 from = "<%= settings.owner %>"
 func = "setCollateralFactor"
-args = ["<%= pUSDC.Proxy.address %>", "<%= parseUnits('74.5', 16) %>", "<%= parseUnits('84.5', 16) %>"]
+args = ["<%= pUSDC.Proxy.address %>", "<%= parseUnits('75', 16) %>", "<%= parseUnits('78', 16) %>"]
 depends = [ "invoke.support_pUSDC" ]
 
 [invoke.set_liquidation_incentive]
@@ -387,7 +387,7 @@ target = [ "core.Proxy" ]
 abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
 from = "<%= settings.owner %>"
 func = "setLiquidationIncentive"
-args = ["<%= parseUnits('1.08', 18) %>"]
+args = ["<%= parseUnits('1.05', 18) %>"]
 depends = ["invoke.set_core_configurator"]
 
 [invoke.set_borrow_cap]

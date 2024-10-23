@@ -22,8 +22,6 @@ include = [
 
 [contract.InitialModuleBundle]
 artifact = "InitialModuleBundle"
-salt = "<%= settings.salt %>"
-create2 = true
 
 [contract.DoubleJumpRateModel]
 artifact = "DoubleJumpRateModel"
@@ -41,11 +39,11 @@ artifact = "RiskEngineModule"
 artifact = "OracleEngine"
 
 [contract.ChainlinkOracleProvider]
-artifact = "src/oracles/ChainlinkOracleProvider.sol:ChainlinkOracleProvider"
+artifact = "ChainlinkOracleProvider"
 args = ["<%= settings.chianlinkSequencerFeed %>"]
 
 [contract.PythOracleProvider]
-artifact = "src/oracles/PythOracleProvider.sol:PythOracleProvider"
+artifact = "PythOracleProvider"
 args = ["<%= settings.pythAddress %>"]
 
 #PToken

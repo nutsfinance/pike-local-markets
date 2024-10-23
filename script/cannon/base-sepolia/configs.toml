@@ -14,8 +14,8 @@ usdc_supplyGuard = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 usdc_borrowGuard = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 usdc_decimals = "18"
 usdc_address = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
-usdc_maxLTV = "<%= parseUnits('74.5', 16) %>" #74.5%
-usdc_LLTV = "<%= parseUnits('84.5', 16) %>" #84.5%
+usdc_maxLTV = "<%= parseUnits('75', 16) %>" #75%
+usdc_LLTV = "<%= parseUnits('78', 16) %>" #78%
 usdc_initial_exchange_rate = "<%= parseUnits('1', 18) %>" # 1e18
 usdc_reserve_factor = "<%= parseUnits('5', 16) %>" # 5%
 usdc_protocol_seize_factor = "<%= parseUnits('1', 16) %>" # 1%
@@ -64,7 +64,7 @@ weth_secondKink = "<%= parseUnits('95', 16) %>"
 core_configurator = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 core_pauseGuard = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 core_closeFactor = "<%= parseUnits('50', 16) %>"
-core_incentives = "<%= parseUnits('1.08', 18) %>"
+core_incentives = "<%= parseUnits('1.05', 18) %>"
 
 [var.salt]
 salt = "main"

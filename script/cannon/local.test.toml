@@ -15,11 +15,11 @@ artifact = "MockOracle"
 
 [contract.WETH]
 artifact = "MockToken"
-args = ["Wrapped Ether", "WETH"]
+args = ["Wrapped Ether", "WETH", "18"]
 
 [contract.USDC]
 artifact = "MockToken"
-args = ["USD Coin", "USDC"]
+args = ["USD Coin", "USDC", "6"]
 
 [invoke.set_oracle]
 target = [ "core.Proxy" ]
