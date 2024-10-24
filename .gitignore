@@ -19,7 +19,9 @@ docs/
 
 .DS_Store
 
-deployments
+deployments/*
+!deployments/base-sepolia
+!deployments/base-sepolia/*
 
 coverage
 lcov.info
