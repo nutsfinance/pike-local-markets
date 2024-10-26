@@ -1,7 +1,3 @@
-[contract.PythOracleProvider]
-artifact = "PythOracleProvider"
-args = ["<%= settings.pythAddress %>"]
-
 [clone.oracleEngine]
 source = "pike-upgradeable-proxy:0.1.0@oz"
 options.implementation = "<%= contracts.OracleEngine.address %>"

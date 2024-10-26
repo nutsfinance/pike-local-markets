@@ -1,12 +1,9 @@
-[contract.mockWETH]
-artifact = "MockTestToken"
-args = ["Wrapped Ether", "WETH", "18", "<%= parseUnits('10', 18) %>"]
-
 [clone.pWETH]
 source = "pike-upgradeable-proxy:0.1.0@main"
 options.implementation = "<%= contracts.PTokenRouter.address %>"
 options.owner = "<%= settings.weth_owner %>"
 options.abi = "<%= JSON.stringify(contracts.PTokenRouter.abi) %>"
+options.salt = "pWETH"
 
 [invoke.chainlink_set_weth]
 target = ["chainlinkOracleProvider.Proxy"]
@@ -22,18 +19,12 @@ fromCall.func = "owner"
 args = ["<%= settings.weth_address %>", "<%= settings.weth_pythID %>", "<%= settings.weth_maxStale %>"]
 depends = [ "invoke.initialize_pyth"]
 
-[invoke.mockProvider_set_weth]
-target = ["MockProvider"]
-func = "setPrice"
-args = ["<%= settings.weth_address %>", "<%= settings.weth_mockPrice %>", "18"]
-depends = [ "contract.MockProvider" ]
-
 [invoke.oe_set_weth]
 target = ["oracleEngine.Proxy"]
 func = "setAssetConfig"
 fromCall.func = "owner"
-args = ["<%= settings.weth_address %>",  "<%= chainlinkOracleProvider.Proxy.address %>",  "<%= pythOracleProvider.Proxy.address %>", "0", "0"]
-depends = [ "contract.MockProvider" ]
+args = ["<%= settings.weth_address %>", "<%= chainlinkOracleProvider.Proxy.address %>", "<%= pythOracleProvider.Proxy.address %>", "0", "0"]
+depends = [ "invoke.pyth_set_weth", "invoke.chainlink_set_weth"]
 
 [invoke.initialize_pWETH]
 target = [ "pWETH.Proxy" ]

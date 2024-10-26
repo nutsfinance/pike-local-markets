@@ -1,12 +1,9 @@
-[contract.mockUSDC]
-artifact = "MockTestToken"
-args = ["USDC", "USDC", "6", "<%= parseUnits('20000', 6) %>"]
-
 [clone.pUSDC]
 source = "pike-upgradeable-proxy:0.1.0@main"
 options.implementation = "<%= contracts.PTokenRouter.address %>"
 options.owner = "<%= settings.usdc_owner %>"
 options.abi = "<%= JSON.stringify(contracts.PTokenRouter.abi) %>"
+options.salt = "pUSDC"
 
 [invoke.chainlink_set_usdc]
 target = ["chainlinkOracleProvider.Proxy"]
@@ -26,7 +23,7 @@ depends = [ "invoke.initialize_pyth"]
 target = ["oracleEngine.Proxy"]
 func = "setAssetConfig"
 fromCall.func = "owner"
-args = ["<%= settings.usdc_address %>", "<%= pythOracleProvider.Proxy.address %>", "<%= chainlinkOracleProvider.Proxy.address %>", "0", "0"]
+args = ["<%= settings.usdc_address %>", "<%= chainlinkOracleProvider.Proxy.address %>", "<%= pythOracleProvider.Proxy.address %>", "0", "0"]
 depends = [ "invoke.pyth_set_usdc", "invoke.chainlink_set_usdc"]
 
 [invoke.initialize_pUSDC]
@@ -110,5 +107,3 @@ from = "<%= settings.usdc_supplyGuard %>"
 func = "setMarketSupplyCaps"
 args = [["<%= pUSDC.Proxy.address %>"], ["<%= settings.usdc_supplyCap %>"]]
 depends = [ "invoke.set_core_supply_guard_pUSDC" ]
-
-

@@ -15,10 +15,10 @@
   "scripts": {
     "build": "forge build",
     "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
-    "deploy:mainnet": "npx cannon build script/cannon/mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io",
-    "deploy:mainnet:dryrun": "npx cannon build script/cannon/mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io --dry-run",
-    "deploy:testnet": "npx cannon build script/cannon/testnet.toml --rpc-url https://sepolia.base.org",
-    "deploy:testnet:dryrun": "npx cannon build script/cannon/testnet.toml --rpc-url https://sepolia.base.org --dry-run",
+    "deploy:mainnet": "npx cannon build script/cannon/base-mainnet/base-mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io",
+    "deploy:mainnet:dryrun": "npx cannon build script/cannon/base-mainnet/base-mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io --dry-run",
+    "deploy:testnet": "npx cannon build script/cannon/base-sepolia/base-sepolia.toml --rpc-url https://sepolia.base.org",
+    "deploy:testnet:dryrun": "npx cannon build script/cannon/base-sepolia/base-sepolia.toml --rpc-url https://sepolia.base.org --dry-run",
     "postinstall": "forge install",
     "lint:check": "yarn lint:sol-logic && forge fmt --check",
     "lint:fix": "yarn sort-package-json && forge fmt && yarn solhint 'src/**/*.sol' 'test/**/*.sol' --fix",
@@ -29,7 +29,7 @@
     "test": "forge test --match-contract Local -vv",
     "test:coverage": "forge coverage --match-contract Local -vv --no-match-coverage \"(script|test|node_modules)\"",
     "test:coverage:output": "forge coverage --match-contract Local -vv --no-match-coverage \"(script|test|node_modules)\" --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage --ignore-errors inconsistent",
-    "test:fork": "forge build --ast && npx cannon test script/cannon/mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io --forge.match-contract Fork --forge.vv",
+    "test:fork": "forge build --ast && npx cannon test script/cannon/base-mainnet/base-mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io --forge.match-contract Fork --forge.vv",
     "test:fuzz": "forge test --match-contract Fuzz -vv"
   },
   "dependencies": {

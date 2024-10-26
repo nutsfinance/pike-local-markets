@@ -1,25 +1,3 @@
-name = "pike-local-market"
-version = "0.1.0"
-preset = "main"
-description = "Local markets for Pike testnet deployment"
-
-include = [
-    # global params 
-    "../global.toml",
-
-    # chain configs
-    "./configs.toml",
-
-    # pTokens
-    "./pTokens/usdc.toml",
-    "./pTokens/weth.toml",
-
-    #oracles
-    "./oracles/oracleEngine.toml",
-    "./oracles/chainlink.toml",
-    "./oracles/pyth.toml"
-]
-
 [contract.InitialModuleBundle]
 artifact = "InitialModuleBundle"
 
@@ -37,14 +15,6 @@ artifact = "RiskEngineModule"
 
 [contract.OracleEngine]
 artifact = "OracleEngine"
-
-[contract.ChainlinkOracleProvider]
-artifact = "ChainlinkOracleProvider"
-args = ["<%= settings.chianlinkSequencerFeed %>"]
-
-[contract.PythOracleProvider]
-artifact = "PythOracleProvider"
-args = ["<%= settings.pythAddress %>"]
 
 #PToken
 [router.PTokenRouter]
