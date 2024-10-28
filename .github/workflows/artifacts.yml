@@ -1,0 +1,86 @@
+name: Publish
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  ABI:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up environment
+        uses: ./.github/setup
+
+      - name: Install Cannon
+        run: npm i -g @usecannon/cli
+
+      - name: Cannon build
+        run: cannon build script/cannon/local.toml
+
+      - name: Cannon inspect
+        run: cannon inspect pike-local-market:0.1.1@main -w ./deployments/
+
+      - name: Extract ABIs
+        run: |
+          deployments_dir="./deployments"
+          output_dir="./temp-abi-package/consolidated"
+
+          mkdir -p "$output_dir"
+
+          for folder in "$deployments_dir"/*/; do
+              folder_name=$(basename "$folder")
+              proxy_json_path="${folder}Proxy.json"
+
+              if [[ -f "$proxy_json_path" ]]; then
+                  abi=$(jq '.abi' "$proxy_json_path")
+                  echo "$abi" > "${output_dir}/${folder_name}.json"
+                  echo "Processed: $folder_name"
+              else
+                  echo "Proxy.json not found in $folder_name, skipping..."
+              fi
+          done
+          echo "ABI extraction completed."
+
+      # Create a temp package.json for ABIs
+      - name: Create package.json for ABI package
+        run: |
+          mkdir -p temp-abi-package
+          cat <<EOT > temp-abi-package/package.json
+          {
+            "name": "@zakrad/abi-package",
+            "version": "0.1.1-alpha.0",
+            "description": "ABI package for Pike Local Markets",
+            "main": "index.js",
+            "files": [
+              "consolidated"
+            ],
+            "author": "NUTS Finance",
+            "license": "MIT",
+            "publishConfig": {
+              "access": "public"
+            }
+          }
+          EOT
+
+      # Auto-increment the version
+      - name: Auto-increment version
+        run: |
+          cd temp-abi-package
+          npm version prerelease --preid=alpha
+
+      # Set npm auth token
+      - name: Set npm auth token
+        run: echo "//registry.npmjs.org/:_authToken=\${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
+      # Publish the ABI package
+      - name: Publish ABI
+        run: npm publish
+        working-directory: ./temp-abi-package
+
+      # Optional cleanup
+      - name: Cleanup
+        run: rm -rf ./temp-abi-package
