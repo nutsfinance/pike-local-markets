@@ -1,6 +1,6 @@
 name = "pike-local-market"
-version = "0.1.1"
-description = "Local markets for Pike mainnet fork deployment"
+version = "0.1.0"
+description = "Pike Local markets for local build"
 # override with mainnet values and mock oracle for test
 
 [var.owner]
