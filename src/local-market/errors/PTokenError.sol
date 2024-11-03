@@ -9,8 +9,6 @@ library PTokenError {
 
     error SetReserveFactorBoundsCheck();
 
-    error BorrowRateBoundsCheck();
-
     error MintRiskEngineRejection(uint256 errorCode);
     error MintFreshnessCheck();
 
