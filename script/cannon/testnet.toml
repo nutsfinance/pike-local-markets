@@ -172,14 +172,14 @@ depends = [ "invoke.initialize_chainlink"]
 target = ["pythOracleProvider.Proxy"]
 func = "setAssetConfig"
 from = "<%= settings.owner %>"
-args = ["<%= settings.weth %>", "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", "<%= MaxUint256 %>"]
+args = ["<%= settings.weth %>", "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", "0", "<%= MaxUint256 %>"]
 depends = [ "invoke.initialize_pyth"]
 
 [invoke.pyth_set_usdc]
 target = ["pythOracleProvider.Proxy"]
 func = "setAssetConfig"
 from = "<%= settings.owner %>"
-args = ["<%= settings.usdc %>", "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a", "<%= MaxUint256 %>"]
+args = ["<%= settings.usdc %>", "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a", "0", "<%= MaxUint256 %>"]
 depends = [ "invoke.initialize_pyth"]
 
 [invoke.oe_set_weth]

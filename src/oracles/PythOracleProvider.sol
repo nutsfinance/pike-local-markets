@@ -17,6 +17,10 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
          */
         bytes32 feed;
         /**
+         * @notice Minimum confidence ratio for the price feed
+         */
+        uint256 confidenceRatioMin;
+        /**
          * @notice Maximum stale period for the price feed
          */
         uint256 maxStalePeriod;
@@ -35,12 +39,19 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
     /**
      * @notice Event emitted when asset configuration is set
      */
-    event AssetConfigSet(address asset, bytes32 feed, uint256 maxStalePeriod);
+    event AssetConfigSet(
+        address asset, bytes32 feed, uint256 confidenceRatioMin, uint256 maxStalePeriod
+    );
 
     /**
      * @notice Error emitted when asset is invalid
      */
     error InvalidAsset();
+
+    /**
+     * @notice Error emitted when min confidence ratio is invalid
+     */
+    error InvalidMinConfRatio();
 
     /**
      * @notice Error emitted when max stale period is invalid
@@ -68,12 +79,15 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
      * @notice Set the asset configuration
      * @param asset Address of the asset
      * @param feed Pyth feed for the asset
+     * @param confidenceRatioMin Minimum confidence ratio for the price feed
      * @param maxStalePeriod Maximum stale period for the price feed
      */
-    function setAssetConfig(address asset, bytes32 feed, uint256 maxStalePeriod)
-        external
-        onlyOwner
-    {
+    function setAssetConfig(
+        address asset,
+        bytes32 feed,
+        uint256 confidenceRatioMin,
+        uint256 maxStalePeriod
+    ) external onlyOwner {
         if (asset == address(0)) {
             revert InvalidAsset();
         }
@@ -82,8 +96,8 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
             revert InvalidMaxStalePeriod();
         }
 
-        configs[asset] = AssetConfig(feed, maxStalePeriod);
-        emit AssetConfigSet(asset, feed, maxStalePeriod);
+        configs[asset] = AssetConfig(feed, confidenceRatioMin, maxStalePeriod);
+        emit AssetConfigSet(asset, feed, confidenceRatioMin, maxStalePeriod);
     }
 
     /**
@@ -96,6 +110,13 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
 
         PythStructs.Price memory priceInfo =
             pyth.getPriceNoOlderThan(config.feed, config.maxStalePeriod);
+
+        if (
+            priceInfo.conf > 0
+                && (uint64(priceInfo.price) / priceInfo.conf < config.confidenceRatioMin)
+        ) {
+            revert InvalidMinConfRatio();
+        }
 
         uint256 priceIn18Decimals = (uint256(uint64(priceInfo.price)) * (10 ** 18))
             / (10 ** uint8(uint32(-1 * priceInfo.expo)));
