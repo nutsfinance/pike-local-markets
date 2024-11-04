@@ -19,6 +19,7 @@ import "@chainlink/contracts/shared/interfaces/AggregatorV3Interface.sol";
 contract LocalOracle is TestLocal {
     IPToken pUSDC;
     IPToken pWETH;
+    IRiskEngine re;
 
     ChainlinkOracleProvider chainlinkOracleProvider;
     PythOracleProvider pythOracleProvider;
@@ -44,6 +45,8 @@ contract LocalOracle is TestLocal {
         /// eth price = 2000$, usdc price = 1$
         pUSDC = getPToken("pUSDC");
         pWETH = getPToken("pWETH");
+
+        re = getRiskEngine();
 
         vm.warp(startTimestamp);
 
@@ -252,6 +255,29 @@ contract LocalOracle is TestLocal {
         vm.expectRevert(OracleEngine.InvalidAsset.selector);
         oracleEngine.setAssetConfig(
             address(0), address(chainlinkOracleProvider), address(0), 0, 0
+        );
+    }
+
+    function testOracleEngineInAction() public {
+        address user1 = makeAddr("user1");
+        vm.startPrank(_testState.admin);
+
+        // get fallback oracle only
+        oracleEngine.setAssetConfig(
+            weth, address(pythOracleProvider), address(pythOracleProvider), 0, 0
+        );
+
+        pythOracleProvider.setAssetConfig(weth, "weth", 2000, 1 hours);
+        pyth.setData(2000e8, 10e8, -8);
+
+        re.setOracle(address(oracleEngine));
+
+        vm.stopPrank();
+
+        doDeposit(user1, user1, address(pWETH), 1e18);
+        // "InvalidFallbackOraclePrice()" selector
+        doBorrowRevert(
+            user1, user1, address(pWETH), 1e17, abi.encodePacked(bytes4(0x5fe3213c))
         );
     }
 }
