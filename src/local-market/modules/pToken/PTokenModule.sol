@@ -571,7 +571,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
                 getCash(), snapshot.totalBorrow, snapshot.totalReserve
             ) > _getPTokenStorage().borrowRateMaxMantissa
         ) {
-            revert PTokenError.BorrowRateBoundsCheck();
+            _getPTokenStorage().accrualBlockTimestamp = currentBlockTimestamp;
+            return;
         }
 
         /////////////////////////
