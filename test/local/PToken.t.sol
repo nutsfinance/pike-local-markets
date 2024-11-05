@@ -113,7 +113,7 @@ contract LocalPToken is TestLocal {
         pUSDC.approve(address(0), 0);
     }
 
-    function testAccrueInterest_FailIfBorrowRateMaxMantissaReached() public {
+    function testAccrueInterest_ReturnIfBorrowRateMaxMantissaReached() public {
         address user1 = makeAddr("user1");
         doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
         doBorrow(user1, user1, address(pUSDC), 1000e6);
@@ -125,9 +125,9 @@ contract LocalPToken is TestLocal {
         //skip time
         skip(1);
 
-        // "BorrowRateBoundsCheck()" selector
-        vm.expectRevert(0xb334a418);
+        uint256 prevIndex = pUSDC.borrowIndex();
         pUSDC.accrueInterest();
+        assertEq(prevIndex, pUSDC.borrowIndex());
     }
 
     function testRedeem_FailIfNotAllowed() public {
