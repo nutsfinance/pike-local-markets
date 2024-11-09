@@ -63,7 +63,7 @@ contract FuzzWithdraw is TestFuzz {
 
         setPTokenTotalSupply(address(pUSDC), pTokenTotalSupply);
         setTotalBorrows(address(pUSDC), totalBorrows);
-        deal(address(pUSDC.underlying()), address(pUSDC), cash);
+        deal(address(pUSDC.asset()), address(pUSDC), cash);
         if (withdrawer != onBehalfOf) {
             vm.prank(onBehalfOf);
             re.updateDelegate(withdrawer, true);
@@ -93,7 +93,7 @@ contract FuzzWithdraw is TestFuzz {
 
         setPTokenTotalSupply(address(pUSDC), pTokenTotalSupply);
         setTotalBorrows(address(pUSDC), totalBorrows);
-        deal(address(pUSDC.underlying()), address(pUSDC), cash);
+        deal(address(pUSDC.asset()), address(pUSDC), cash);
         if (withdrawer != onBehalfOf) {
             vm.prank(onBehalfOf);
             re.updateDelegate(withdrawer, true);

@@ -32,7 +32,7 @@ contract MockReentrantToken is MockToken {
     {}
 
     function transferFrom(address, address, uint256) public override returns (bool) {
-        IPToken(msg.sender).mint(0);
+        IPToken(msg.sender).deposit(0, msg.sender);
         return true;
     }
 }

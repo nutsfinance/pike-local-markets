@@ -46,13 +46,13 @@ contract TestHelpers is TestUtilities {
                 if (params.expectRevert) {
                     vm.expectRevert(params.error);
                 }
-                IPToken(params.pToken).mintOnBehalfOf(params.onBehalfOf, params.amount);
+                IPToken(params.pToken).deposit(params.amount, params.onBehalfOf);
             } else {
                 vm.prank(user);
                 if (params.expectRevert) {
                     vm.expectRevert(params.error);
                 }
-                IPToken(params.pToken).mint(params.amount);
+                IPToken(params.pToken).deposit(params.amount, params.onBehalfOf);
             }
         } else if (action == Action.REPAY) {
             if (getDebug()) {
@@ -114,15 +114,13 @@ contract TestHelpers is TestUtilities {
                 if (params.expectRevert) {
                     vm.expectRevert(params.error);
                 }
-                IPToken(params.pToken).redeemUnderlyingOnBehalfOf(
-                    params.onBehalfOf, params.amount
-                );
+                IPToken(params.pToken).withdraw(params.amount, user, params.onBehalfOf);
             } else {
                 vm.prank(user);
                 if (params.expectRevert) {
                     vm.expectRevert(params.error);
                 }
-                IPToken(params.pToken).redeemUnderlying(params.amount);
+                IPToken(params.pToken).withdraw(params.amount, user, params.onBehalfOf);
             }
         } else if (action == Action.WITHDRAW) {
             if (getDebug()) {
@@ -136,13 +134,13 @@ contract TestHelpers is TestUtilities {
                 if (params.expectRevert) {
                     vm.expectRevert(params.error);
                 }
-                IPToken(params.pToken).redeemOnBehalfOf(params.onBehalfOf, params.amount);
+                IPToken(params.pToken).redeem(params.amount, user, params.onBehalfOf);
             } else {
                 vm.prank(user);
                 if (params.expectRevert) {
                     vm.expectRevert(params.error);
                 }
-                IPToken(params.pToken).redeem(params.amount);
+                IPToken(params.pToken).redeem(params.amount, user, params.onBehalfOf);
             }
         }
 
@@ -243,7 +241,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.SUPPLY,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: false,
                 error: "",
@@ -263,7 +261,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.SUPPLY,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: false,
                 error: "",
@@ -285,7 +283,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.SUPPLY,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: true,
                 error: err,
@@ -305,7 +303,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.BORROW,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: false,
                 error: "",
@@ -326,7 +324,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.BORROW,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: true,
                 error: err,
@@ -346,7 +344,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.REPAY,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: false,
                 error: "",
@@ -367,7 +365,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.REPAY,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: true,
                 error: err,
@@ -387,7 +385,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.WITHDRAW,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: false,
                 error: "",
@@ -408,7 +406,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.WITHDRAW,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: true,
                 error: err,
@@ -428,7 +426,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.WITHDRAW_UNDERLYING,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: false,
                 error: "",
@@ -449,7 +447,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.WITHDRAW_UNDERLYING,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: true,
                 error: err,
@@ -524,7 +522,7 @@ contract TestHelpers is TestUtilities {
             console.log("-[Liquidator %s]--------------", lp.prankAddress);
         }
 
-        address underlyingRepayToken = IPToken(lp.borrowedPToken).underlying();
+        address underlyingRepayToken = IPToken(lp.borrowedPToken).asset();
 
         deal(underlyingRepayToken, lp.prankAddress, lp.repayAmount);
         vm.prank(lp.prankAddress);

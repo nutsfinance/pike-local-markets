@@ -193,70 +193,61 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
     /**
      * @inheritdoc IPToken
      */
-    function mint(uint256 mintAmount) external nonReentrant {
+    function mint(uint256 tokenAmount, address receiver)
+        external
+        nonReentrant
+        returns (uint256)
+    {
+        if (receiver == address(0)) {
+            revert CommonError.ZeroAddress();
+        }
         accrueInterest();
-        mintFresh(msg.sender, msg.sender, mintAmount);
+        (, uint256 assets) = mintFresh(msg.sender, receiver, tokenAmount, 0);
+        return assets;
     }
 
     /**
      * @inheritdoc IPToken
      */
-    function mintOnBehalfOf(address onBehalfOf, uint256 mintAmount)
+    function deposit(uint256 mintAmount, address receiver)
         external
         nonReentrant
+        returns (uint256)
     {
-        if (onBehalfOf == address(0)) {
+        if (receiver == address(0)) {
             revert CommonError.ZeroAddress();
         }
 
         accrueInterest();
-        mintFresh(msg.sender, onBehalfOf, mintAmount);
+        (uint256 shares,) = mintFresh(msg.sender, receiver, 0, mintAmount);
+        return shares;
     }
 
     /**
      * @inheritdoc IPToken
      */
-    function redeem(uint256 redeemTokens) external nonReentrant {
-        accrueInterest();
-
-        redeemFresh(msg.sender, msg.sender, redeemTokens, 0);
-    }
-
-    /**
-     * @inheritdoc IPToken
-     */
-    function redeemOnBehalfOf(address onBehalfOf, uint256 redeemTokens)
+    function redeem(uint256 redeemTokens, address receiver, address owner)
         external
         nonReentrant
+        returns (uint256)
     {
-        _isDelegateeOf(onBehalfOf);
-
         accrueInterest();
 
-        redeemFresh(msg.sender, onBehalfOf, redeemTokens, 0);
+        (, uint256 assets) = redeemFresh(receiver, owner, redeemTokens, 0);
+        return assets;
     }
 
     /**
      * @inheritdoc IPToken
      */
-    function redeemUnderlying(uint256 redeemAmount) external nonReentrant {
-        accrueInterest();
-
-        redeemFresh(msg.sender, msg.sender, 0, redeemAmount);
-    }
-
-    /**
-     * @inheritdoc IPToken
-     */
-    function redeemUnderlyingOnBehalfOf(address onBehalfOf, uint256 redeemAmount)
+    function withdraw(uint256 redeemAmount, address receiver, address owner)
         external
         nonReentrant
+        returns (uint256)
     {
-        _isDelegateeOf(onBehalfOf);
-
         accrueInterest();
-
-        redeemFresh(msg.sender, onBehalfOf, 0, redeemAmount);
+        (uint256 shares,) = redeemFresh(receiver, owner, 0, redeemAmount);
+        return shares;
     }
 
     /**
@@ -364,6 +355,70 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         returns (uint256)
     {
         return _getPTokenStorage().transferAllowances[owner][spender];
+    }
+
+    function convertToShares(uint256 assets) external view returns (uint256) {
+        uint256 _totalSupply = _getPTokenStorage().totalSupply;
+        if (_totalSupply == 0) {
+            return assets;
+        } else {
+            return assets * _totalSupply / totalAssets();
+        }
+    }
+
+    function convertToAssets(uint256 shares) external view returns (uint256) {
+        uint256 _totalSupply = _getPTokenStorage().totalSupply;
+        if (_totalSupply == 0) {
+            return shares;
+        } else {
+            return shares * totalAssets() / _totalSupply;
+        }
+    }
+
+    function maxMint(address receiver) external view returns (uint256) {
+        ExponentialNoError.Exp memory exchangeRate =
+            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
+        return maxDeposit(receiver).div_(exchangeRate);
+    }
+
+    function maxWithdraw(address owner) external view returns (uint256) {
+        return _getPTokenStorage().riskEngine.maxWithdraw(address(this), owner);
+    }
+
+    function maxRedeem(address owner) external view returns (uint256 maxShares) {
+        ExponentialNoError.Exp memory exchangeRate =
+            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
+        return _getPTokenStorage().riskEngine.maxWithdraw(address(this), owner).div_(
+            exchangeRate
+        );
+    }
+
+    function previewDeposit(uint256 assets) external view returns (uint256 shares) {
+        ExponentialNoError.Exp memory exchangeRate =
+            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
+        shares = assets.div_(exchangeRate);
+    }
+
+    function previewMint(uint256 shares) external view returns (uint256 assets) {
+        ExponentialNoError.Exp memory exchangeRate =
+            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
+        assets = shares.mul_(exchangeRate);
+    }
+
+    function previewRedeem(uint256 shares) external view returns (uint256 assets) {
+        ExponentialNoError.Exp memory exchangeRate =
+            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
+
+        assets = exchangeRate.mul_ScalarTruncate(shares);
+    }
+
+    function previewWithdraw(uint256 assets) external view returns (uint256 shares) {
+        ExponentialNoError.Exp memory exchangeRate =
+            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
+
+        shares = assets.div_(exchangeRate);
+        uint256 _redeemAmount = shares.mul_(exchangeRate);
+        if (_redeemAmount != 0 && _redeemAmount != assets) shares++;
     }
 
     /**
@@ -540,7 +595,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
     /**
      * @inheritdoc IPToken
      */
-    function underlying() external view returns (address) {
+    function asset() external view returns (address) {
         return _getPTokenStorage().underlying;
     }
 
@@ -594,6 +649,23 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         );
     }
 
+    function totalAssets() public view returns (uint256) {
+        PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+        return (getCash() + snapshot.totalBorrow - snapshot.totalReserve);
+    }
+
+    function maxDeposit(address) public view returns (uint256) {
+        uint256 allowed = _getPTokenStorage().riskEngine.mintAllowed(address(this), 1);
+        if (allowed != 0) {
+            return 0;
+        }
+        uint256 cap = _getPTokenStorage().riskEngine.supplyCap(address(this));
+        if (cap != type(uint256).max) {
+            return cap - totalAssets();
+        }
+        return cap;
+    }
+
     /**
      * @inheritdoc IPToken
      */
@@ -621,12 +693,30 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
      * @dev Assumes interest has already been accrued up to the current timestamp
      * @param minter The address of the account which is supplying the assets
      * @param onBehalfOf The address whom the supply will be attributed to
-     * @param mintAmount The amount of the underlying asset to supply
+     * @param mintTokensIn The amount of ptoken to mint for supply
+     * @param mintAmountIn The amount of the underlying asset to supply
      */
-    function mintFresh(address minter, address onBehalfOf, uint256 mintAmount) internal {
+    function mintFresh(
+        address minter,
+        address onBehalfOf,
+        uint256 mintTokensIn,
+        uint256 mintAmountIn
+    ) internal returns (uint256, uint256) {
+        if (mintTokensIn != 0 && mintAmountIn != 0) {
+            revert CommonError.ZeroValue();
+        }
+
+        ExponentialNoError.Exp memory exchangeRate =
+            ExponentialNoError.Exp({mantissa: exchangeRateStoredInternal()});
+
+        if (mintTokensIn > 0) {
+            /* mintAmount = mintTokensIn x exchangeRateStored */
+            mintAmountIn = mintTokensIn.mul_(exchangeRate);
+        }
+
         /* Fail if mint not allowed */
         uint256 allowed =
-            _getPTokenStorage().riskEngine.mintAllowed(address(this), mintAmount);
+            _getPTokenStorage().riskEngine.mintAllowed(address(this), mintAmountIn);
         if (allowed != 0) {
             revert PTokenError.MintRiskEngineRejection(allowed);
         }
@@ -635,9 +725,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
             revert PTokenError.MintFreshnessCheck();
         }
-
-        ExponentialNoError.Exp memory exchangeRate =
-            ExponentialNoError.Exp({mantissa: exchangeRateStoredInternal()});
 
         /////////////////////////
         // EFFECTS & INTERACTIONS
@@ -650,7 +737,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
          *  in case of a fee. On success, the pToken holds an additional `actualMintAmount`
          *  of cash.
          */
-        uint256 actualMintAmount = doTransferIn(minter, mintAmount);
+        uint256 actualMintAmount = doTransferIn(minter, mintAmountIn);
 
         /*
          * We get the current exchange rate and calculate the number of pTokens to be minted:
@@ -672,23 +759,24 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         /* We emit a Mint event, and a Transfer event */
         emit Mint(minter, onBehalfOf, actualMintAmount, mintTokens);
         emit Transfer(address(0), onBehalfOf, mintTokens);
+        return (mintTokens, actualMintAmount);
     }
 
     /**
      * @notice User redeems pTokens in exchange for the underlying asset
      * @dev Assumes interest has already been accrued up to the current timestamp
-     * @param redeemer The address of the account which is redeeming the tokens
+     * @param receiver The address of the account which receives the tokens
      * @param onBehalfOf The address of user on behalf of whom to redeem
      * @param redeemTokensIn The number of pTokens to redeem into underlying
      * (only one of redeemTokensIn or redeemAmountIn may be non-zero)
      * @param redeemAmountIn The number of underlying tokens to receive from redeeming pTokens
      */
     function redeemFresh(
-        address redeemer,
+        address receiver,
         address onBehalfOf,
         uint256 redeemTokensIn,
         uint256 redeemAmountIn
-    ) internal {
+    ) internal returns (uint256, uint256) {
         if (redeemTokensIn != 0 && redeemAmountIn != 0) {
             revert CommonError.ZeroValue();
         }
@@ -736,7 +824,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
             revert PTokenError.RedeemTransferOutNotPossible();
         }
 
-        /////////////////////////
+        if (msg.sender != onBehalfOf) {
+            _spendAllowance(onBehalfOf, msg.sender, redeemTokens);
+        }
+
         // EFFECTS & INTERACTIONS
         // (No safe failures beyond this point)
 
@@ -749,19 +840,18 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
             _getPTokenStorage().accountTokens[onBehalfOf] - redeemTokens;
 
         /*
-         * We invoke doTransferOut for the redeemer and the redeemAmount.
+         * We invoke doTransferOut for the receiver and the redeemAmount.
          *  On success, the pToken has redeemAmount less of cash.
          *  doTransferOut reverts if anything goes wrong, since we can't be sure if side effects occurred.
          */
-        doTransferOut(redeemer, redeemAmount);
-
+        doTransferOut(receiver, redeemAmount);
         if (redeemTokens == 0 && redeemAmount > 0) {
             revert PTokenError.InvalidRedeemTokens();
         }
-
         /* We emit a Transfer event, and a Redeem event */
         emit Transfer(onBehalfOf, address(0), redeemTokens);
-        emit Redeem(redeemer, onBehalfOf, redeemAmount, redeemTokens);
+        emit Redeem(msg.sender, receiver, onBehalfOf, redeemAmount, redeemTokens);
+        return (redeemTokens, redeemAmount);
     }
 
     /**
@@ -1087,16 +1177,11 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
             revert PTokenError.TransferNotAllowed();
         }
 
-        /* Get the allowance, infinite for the account owner */
-        uint256 startingAllowance = 0;
-        if (spender == src) {
-            startingAllowance = type(uint256).max;
-        } else {
-            startingAllowance = _getPTokenStorage().transferAllowances[src][spender];
+        if (spender != src) {
+            _spendAllowance(src, spender, tokens);
         }
 
         /* Do the calculations, checking for {under,over}flow */
-        uint256 allowanceNew = startingAllowance - tokens;
         uint256 srcTokensNew = _getPTokenStorage().accountTokens[src] - tokens;
         uint256 dstTokensNew = _getPTokenStorage().accountTokens[dst] + tokens;
 
@@ -1107,13 +1192,24 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         _getPTokenStorage().accountTokens[src] = srcTokensNew;
         _getPTokenStorage().accountTokens[dst] = dstTokensNew;
 
-        /* Eat some of the allowance (if necessary) */
-        if (startingAllowance != type(uint256).max) {
-            _getPTokenStorage().transferAllowances[src][spender] = allowanceNew;
-        }
-
         /* We emit a Transfer event */
         emit Transfer(src, dst, tokens);
+    }
+
+    /**
+     * @dev Updates `owner` allowance for `spender` based on spent `value`.
+     */
+    function _spendAllowance(address owner, address spender, uint256 value) internal {
+        uint256 currentAllowance = _getPTokenStorage().transferAllowances[owner][spender];
+        if (currentAllowance != type(uint256).max) {
+            if (currentAllowance < value) {
+                revert PTokenError.InsufficientAllowance(spender, currentAllowance, value);
+            }
+            unchecked {
+                _getPTokenStorage().transferAllowances[owner][spender] =
+                    currentAllowance - value;
+            }
+        }
     }
 
     /**

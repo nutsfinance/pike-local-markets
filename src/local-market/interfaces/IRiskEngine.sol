@@ -284,6 +284,11 @@ interface IRiskEngine {
      */
     function isDeprecated(IPToken pToken) external view returns (bool);
 
+    function maxWithdraw(address pToken, address account)
+        external
+        view
+        returns (uint256);
+
     /**
      * @notice Checks if the account should be allowed to mint tokens in the given market
      * @param pToken The market to verify the mint against

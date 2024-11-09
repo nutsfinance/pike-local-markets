@@ -42,6 +42,7 @@ library PTokenError {
     error ReduceReservesCashNotAvailable();
     error ReduceReservesCashValidation();
 
+    error InsufficientAllowance(address spender, uint256 allowance, uint256 needed);
     error TransferNotAllowed();
     error TransferRiskEngineRejection(uint256 errorCode);
     error SweepNotAllowed();

@@ -38,12 +38,12 @@ contract LocalReserve is TestLocal {
         address user1 = makeAddr("user1");
         uint256 value = 1e18;
 
-        deal(pWETH.underlying(), user1, value);
+        deal(pWETH.asset(), user1, value);
 
         uint256 reserveBefore = pWETH.totalReserves();
 
         vm.startPrank(user1);
-        IERC20(pWETH.underlying()).approve(address(pWETH), value);
+        IERC20(pWETH.asset()).approve(address(pWETH), value);
         pWETH.addReserves(value);
 
         uint256 reserveAfter = pWETH.totalReserves();
@@ -55,10 +55,10 @@ contract LocalReserve is TestLocal {
         address user1 = makeAddr("user1");
         uint256 value = 1e18;
 
-        deal(pWETH.underlying(), user1, value);
+        deal(pWETH.asset(), user1, value);
 
         vm.startPrank(user1);
-        IERC20(pWETH.underlying()).approve(address(pWETH), value);
+        IERC20(pWETH.asset()).approve(address(pWETH), value);
         pWETH.addReserves(value);
 
         vm.startPrank(getAdmin());
@@ -75,20 +75,20 @@ contract LocalReserve is TestLocal {
         address user1 = makeAddr("user1");
         uint256 value = 1e18;
 
-        deal(pWETH.underlying(), user1, value);
+        deal(pWETH.asset(), user1, value);
 
         vm.startPrank(user1);
-        IERC20(pWETH.underlying()).transfer(address(pUSDC), value);
+        IERC20(pWETH.asset()).transfer(address(pUSDC), value);
 
         vm.startPrank(getAdmin());
 
-        uint256 balanceBefore = IERC20(pWETH.underlying()).balanceOf(address(pUSDC));
-        uint256 adminBalanceBefore = IERC20(pWETH.underlying()).balanceOf(getAdmin());
+        uint256 balanceBefore = IERC20(pWETH.asset()).balanceOf(address(pUSDC));
+        uint256 adminBalanceBefore = IERC20(pWETH.asset()).balanceOf(getAdmin());
 
-        pUSDC.sweepToken(IERC20(pWETH.underlying()));
+        pUSDC.sweepToken(IERC20(pWETH.asset()));
 
-        uint256 balanceAfter = IERC20(pWETH.underlying()).balanceOf(address(pUSDC));
-        uint256 adminBalanceAfter = IERC20(pWETH.underlying()).balanceOf(getAdmin());
+        uint256 balanceAfter = IERC20(pWETH.asset()).balanceOf(address(pUSDC));
+        uint256 adminBalanceAfter = IERC20(pWETH.asset()).balanceOf(getAdmin());
 
         assertEq(balanceBefore, balanceAfter + value);
         assertEq(adminBalanceAfter, adminBalanceBefore + value);
@@ -126,7 +126,7 @@ contract LocalReserve is TestLocal {
     }
 
     function testReduceReserve_FailIfMoreThanBalance() public {
-        deal(address(pUSDC.underlying()), address(pUSDC), 1e18);
+        deal(address(pUSDC.asset()), address(pUSDC), 1e18);
 
         vm.prank(getAdmin());
         // "ReduceReservesCashNotAvailable()" selector
@@ -135,7 +135,7 @@ contract LocalReserve is TestLocal {
     }
 
     function testReduceReserve_FailIfNotValid() public {
-        deal(address(pUSDC.underlying()), address(pUSDC), 1e18);
+        deal(address(pUSDC.asset()), address(pUSDC), 1e18);
 
         vm.prank(getAdmin());
         // "ReduceReservesCashValidation()" selector

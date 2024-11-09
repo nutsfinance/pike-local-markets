@@ -86,7 +86,7 @@ contract LocalPToken is TestLocal {
     }
 
     function testSweep_FailIfUnderlying() public {
-        IERC20 underlying = IERC20(pUSDC.underlying());
+        IERC20 underlying = IERC20(pUSDC.asset());
         vm.prank(getAdmin());
         // "SweepNotAllowed()" selector
         vm.expectRevert(0x00b5509b);
@@ -96,7 +96,7 @@ contract LocalPToken is TestLocal {
     function testMintBehalfOf_FailIfAddressIsZero() public {
         // "ZeroAddress()" selector
         vm.expectRevert(0xd92e233d);
-        pUSDC.mintOnBehalfOf(address(0), 0);
+        pUSDC.deposit(0, address(0));
     }
 
     function testLiquidateBorrow_FailIfPTokenCollateralIsInvalid() public {
@@ -144,12 +144,12 @@ contract LocalPToken is TestLocal {
         vm.prank(user1);
         // "RedeemRiskEngineRejection(uint256)" selector
         vm.expectRevert(abi.encodePacked(bytes4(0x9759ead5), uint256(3)));
-        pUSDC.redeemUnderlying(1000e6);
+        pUSDC.withdraw(1000e6, user1, user1);
 
         vm.prank(depositor);
         // "RedeemTransferOutNotPossible()" selector
         vm.expectRevert(0x91240a1b);
-        pWETH.redeemUnderlying(1e18);
+        pWETH.withdraw(1e18, user1, user1);
     }
 
     function testBorrow_FailIfNotEnoughCash() public {
@@ -161,7 +161,7 @@ contract LocalPToken is TestLocal {
 
         doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
 
-        deal(address(pWETH.underlying()), address(pWETH), 0);
+        deal(address(pWETH.asset()), address(pWETH), 0);
         //"BorrowCashNotAvailable()" selector
         doBorrowRevert(
             user1, user1, address(pWETH), 0.745e18, abi.encodePacked(bytes4(0x48c25881))

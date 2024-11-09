@@ -529,6 +529,36 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         return uint256(RiskEngineError.Error.NO_ERROR);
     }
 
+    function maxWithdraw(address pToken, address account)
+        external
+        view
+        returns (uint256)
+    {
+        uint256 allowed = redeemAllowedInternal(pToken, account, 1);
+        if (allowed != uint256(RiskEngineError.Error.NO_ERROR)) {
+            return 0;
+        }
+        uint256 underlyingBalance = IPToken(pToken).balanceOfUnderlying(account);
+
+        // Get the normalized price of the asset
+        uint256 oraclePriceMantissa = IOracleEngine(_getRiskEngineStorage().oracle)
+            .getUnderlyingPrice(IPToken(pToken));
+
+        ExponentialNoError.Exp memory oraclePrice =
+            ExponentialNoError.Exp({mantissa: oraclePriceMantissa});
+
+        uint256 underlyingValue = underlyingBalance.mul_(oraclePrice);
+
+        (, uint256 liquidity,) = getHypotheticalAccountLiquidityInternal(
+            account, IPToken(address(0)), 0, 0, _getCollateralFactor
+        );
+        if (liquidity >= underlyingValue) {
+            return underlyingBalance;
+        } else {
+            return liquidity.div_(oraclePrice);
+        }
+    }
+
     /**
      * @inheritdoc IRiskEngine
      */

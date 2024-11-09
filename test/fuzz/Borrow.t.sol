@@ -103,11 +103,11 @@ contract FuzzBorrow is TestFuzz {
 
         setPTokenTotalSupply(address(pUSDC), usdcTotalSupply);
         setTotalBorrows(address(pUSDC), usdcTotalBorrows);
-        deal(address(pUSDC.underlying()), address(pUSDC), usdcCash);
+        deal(address(pUSDC.asset()), address(pUSDC), usdcCash);
 
         setPTokenTotalSupply(address(pWETH), wethTotalSupply);
         setTotalBorrows(address(pWETH), wethTotalBorrows);
-        deal(address(pWETH.underlying()), address(pWETH), wethCash);
+        deal(address(pWETH.asset()), address(pWETH), wethCash);
         if (borrower != onBehalfOf) {
             vm.prank(onBehalfOf);
             re.updateDelegate(borrower, true);
