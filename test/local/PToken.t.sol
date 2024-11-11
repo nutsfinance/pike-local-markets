@@ -149,7 +149,7 @@ contract LocalPToken is TestLocal {
         vm.prank(depositor);
         // "RedeemTransferOutNotPossible()" selector
         vm.expectRevert(0x91240a1b);
-        pWETH.withdraw(1e18, user1, user1);
+        pWETH.withdraw(1e18, depositor, depositor);
     }
 
     function testBorrow_FailIfNotEnoughCash() public {

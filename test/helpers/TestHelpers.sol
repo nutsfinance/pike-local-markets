@@ -468,6 +468,16 @@ contract TestHelpers is TestUtilities {
         re.updateDelegate(delegate, approved);
     }
 
+    function doAllow(
+        address prankAddress,
+        address delegate,
+        IPToken pToken,
+        uint256 value
+    ) public {
+        vm.prank(prankAddress);
+        pToken.approve(delegate, value);
+    }
+
     function doTransfer(
         address prankAddress,
         address onBehalfOf,
