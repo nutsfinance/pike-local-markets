@@ -97,6 +97,10 @@ contract LocalPToken is TestLocal {
         // "ZeroAddress()" selector
         vm.expectRevert(0xd92e233d);
         pUSDC.deposit(0, address(0));
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        pUSDC.mint(0, address(0));
     }
 
     function testLiquidateBorrow_FailIfPTokenCollateralIsInvalid() public {

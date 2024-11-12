@@ -49,6 +49,8 @@ contract LocalGeneral is TestLocal {
         assertEq(liquidity, 84.5e18, "Invalid liquidity");
         // max liquidity to allow borrow for pUSDC is set to 74.5%
         assertEq(borrowLiquidity, 74.5e18, "Invalid liquidity to borrow");
+
+        doMint(user1, user1, address(pWETH), 1e18);
     }
 
     function testDBehalf() public {
