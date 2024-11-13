@@ -284,6 +284,15 @@ interface IRiskEngine {
      */
     function isDeprecated(IPToken pToken) external view returns (bool);
 
+    /**
+     * @notice Returns the maximum amount of underlying tokens that can be withdrawn
+     * from a PToken contract for a given account.
+     * @dev Returns zero if there’s a price error, insufficient liquidity,
+     * or if the market is not listed.
+     * @param pToken The PToken contract address to check withdrawal limits.
+     * @param account The account address for which to check withdrawal capacity.
+     * @return The maximum amount of underlying tokens that can be withdrawn.
+     */
     function maxWithdraw(address pToken, address account)
         external
         view

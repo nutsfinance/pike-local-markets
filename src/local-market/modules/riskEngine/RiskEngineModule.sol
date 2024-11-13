@@ -529,6 +529,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         return uint256(RiskEngineError.Error.NO_ERROR);
     }
 
+    /**
+     * @inheritdoc IRiskEngine
+     */
     function maxWithdraw(address pToken, address account)
         external
         view
@@ -942,6 +945,15 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         }
     }
 
+    /**
+     * @notice Calculates the available withdrawal liquidity for an account,
+     * factoring in thresholds and collateral.
+     * @dev Returns liquidity in underlying asset terms,
+     * or zero if insufficient liquidity or price error occurs.
+     * @param account The account to check.
+     * @param threshold The threshold factor function for liquidity calculation.
+     * @return Error code and maximum withdrawable amount.
+     */
     function getWithdrawLiquidityInternal(
         address account,
         function (IPToken) internal view returns (ExponentialNoError.Exp memory) threshold

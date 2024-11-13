@@ -357,6 +357,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         return _getPTokenStorage().transferAllowances[owner][spender];
     }
 
+    /**
+     * @inheritdoc IPToken
+     */
     function convertToShares(uint256 assets) external view returns (uint256) {
         uint256 _totalSupply = _getPTokenStorage().totalSupply;
         if (_totalSupply == 0) {
@@ -366,6 +369,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         }
     }
 
+    /**
+     * @inheritdoc IPToken
+     */
     function convertToAssets(uint256 shares) external view returns (uint256) {
         uint256 _totalSupply = _getPTokenStorage().totalSupply;
         if (_totalSupply == 0) {
@@ -375,16 +381,25 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         }
     }
 
+    /**
+     * @inheritdoc IPToken
+     */
     function maxMint(address receiver) external view returns (uint256) {
         ExponentialNoError.Exp memory exchangeRate =
             ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
         return maxDeposit(receiver).div_(exchangeRate);
     }
 
+    /**
+     * @inheritdoc IPToken
+     */
     function maxWithdraw(address owner) external view returns (uint256) {
         return _getPTokenStorage().riskEngine.maxWithdraw(address(this), owner);
     }
 
+    /**
+     * @inheritdoc IPToken
+     */
     function maxRedeem(address owner) external view returns (uint256 maxShares) {
         ExponentialNoError.Exp memory exchangeRate =
             ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
@@ -393,18 +408,27 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         );
     }
 
+    /**
+     * @inheritdoc IPToken
+     */
     function previewDeposit(uint256 assets) external view returns (uint256 shares) {
         ExponentialNoError.Exp memory exchangeRate =
             ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
         shares = assets.div_(exchangeRate);
     }
 
+    /**
+     * @inheritdoc IPToken
+     */
     function previewMint(uint256 shares) external view returns (uint256 assets) {
         ExponentialNoError.Exp memory exchangeRate =
             ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
         assets = shares.mul_(exchangeRate);
     }
 
+    /**
+     * @inheritdoc IPToken
+     */
     function previewRedeem(uint256 shares) external view returns (uint256 assets) {
         ExponentialNoError.Exp memory exchangeRate =
             ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
@@ -412,6 +436,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         assets = exchangeRate.mul_ScalarTruncate(shares);
     }
 
+    /**
+     * @inheritdoc IPToken
+     */
     function previewWithdraw(uint256 assets) external view returns (uint256 shares) {
         ExponentialNoError.Exp memory exchangeRate =
             ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
@@ -649,11 +676,17 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         );
     }
 
+    /**
+     * @inheritdoc IPToken
+     */
     function totalAssets() public view returns (uint256) {
         PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
         return (getCash() + snapshot.totalBorrow - snapshot.totalReserve);
     }
 
+    /**
+     * @inheritdoc IPToken
+     */
     function maxDeposit(address) public view returns (uint256) {
         uint256 allowed = _getPTokenStorage().riskEngine.mintAllowed(address(this), 1);
         if (allowed != 0) {

@@ -372,4 +372,93 @@ interface IPToken is IERC4626 {
      * @notice Returns the protocol seize share
      */
     function protocolSeizeShareMantissa() external view returns (uint256);
+
+    /**
+     * @notice Converts an underlying amount to the equivalent amount of pTokens
+     * based on the current total supply and assets.
+     * @dev calculate pToken per underlying, accounting for a zero total supply case.
+     * @param assets The amount of underlying to convert to pTokens.
+     * @return The equivalent amount of pTokens.
+     */
+    function convertToShares(uint256 assets) external view returns (uint256);
+
+    /**
+     * @notice Converts a pToken amount to the equivalent amount of underlying
+     * based on the current total supply and assets.
+     * @dev calculate underlying per pToken, accounting for a zero total supply case.
+     * @param shares The amount of pTokens to convert to underlying.
+     * @return The equivalent amount of underlying.
+     */
+    function convertToAssets(uint256 shares) external view returns (uint256);
+
+    /**
+     * @notice Returns the maximum number of pTokens that can be minted for a given receiver,
+     * based on the current exchange rate.
+     * @param receiver The address for which pTokens are being minted.
+     * @return The maximum amount of pTokens that can be minted for the receiver.
+     */
+    function maxMint(address receiver) external view returns (uint256);
+
+    /**
+     * @notice Returns the maximum amount of underlying that can be deposited,
+     * considering the risk engine’s mint allowance and any supply cap.
+     * @param account The address for which assets are being deposited (unused in this implementation).
+     * @return The maximum deposit amount, based on mint allowance and any supply cap.
+     */
+    function maxDeposit(address account) external view returns (uint256);
+
+    /**
+     * @notice Returns the maximum number of pTokens that can be redeemed by an account owner,
+     * based on current exchange rate and risk limits.
+     * @param owner The address of the account from which pTokens are redeemed.
+     * @return maxShares The maximum amount of pTokens that can be redeemed by the owner.
+     */
+    function maxRedeem(address owner) external view returns (uint256 maxShares);
+
+    /**
+     * @notice Returns the maximum amount of underlying can be withdrawn by owner,
+     * based on risk engine limits.
+     * @param owner The address of the account from which underlying are withdrawn.
+     * @return The maximum amount of underlying that can be withdrawn by owner.
+     */
+    function maxWithdraw(address owner) external view returns (uint256);
+
+    /**
+     * @notice Returns the actual amount of pTokens that would be minted
+     * for a given underlying amount if deposited.
+     * @param assets The amount of underlying assets to deposit.
+     * @return shares The calculated amount of pTokens corresponding to the deposit.
+     */
+    function previewDeposit(uint256 assets) external view returns (uint256 shares);
+
+    /**
+     * @notice Calculates the actual amount of underlying assets required
+     * to mint a given amount of pTokens.
+     * @param shares The number of pTokens to mint.
+     * @return assets The required amount of underlying for minting the specified pTokens.
+     */
+    function previewMint(uint256 shares) external view returns (uint256 assets);
+
+    /**
+     * @notice Calculates the actual number of pTokens required
+     * to withdraw a specified amount of underlying.
+     * @param assets The desired amount of underlying to withdraw.
+     * @return shares The pTokens needed to facilitate the withdrawal of the underlying.
+     */
+    function previewWithdraw(uint256 assets) external view returns (uint256 shares);
+
+    /**
+     * @notice Determines the actual amount of underlying redeemable for a given amount of pTokens.
+     * @param shares The number of pTokens to redeem.
+     * @return assets The equivalent amount of underlying for the redeemed pTokens.
+     */
+    function previewRedeem(uint256 shares) external view returns (uint256 assets);
+
+    /**
+     * @notice Returns the total amount of underlying assets managed by the protocol,
+     * including underlying balance, borrows, and reserves with accruing interests.
+     * @return The total supplied assets,
+     * calculated as cash plus total borrows minus total reserves.
+     */
+    function totalAssets() external view returns (uint256);
 }
