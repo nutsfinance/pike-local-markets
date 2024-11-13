@@ -13,24 +13,6 @@ interface IPToken is IERC4626 {
     event NewRiskEngine(IRiskEngine oldRiskEngine, IRiskEngine newRiskEngine);
 
     /**
-     * @notice Event emitted when tokens are minted
-     */
-    event Mint(
-        address minter, address onBehalfOf, uint256 mintAmount, uint256 mintTokens
-    );
-
-    /**
-     * @notice Event emitted when tokens are redeemed
-     */
-    event Redeem(
-        address redeemer,
-        address receiver,
-        address onBehalfOf,
-        uint256 redeemAmount,
-        uint256 redeemTokens
-    );
-
-    /**
      * @notice Event emitted when underlying is borrowed
      */
     event Borrow(
