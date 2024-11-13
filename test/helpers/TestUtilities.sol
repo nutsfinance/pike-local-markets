@@ -126,6 +126,7 @@ contract TestUtilities is TestDeploy {
     function requireActionDataValid(
         Action action,
         address pTokenAddress,
+        uint256 preview,
         uint256 amount,
         ActionStateData memory beforeData,
         ActionStateData memory afterData,
@@ -136,6 +137,11 @@ contract TestUtilities is TestDeploy {
         if (action == Action.MINT) {
             uint256 mintAmount = amount * exchangeRateStored / ONE_MANTISSA;
             if (!expectRevert) {
+                require(
+                    preview
+                        == afterData.userData.collateral - beforeData.userData.collateral,
+                    "Does not match preview mint"
+                );
                 require(
                     beforeData.pTokenData.totalSupplyUnderlying + mintAmount
                         == afterData.pTokenData.totalSupplyUnderlying,
@@ -189,6 +195,12 @@ contract TestUtilities is TestDeploy {
         } else if (action == Action.SUPPLY) {
             uint256 mintTokens = amount * ONE_MANTISSA / exchangeRateStored;
             if (!expectRevert) {
+                require(
+                    preview
+                        == afterData.pTokenData.totalSupply
+                            - beforeData.pTokenData.totalSupply,
+                    "Does not match preview deposit"
+                );
                 require(
                     beforeData.pTokenData.totalSupplyUnderlying + amount
                         == afterData.pTokenData.totalSupplyUnderlying,
@@ -296,6 +308,21 @@ contract TestUtilities is TestDeploy {
                 redeemTokens = amount * ONE_MANTISSA / exchangeRateStored;
             }
             if (!expectRevert) {
+                if (action == Action.WITHDRAW) {
+                    require(
+                        preview
+                            == beforeData.pTokenData.totalSupplyUnderlying
+                                - afterData.pTokenData.totalSupplyUnderlying,
+                        "Does not match preview redeem"
+                    );
+                } else if (action == Action.WITHDRAW_UNDERLYING) {
+                    require(
+                        preview
+                            == beforeData.pTokenData.totalSupply
+                                - afterData.pTokenData.totalSupply,
+                        "Does not match preview withdraw"
+                    );
+                }
                 assertApproxEqRel(
                     beforeData.pTokenData.totalSupplyUnderlying,
                     afterData.pTokenData.totalSupplyUnderlying + amount,

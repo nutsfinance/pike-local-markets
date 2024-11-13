@@ -31,6 +31,8 @@ contract TestHelpers is TestUtilities {
             user, params.onBehalfOf, params.pToken, params.tokenAddress
         );
 
+        uint256 preview;
+
         vm.recordLogs();
         if (action == Action.MINT) {
             if (getDebug()) {
@@ -39,6 +41,7 @@ contract TestHelpers is TestUtilities {
                 );
             }
 
+            preview = IPToken(params.pToken).previewMint(params.amount);
             vm.prank(user);
             if (params.expectRevert) {
                 vm.expectRevert(params.error);
@@ -53,6 +56,7 @@ contract TestHelpers is TestUtilities {
                 );
             }
 
+            preview = IPToken(params.pToken).previewDeposit(params.amount);
             vm.prank(user);
             if (params.expectRevert) {
                 vm.expectRevert(params.error);
@@ -113,6 +117,7 @@ contract TestHelpers is TestUtilities {
                 );
             }
 
+            preview = IPToken(params.pToken).previewWithdraw(params.amount);
             vm.prank(user);
             if (params.expectRevert) {
                 vm.expectRevert(params.error);
@@ -125,6 +130,7 @@ contract TestHelpers is TestUtilities {
                 );
             }
 
+            preview = IPToken(params.pToken).previewRedeem(params.amount);
             vm.prank(user);
             if (params.expectRevert) {
                 vm.expectRevert(params.error);
@@ -139,6 +145,7 @@ contract TestHelpers is TestUtilities {
         requireActionDataValid(
             action,
             params.pToken,
+            preview,
             params.amount,
             beforeAction,
             afterAction,

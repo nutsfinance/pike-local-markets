@@ -56,6 +56,7 @@ contract RiskEngineStorage {
      *  whereas `borrowBalance` is the amount of underlying that the account has borrowed.
      */
     struct AccountLiquidityLocalVars {
+        uint256 sumLiquidity;
         uint256 sumCollateral;
         uint256 sumBorrowPlusEffects;
         uint256 pTokenBalance;
