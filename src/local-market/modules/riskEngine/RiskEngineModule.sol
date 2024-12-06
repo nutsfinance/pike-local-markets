@@ -23,7 +23,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      * @inheritdoc IRiskEngine
      */
     function setOracle(address newOracle) external {
-        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
+        checkPermission(_PROTOCOL_OWNER_PERMISSION, msg.sender);
         emit NewOracleEngine(_getRiskEngineStorage().oracle, newOracle);
         _getRiskEngineStorage().oracle = newOracle;
     }
@@ -31,24 +31,31 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     /**
      * @inheritdoc IRiskEngine
      */
-    function setCloseFactor(uint256 newCloseFactorMantissa) external {
+    function setCloseFactor(address pTokenAddress, uint256 newCloseFactorMantissa)
+        external
+    {
         checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
-        uint256 oldCloseFactorMantissa = _getRiskEngineStorage().closeFactorMantissa;
-        _getRiskEngineStorage().closeFactorMantissa = newCloseFactorMantissa;
+        uint256 oldCloseFactorMantissa =
+            _getRiskEngineStorage().closeFactorMantissa[pTokenAddress];
+        _getRiskEngineStorage().closeFactorMantissa[pTokenAddress] =
+            newCloseFactorMantissa;
         emit NewCloseFactor(oldCloseFactorMantissa, newCloseFactorMantissa);
     }
 
     /**
      * @inheritdoc IRiskEngine
      */
-    function setCollateralFactor(
+    function setMarketParams(
+        uint8 categoryId,
         IPToken pToken,
         uint256 newCollateralFactorMantissa,
-        uint256 newLiquidationThresholdMantissa
+        uint256 newLiquidationThresholdMantissa,
+        uint256 newLiquidationIncentiveMantissa
     ) external {
-        checkNestedPermission(_CONFIGURATOR_PERMISSION, address(pToken), msg.sender);
+        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
         // Verify market is listed
-        Market storage market = _getRiskEngineStorage().markets[address(pToken)];
+        Market storage market =
+            _getRiskEngineStorage().markets[categoryId][address(pToken)];
         if (!market.isListed) {
             revert RiskEngineError.MarketNotListed();
         }
@@ -81,6 +88,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint256 oldLiquidationThresholdMantissa = market.liquidationThresholdMantissa;
         market.liquidationThresholdMantissa = newLiquidationThresholdMantissa;
 
+        // Set market's liquidation incentive to new liquidation incentive, remember old value
+        uint256 oldLiquidationIncentiveMantissa = market.liquidationIncentiveMantissa;
+        market.liquidationIncentiveMantissa = newLiquidationIncentiveMantissa;
+
         // Emit event with asset, old collateral factor, and new collateral factor
         emit NewCollateralFactor(
             pToken, oldCollateralFactorMantissa, newCollateralFactorMantissa
@@ -89,24 +100,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         emit NewLiquidationThreshold(
             pToken, oldLiquidationThresholdMantissa, newLiquidationThresholdMantissa
         );
-    }
-
-    /**
-     * @inheritdoc IRiskEngine
-     */
-    function setLiquidationIncentive(uint256 newLiquidationIncentiveMantissa) external {
-        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
-        // Save current value for use in log
-        uint256 oldLiquidationIncentiveMantissa =
-            _getRiskEngineStorage().liquidationIncentiveMantissa;
-
-        // Set liquidation incentive to new incentive
-        _getRiskEngineStorage().liquidationIncentiveMantissa =
-            newLiquidationIncentiveMantissa;
-
         // Emit event with old incentive, new incentive
         emit NewLiquidationIncentive(
-            oldLiquidationIncentiveMantissa, newLiquidationIncentiveMantissa
+            pToken, oldLiquidationIncentiveMantissa, newLiquidationIncentiveMantissa
         );
     }
 
@@ -115,17 +111,39 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      */
     function supportMarket(IPToken pToken) external {
         checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
-        if (_getRiskEngineStorage().markets[address(pToken)].isListed) {
+        if (_getRiskEngineStorage().markets[0][address(pToken)].isListed) {
             revert RiskEngineError.AlreadyListed();
         }
 
-        // Note that isComped is not in active use anymore
-        Market storage newMarket = _getRiskEngineStorage().markets[address(pToken)];
+        Market storage newMarket = _getRiskEngineStorage().markets[0][address(pToken)];
         newMarket.isListed = true;
         newMarket.collateralFactorMantissa = 0;
         newMarket.liquidationThresholdMantissa = 0;
+        newMarket.liquidationIncentiveMantissa = 0;
+        newMarket.isCollateralizable = true;
+        newMarket.isBorrowable = true;
 
-        _addMarketInternal(address(pToken));
+        _addMarketInternal(0, address(pToken));
+
+        emit MarketListed(pToken);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function configureEModeCategory(uint8 categoryId, IPToken pToken) external {
+        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
+        if (_getRiskEngineStorage().markets[0][address(pToken)].isListed) {
+            revert RiskEngineError.AlreadyListed();
+        }
+
+        Market storage newMarket = _getRiskEngineStorage().markets[0][address(pToken)];
+        newMarket.isListed = true;
+        newMarket.collateralFactorMantissa = 0;
+        newMarket.liquidationThresholdMantissa = 0;
+        newMarket.liquidationIncentiveMantissa = 0;
+
+        _addMarketInternal(0, address(pToken));
 
         emit MarketListed(pToken);
     }
@@ -754,13 +772,13 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             && pToken.reserveFactorMantissa() == 1e18;
     }
 
-    function _addMarketInternal(address pToken) internal {
+    function _addMarketInternal(uint8 categoryId, address pToken) internal {
         for (uint256 i = 0; i < _getRiskEngineStorage().allMarkets[0].length; i++) {
             if (_getRiskEngineStorage().allMarkets[0][i] == IPToken(pToken)) {
                 revert RiskEngineError.AlreadyListed();
             }
         }
-        _getRiskEngineStorage().allMarkets[0].push(IPToken(pToken));
+        _getRiskEngineStorage().allMarkets[categoryId].push(IPToken(pToken));
     }
 
     /**

@@ -35,7 +35,9 @@ interface IRiskEngine {
 
     /// @notice Emitted when liquidation incentive is changed by admin
     event NewLiquidationIncentive(
-        uint256 oldLiquidationIncentiveMantissa, uint256 newLiquidationIncentiveMantissa
+        IPToken pToken,
+        uint256 oldLiquidationIncentiveMantissa,
+        uint256 newLiquidationIncentiveMantissa
     );
 
     /// @notice Emitted when an action is paused globally
@@ -107,28 +109,25 @@ interface IRiskEngine {
     /**
      * @notice Sets the closeFactor for a market used when liquidating borrows
      * @dev Admin function to set closeFactor
+     * @param pTokenAddress address of ptoken set close factor for
      * @param newCloseFactorMantissa New close factor, scaled by 1e18
      */
-    function setCloseFactor(uint256 newCloseFactorMantissa) external;
+    function setCloseFactor(address pTokenAddress, uint256 newCloseFactorMantissa)
+        external;
 
     /**
      * @notice Sets the collateralFactor and liquidation threshold for a market
      * @dev Admin function to set per-market collateralFactor
+     * @param categoryId The category ptoken belongs to
      * @param pToken The market to set the factor on
      * @param newCollateralFactorMantissa The new collateral factor, scaled by 1e18
      */
-    function setCollateralFactor(
+    function setMarketParams(
+        uint8 categoryId,
         IPToken pToken,
         uint256 newCollateralFactorMantissa,
         uint256 newLiquidationThresholdMantissa
     ) external;
-
-    /**
-     * @notice Sets liquidationIncentive for a market
-     * @dev Admin function to set liquidationIncentive
-     * @param newLiquidationIncentiveMantissa New liquidationIncentive scaled by 1e18
-     */
-    function setLiquidationIncentive(uint256 newLiquidationIncentiveMantissa) external;
 
     /**
      * @notice Add the market to the markets mapping and set it as listed

@@ -8,20 +8,37 @@ contract RiskEngineStorage {
     struct RiskEngineData {
         /**
          * @notice Multiplier used to calculate the maximum repayAmount when liquidating a borrow
+         * @dev mapping pToken -> closeFactor
          */
-        uint256 closeFactorMantissa;
-        /**
-         * @notice Multiplier representing the discount on collateral that a liquidator receives
-         */
-        uint256 liquidationIncentiveMantissa;
+        mapping(address => uint256) closeFactorMantissa;
         /**
          * @notice Max number of assets a single account can participate in (borrow or use as collateral)
          */
         uint256 maxAssets;
         /**
-         * @notice Per-account mapping of "assets you are in", capped by maxAssets
+         * @notice Number of categories
          */
-        mapping(address => IPToken[]) accountAssets;
+        uint8 totalCategories;
+        /**
+         * @notice Per-account mapping of "activated category"
+         */
+        mapping(address => uint8) accountCategory;
+        /**
+         * @notice Per-account mapping of "assets you are in collateral", capped by maxAssets
+         */
+        mapping(address => IPToken[]) accountCollateralAssets;
+        /**
+         * @notice Per-account mapping of "assets you are in borrow", capped by maxAssets
+         */
+        mapping(address => IPToken[]) accountBorrowAssets;
+        /**
+         * @notice Per-category mapping of "markets for collateral"
+         */
+        mapping(uint8 => mapping(IPToken => bool)) categoryCollateral;
+        /**
+         * @notice Per-category mapping of "markets for borrow"
+         */
+        mapping(uint8 => mapping(IPToken => bool)) categoryBorrow;
         /**
          * @notice Official mapping of pTokens -> Market metadata
          * @dev Used e.g. to determine if a market is supported
@@ -46,8 +63,8 @@ contract RiskEngineStorage {
         /// @notice Whether the delegate is allowed to borrow or redeem on behalf of the user
         //mapping(address user => mapping (address delegate => bool approved)) public approvedDelegates;
         mapping(address => mapping(address => bool)) approvedDelegates;
-        /// @notice A list of all markets in index 0 (to avoid storage collisions)
-        mapping(uint256 => IPToken[]) allMarkets;
+        /// @notice A list of all markets in categories (0 is default category includes all markets)
+        mapping(uint8 => IPToken[]) allMarkets;
     }
 
     /**
@@ -80,8 +97,26 @@ contract RiskEngineStorage {
         //  for liquidation. For instance, 0.8 liquidate when the borrow is 80% of collateral
         //  value. Must be between 0 and collateral factor, stored as a mantissa.
         uint256 liquidationThresholdMantissa;
+        // Multiplier representing the discount on collateral that a liquidator receives
+        uint256 liquidationIncentiveMantissa;
         // Per-market mapping of "accounts in this asset"
         mapping(address => bool) accountMembership;
+    }
+
+    struct EModeConfiguration {
+        // Whether or not this emode is allowed
+        bool allowed;
+        //  Multiplier representing the most one can borrow against their collateral in this e-mode.
+        uint256 collateralFactorMantissa;
+        //  Multiplier representing the collateralization after which the borrow is eligible
+        //  for liquidation in this e-mode.
+        uint256 liquidationThresholdMantissa;
+        // Multiplier representing the discount on collateral that a liquidator receives in this e-mode.
+        uint256 liquidationIncentiveMantissa;
+        // Per-emode mapping of "accounts in this asset"
+        mapping(address => bool) accountMembership;
+        IPToken[] collateralAssets;
+        IPToken[] borrowAssets;
     }
 
     /// keccak256(abi.encode(uint256(keccak256("pike.LM.RiskEngine")) - 1)) & ~bytes32(uint256(0xff))

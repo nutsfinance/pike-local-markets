@@ -12,6 +12,7 @@ abstract contract RBACStorage {
         0xd21fdb8e4b687c9e7355e21e2f4695df714198f0142124262187b209674d2600;
 
     bytes32 internal constant _CONFIGURATOR_PERMISSION = "CONFIGURATOR";
+    bytes32 internal constant _PROTOCOL_OWNER_PERMISSION = "PROTOCOL_OWNER";
     bytes32 internal constant _PAUSE_GUARDIAN_PERMISSION = "PAUSE_GUARDIAN";
     bytes32 internal constant _BORROW_CAP_GUARDIAN_PERMISSION = "BORROW_CAP_GUARDIAN";
     bytes32 internal constant _SUPPLY_CAP_GUARDIAN_PERMISSION = "SUPPLY_CAP_GUARDIAN";
@@ -43,6 +44,7 @@ abstract contract RBACStorage {
     function _isPermissionValid(bytes32 permission) internal pure {
         if (
             permission != _CONFIGURATOR_PERMISSION
+                && permission != _PROTOCOL_OWNER_PERMISSION
                 && permission != _PAUSE_GUARDIAN_PERMISSION
                 && permission != _BORROW_CAP_GUARDIAN_PERMISSION
                 && permission != _SUPPLY_CAP_GUARDIAN_PERMISSION
