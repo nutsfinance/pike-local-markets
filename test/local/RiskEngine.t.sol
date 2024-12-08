@@ -127,7 +127,7 @@ contract LocalRiskEngine is TestLocal {
         re.exitMarket(address(pUSDC));
 
         assertEq(re.getAssetsIn(user1).length, 0, "assets are not empty");
-        assertEq(re.checkMembership(user1, pUSDC), false, "still in market");
+        assertEq(re.checkCollateralMembership(user1, pUSDC), false, "still in market");
         // "BorrowRiskEngineRejection(3)" selector
         doBorrowRevert(
             user1,
@@ -219,7 +219,9 @@ contract LocalRiskEngine is TestLocal {
         vm.startPrank(getAdmin());
         pUSDC.setReserveFactor(1e18);
 
-        re.setCollateralFactor(pUSDC, 0, 0);
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(0, 0, 108e16);
+        re.configureMarket(pUSDC, config);
         re.setBorrowPaused(pUSDC, true);
 
         assertEq(re.isDeprecated(pUSDC), true, "not deprecated");
@@ -230,25 +232,31 @@ contract LocalRiskEngine is TestLocal {
 
         changeList(address(pUSDC), false);
 
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(0, 0, 108e16);
         // "MarketNotListed()" selector
         vm.expectRevert(0x69609fc6);
-        re.setCollateralFactor(IPToken(pUSDC), 0, 0);
+        re.configureMarket(IPToken(pUSDC), config);
     }
 
     function testSetCF_FailIfInvalidCF() public {
         vm.startPrank(getAdmin());
 
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(1e18, 0, 108e16);
         // "InvalidCollateralFactor()" selector
         vm.expectRevert(0xbc8b2b40);
-        re.setCollateralFactor(pUSDC, 1e18, 0);
+        re.configureMarket(pUSDC, config);
 
+        config = IRiskEngine.BaseConfiguration(0, 1e18 + 1, 108e16);
         // "InvalidLiquidationThreshold()" selector
         vm.expectRevert(0x3e51d2c0);
-        re.setCollateralFactor(pUSDC, 0, 1e18 + 1);
+        re.configureMarket(pUSDC, config);
 
+        config = IRiskEngine.BaseConfiguration(0.8e18, 0.7e18, 108e16);
         // "InvalidLiquidationThreshold()" selector
         vm.expectRevert(0x3e51d2c0);
-        re.setCollateralFactor(pUSDC, 0.8e18, 0.7e18);
+        re.configureMarket(pUSDC, config);
     }
 
     function testSupportMarket_FailIfAlreadyListedOrUnsupported() public {
@@ -464,7 +472,9 @@ contract LocalRiskEngine is TestLocal {
         // deprecate pUSDC
         vm.startPrank(getAdmin());
         pUSDC.setReserveFactor(1e18);
-        re.setCollateralFactor(pUSDC, 0, 0);
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(0, 0, 108e16);
+        re.configureMarket(pUSDC, config);
         re.setBorrowPaused(pUSDC, true);
         vm.stopPrank();
 
@@ -492,7 +502,7 @@ contract LocalRiskEngine is TestLocal {
         doDepositAndEnter(user1, user1, address(pWETH), 1e18);
         doBorrow(user1, user1, address(pUSDC), 1450e6);
 
-        address mockRE = deployRiskEngine(closeFactor, liquidationIncentive);
+        address mockRE = deployRiskEngine();
         vm.prank(getAdmin());
         pWETH.setRiskEngine(IRiskEngine(mockRE));
 

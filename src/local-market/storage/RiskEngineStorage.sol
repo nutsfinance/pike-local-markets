@@ -2,6 +2,8 @@
 pragma solidity 0.8.28;
 
 import {IPToken} from "@interfaces/IPToken.sol";
+import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
+import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
 
 contract RiskEngineStorage {
@@ -26,6 +28,10 @@ contract RiskEngineStorage {
         /**
          * @notice Per-account mapping of "assets you are in collateral", capped by maxAssets
          */
+        mapping(address => IPToken[]) accountAssets;
+        /**
+         * @notice Per-account mapping of "assets you are in collateral", capped by maxAssets
+         */
         mapping(address => IPToken[]) accountCollateralAssets;
         /**
          * @notice Per-account mapping of "assets you are in borrow", capped by maxAssets
@@ -33,17 +39,24 @@ contract RiskEngineStorage {
         mapping(address => IPToken[]) accountBorrowAssets;
         /**
          * @notice Per-category mapping of "markets for collateral"
+         * mapping of categoryId -> ptokens -> exist
          */
-        mapping(uint8 => mapping(IPToken => bool)) categoryCollateral;
+        mapping(uint8 => mapping(address => bool)) categoryCollateral;
         /**
          * @notice Per-category mapping of "markets for borrow"
+         * mapping of categoryId -> ptokens -> exist
          */
-        mapping(uint8 => mapping(IPToken => bool)) categoryBorrow;
+        mapping(uint8 => mapping(address => bool)) categoryBorrow;
         /**
-         * @notice Official mapping of pTokens -> Market metadata
+         * @notice mapping of pTokens -> Market metadata
          * @dev Used e.g. to determine if a market is supported
          */
         mapping(address => Market) markets;
+        /**
+         * @notice mapping of categoryIds -> E-mode metadata
+         * @dev Used e.g. to determine if a e-mode is allowed
+         */
+        mapping(uint8 => EModeConfiguration) emodes;
         /// @notice oracle engine address
         address oracle;
         /// @notice A flag indicating whether transfers are paused by guardian.
@@ -73,6 +86,8 @@ contract RiskEngineStorage {
      *  whereas `borrowBalance` is the amount of underlying that the account has borrowed.
      */
     struct AccountLiquidityLocalVars {
+        IOracleEngine oracle;
+        uint8 accountCategory;
         uint256 sumLiquidity;
         uint256 sumCollateral;
         uint256 sumBorrowPlusEffects;
@@ -89,30 +104,19 @@ contract RiskEngineStorage {
     struct Market {
         // Whether or not this market is listed
         bool isListed;
-        //  Multiplier representing the most one can borrow against their collateral in this market.
-        //  For instance, 0.9 to allow borrowing 90% of collateral value.
-        //  Must be between 0 and 1, and stored as a mantissa.
-        uint256 collateralFactorMantissa;
-        //  Multiplier representing the collateralization after which the borrow is eligible
-        //  for liquidation. For instance, 0.8 liquidate when the borrow is 80% of collateral
-        //  value. Must be between 0 and collateral factor, stored as a mantissa.
-        uint256 liquidationThresholdMantissa;
-        // Multiplier representing the discount on collateral that a liquidator receives
-        uint256 liquidationIncentiveMantissa;
-        // Per-market mapping of "accounts in this asset"
-        mapping(address => bool) accountMembership;
+        // e-mode risk parameters
+        IRiskEngine.BaseConfiguration baseConfiguration;
+        // Per-market mapping of "accounts in this asset as collateral"
+        mapping(address => bool) collateralMembership;
+        // Per-market mapping of "accounts in this asset as borrow"
+        mapping(address => bool) borrowMembership;
     }
 
     struct EModeConfiguration {
         // Whether or not this emode is allowed
         bool allowed;
-        //  Multiplier representing the most one can borrow against their collateral in this e-mode.
-        uint256 collateralFactorMantissa;
-        //  Multiplier representing the collateralization after which the borrow is eligible
-        //  for liquidation in this e-mode.
-        uint256 liquidationThresholdMantissa;
-        // Multiplier representing the discount on collateral that a liquidator receives in this e-mode.
-        uint256 liquidationIncentiveMantissa;
+        // e-mode risk parameters
+        IRiskEngine.BaseConfiguration baseConfiguration;
         // Per-emode mapping of "accounts in this asset"
         mapping(address => bool) accountMembership;
         IPToken[] collateralAssets;

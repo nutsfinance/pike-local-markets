@@ -4,6 +4,23 @@ pragma solidity 0.8.28;
 import {IPToken} from "@interfaces/IPToken.sol";
 
 interface IRiskEngine {
+    struct BaseConfiguration {
+        //  Multiplier representing the most one can borrow against their collateral in this market.
+        //  For instance, 0.9 to allow borrowing 90% of collateral value.
+        //  Must be between 0 and 1, and stored as a mantissa.
+        uint256 collateralFactorMantissa;
+        //  Multiplier representing the collateralization after which the borrow is eligible
+        //  for liquidation. For instance, 0.8 liquidate when the borrow is 80% of collateral
+        //  value. Must be between 0 and collateral factor, stored as a mantissa.
+        uint256 liquidationThresholdMantissa;
+        // Multiplier representing the discount on collateral that a liquidator receives
+        uint256 liquidationIncentiveMantissa;
+    }
+
+    /// @notice Emitted when new configuration set for e-mode
+    event NewEModeConfiguration(
+        uint8 categoryId, BaseConfiguration oldConfig, BaseConfiguration newConfig
+    );
     /// @notice Emitted when a new oracle engine is set
     event NewOracleEngine(address oldOracleEngine, address newOracleEngine);
 
@@ -86,6 +103,8 @@ interface IRiskEngine {
 
     /// *** Hooks ***
 
+    function repayBorrowVerify(IPToken pToken, address account) external;
+
     /**
      * @notice Checks if the account should be allowed to borrow the underlying asset of the given market
      * @param pToken The market to verify the borrow against
@@ -118,16 +137,10 @@ interface IRiskEngine {
     /**
      * @notice Sets the collateralFactor and liquidation threshold for a market
      * @dev Admin function to set per-market collateralFactor
-     * @param categoryId The category ptoken belongs to
-     * @param pToken The market to set the factor on
-     * @param newCollateralFactorMantissa The new collateral factor, scaled by 1e18
+     * @param baseConfig The collateralFactor, liqThreshold and liqIncentive of market
      */
-    function setMarketParams(
-        uint8 categoryId,
-        IPToken pToken,
-        uint256 newCollateralFactorMantissa,
-        uint256 newLiquidationThresholdMantissa
-    ) external;
+    function configureMarket(IPToken pToken, BaseConfiguration calldata baseConfig)
+        external;
 
     /**
      * @notice Add the market to the markets mapping and set it as listed
@@ -194,12 +207,25 @@ interface IRiskEngine {
     function getAssetsIn(address account) external view returns (IPToken[] memory);
 
     /**
-     * @notice Returns whether the given account is entered in the given asset
+     * @notice Returns whether the given account is entered (enabled as collateral)
+     * in the given asset
      * @param account The address of the account to check
      * @param pToken The pToken to check
      * @return True if the account is in the asset, otherwise false.
      */
-    function checkMembership(address account, IPToken pToken)
+    function checkCollateralMembership(address account, IPToken pToken)
+        external
+        view
+        returns (bool);
+
+    /**
+     * @notice Returns whether the given account has borrow
+     * in the given asset
+     * @param account The address of the account to check
+     * @param pToken The pToken to check
+     * @return True if the account is in the asset, otherwise false.
+     */
+    function checkBorrowMembership(address account, IPToken pToken)
         external
         view
         returns (bool);
@@ -247,12 +273,14 @@ interface IRiskEngine {
     /**
      * @notice Calculate number of tokens of collateral asset to seize given an underlying amount
      * @dev Used in liquidation (called in pToken.liquidateBorrowFresh)
+     * @param borrower The address of borrower
      * @param pTokenBorrowed The address of the borrowed pToken
      * @param pTokenCollateral The address of the collateral pToken
      * @param actualRepayAmount The amount of pTokenBorrowed underlying to convert into pTokenCollateral tokens
      * @return (errorCode, number of pTokenCollateral tokens to be seized in a liquidation)
      */
     function liquidateCalculateSeizeTokens(
+        address borrower,
         address pTokenBorrowed,
         address pTokenCollateral,
         uint256 actualRepayAmount
@@ -299,11 +327,12 @@ interface IRiskEngine {
 
     /**
      * @notice Checks if the account should be allowed to mint tokens in the given market
+     * @param account The address of account try to mint
      * @param pToken The market to verify the mint against
      * @param mintAmount The amount of underlying being supplied to the market in exchange for tokens
      * @return 0 if the mint is allowed, otherwise an error code (See Errors)
      */
-    function mintAllowed(address pToken, uint256 mintAmount)
+    function mintAllowed(address account, address pToken, uint256 mintAmount)
         external
         view
         returns (uint256);
@@ -382,12 +411,15 @@ interface IRiskEngine {
     /**
      * @return the liquidation incentives of pTokens
      */
-    function liquidationIncentive() external view returns (uint256);
+    function liquidationIncentive(uint8 categoryId, address pToken)
+        external
+        view
+        returns (uint256);
 
     /**
      * @return the close factor percentage for liquidation
      */
-    function closeFactor() external view returns (uint256);
+    function closeFactor(address pToken) external view returns (uint256);
 
     /**
      * @return the supply cap for the pToken

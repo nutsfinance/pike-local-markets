@@ -14,7 +14,10 @@ library RiskEngineError {
         PRICE_ERROR,
         TOO_MUCH_REPAY,
         SUPPLY_CAP_EXCEEDED,
-        BORROW_CAP_EXCEEDED
+        BORROW_CAP_EXCEEDED,
+        NOT_ALLOWED_AS_COLLATERAL,
+        NOT_ALLOWED_TO_BORROW,
+        EMODE_NOT_ALLOWED
     }
 
     error NonZeroBorrowBalance();
@@ -34,6 +37,11 @@ library RiskEngineError {
     error InvalidLiquidationThreshold();
 
     error AlreadyListed();
+    error NotListed();
+
+    error InvalidCategory();
+
+    error PTokenNotAllowedToBorrow();
 
     error DelegationStatusUnchanged();
 }

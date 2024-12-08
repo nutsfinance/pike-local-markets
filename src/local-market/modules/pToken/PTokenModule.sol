@@ -687,8 +687,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
     /**
      * @inheritdoc IPToken
      */
-    function maxDeposit(address) public view returns (uint256) {
-        uint256 allowed = _getPTokenStorage().riskEngine.mintAllowed(address(this), 1);
+    function maxDeposit(address account) public view returns (uint256) {
+        uint256 allowed =
+            _getPTokenStorage().riskEngine.mintAllowed(account, address(this), 1);
         if (allowed != 0) {
             return 0;
         }
@@ -748,8 +749,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         }
 
         /* Fail if mint not allowed */
-        uint256 allowed =
-            _getPTokenStorage().riskEngine.mintAllowed(address(this), mintAmountIn);
+        uint256 allowed = _getPTokenStorage().riskEngine.mintAllowed(
+            minter, address(this), mintAmountIn
+        );
         if (allowed != 0) {
             revert PTokenError.MintRiskEngineRejection(allowed);
         }
@@ -1005,6 +1007,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
             _getPTokenStorage().borrowIndex;
         _getPTokenStorage().totalBorrows = totalBorrowsNew;
 
+        _getPTokenStorage().riskEngine.repayBorrowVerify(
+            IPToken(address(this)), onBehalfOf
+        );
+
         /* We emit a RepayBorrow event */
         emit RepayBorrow(
             payer, onBehalfOf, actualRepayAmount, accountBorrowsNew, totalBorrowsNew
@@ -1071,7 +1077,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         (uint256 amountSeizeError, uint256 seizeTokens) = _getPTokenStorage()
             .riskEngine
             .liquidateCalculateSeizeTokens(
-            address(this), address(pTokenCollateral), actualRepayAmount
+            borrower, address(this), address(pTokenCollateral), actualRepayAmount
         );
         if (amountSeizeError != CommonError.NO_ERROR) {
             revert PTokenError.LiquidateCalculateAmountSeizeFailed(amountSeizeError);

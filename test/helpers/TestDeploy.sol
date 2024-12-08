@@ -56,7 +56,7 @@ contract TestDeploy is TestSetters {
         address oracle = address(new MockOracle());
         setOracle(oracle);
 
-        deployRiskEngine(closeFactor, liquidationIncentive);
+        deployRiskEngine();
     }
 
     function deployPToken(
@@ -143,7 +143,9 @@ contract TestDeploy is TestSetters {
         );
 
         re.supportMarket(IPToken(_pToken));
-        re.setCollateralFactor(IPToken(_pToken), colFactor, liqThreshold);
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(colFactor, liqThreshold, liquidationIncentive);
+        re.configureMarket(IPToken(_pToken), config);
 
         assertEq(re.collateralFactor(IPToken(_pToken)), colFactor);
         assertEq(re.liquidationThreshold(IPToken(_pToken)), liqThreshold);
@@ -160,6 +162,11 @@ contract TestDeploy is TestSetters {
         assertEq(re.supplyCap(address(markets[0])), caps[0]);
         assertEq(re.borrowCap(address(markets[0])), caps[0]);
 
+        re.setCloseFactor(_pToken, closeFactor);
+
+        assertEq(re.liquidationIncentive(0, _pToken), liquidationIncentive);
+        assertEq(re.closeFactor(_pToken), closeFactor);
+
         vm.stopPrank();
 
         assertEq(IPToken(_pToken).decimals(), pTokenDecimals);
@@ -172,11 +179,7 @@ contract TestDeploy is TestSetters {
         return _pToken;
     }
 
-    function deployRiskEngine(uint256 _closeFactor, uint256 _liquidationIncentive)
-        internal
-        virtual
-        returns (address)
-    {
+    function deployRiskEngine() internal virtual returns (address) {
         string[] memory riskEngineModulesFacets = new string[](3);
         riskEngineModulesFacets[0] = "InitialModuleBundle";
         riskEngineModulesFacets[1] = "RBACModule";
@@ -200,11 +203,6 @@ contract TestDeploy is TestSetters {
         IRBAC(riskEngine).grantPermission(pause_guard_permission, getAdmin());
 
         IRiskEngine(riskEngine).setOracle(getOracle());
-        IRiskEngine(riskEngine).setCloseFactor(_closeFactor);
-        IRiskEngine(riskEngine).setLiquidationIncentive(_liquidationIncentive);
-
-        assertEq(IRiskEngine(riskEngine).liquidationIncentive(), _liquidationIncentive);
-        assertEq(IRiskEngine(riskEngine).closeFactor(), _closeFactor);
 
         vm.stopPrank();
 

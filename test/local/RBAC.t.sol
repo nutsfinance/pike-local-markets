@@ -87,6 +87,8 @@ contract LocalRBAC is TestLocal {
         );
         re.setMintPaused(pWETH, true);
 
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(0, 0, 108e16);
         // "NestedPermissionDenied(bytes32,address,address)" selector
         vm.expectRevert(
             abi.encodePacked(
@@ -94,7 +96,7 @@ contract LocalRBAC is TestLocal {
                 abi.encode(configurator_permission, address(pWETH), address(1))
             )
         );
-        re.setCollateralFactor(pWETH, 0, 0);
+        re.configureMarket(pWETH, config);
 
         vm.stopPrank();
     }
