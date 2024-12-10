@@ -1,0 +1,97 @@
+name = "pike-local-market"
+version = "0.1.0"
+preset = "main"
+description = "Local markets for Pike mainnet deployment"
+
+include = [
+    # global params 
+    "../global.toml",
+
+    # core risk engine
+    "../core.toml",
+
+    # pTokens
+    "./pTokens/usdc.toml",
+    "./pTokens/weth.toml",
+
+    #oracles
+    "./oracles/oracleEngine.toml",
+    "./oracles/chainlink.toml",
+    "./oracles/pyth.toml",
+]
+
+[var.owner]
+core_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+oracleEngine_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+chainlinkProvider_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+pythProvider_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+usdc_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+weth_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+steth_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+
+[var.usdc]
+usdc_reserveManager = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+usdc_reserveWithdrawer = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+usdc_configurator = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+usdc_supplyGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+usdc_borrowGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+usdc_decimals = "18"
+usdc_address = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+usdc_maxLTV = "<%= parseUnits('75', 16) %>" #75%
+usdc_LLTV = "<%= parseUnits('78', 16) %>" #78%
+usdc_initial_exchange_rate = "<%= parseUnits('1', 18) %>" # 1e18
+usdc_reserve_factor = "<%= parseUnits('5', 16) %>" # 5%
+usdc_protocol_seize_factor = "<%= parseUnits('1', 16) %>" # 1%
+usdc_max_borrow_rate = "<%= parseUnits('5', 12) %>" # 5e12
+usdc_chainlinkFeed = "0x7e860098F58bBFC8648a4311b374B1D669a2bc6B"
+usdc_pythID = "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a"
+usdc_maxStale = "<%= MaxUint256 %>"
+usdc_supplyCap = "<%= MaxUint256 %>"
+usdc_borrowCap = "<%= MaxUint256 %>"
+#IRM
+usdc_baseRate = "0"
+usdc_multiplier = "0"
+usdc_firstJumpMultiplier = "<%= parseUnits('6.111111', 16) %>"
+usdc_secondJumpMultiplier = "<%= parseUnits('6', 18) %>"
+usdc_firstKink = "<%= parseUnits('5', 16) %>"
+usdc_secondKink = "<%= parseUnits('95', 16) %>"
+
+[var.weth]
+weth_reserveManager = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+weth_reserveWithdrawer = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+weth_configurator = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+weth_supplyGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+weth_borrowGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+weth_decimals = "18"
+weth_address = "0x4200000000000000000000000000000000000006"
+weth_maxLTV = "<%= parseUnits('80', 16) %>" #80%
+weth_LLTV = "<%= parseUnits('83', 16) %>" #83%
+weth_initial_exchange_rate = "<%= parseUnits('1', 18) %>" # 1e18
+weth_reserve_factor = "<%= parseUnits('5', 16) %>" # 5%
+weth_protocol_seize_factor = "<%= parseUnits('1', 16) %>" # 1%
+weth_max_borrow_rate = "<%= parseUnits('5', 12) %>" # 5e12
+weth_chainlinkFeed = "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70"
+weth_pythID = "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
+weth_maxStale = "<%= MaxUint256 %>"
+weth_supplyCap = "<%= MaxUint256 %>"
+weth_borrowCap = "<%= MaxUint256 %>"
+#IRM
+weth_baseRate = "0"
+weth_multiplier = "0"
+weth_firstJumpMultiplier = "<%= parseUnits('3', 16) %>"
+weth_secondJumpMultiplier = "<%= parseUnits('8', 18) %>"
+weth_firstKink = "<%= parseUnits('5', 16) %>"
+weth_secondKink = "<%= parseUnits('95', 16) %>"
+
+[var.params]
+core_configurator = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+core_pauseGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+core_closeFactor = "<%= parseUnits('50', 16) %>"
+core_incentives = "<%= parseUnits('1.05', 18) %>"
+
+[var.salt]
+salt = "main"
+
+[var.oracle]
+chianlinkSequencerFeed = "0xBCF85224fc0756B9Fa45aA7892530B47e10b6433"
+pythAddress = "0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a"

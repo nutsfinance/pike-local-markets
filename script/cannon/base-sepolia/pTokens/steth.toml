@@ -1,0 +1,120 @@
+[contract.mockstETH]
+artifact = "MockTestToken"
+args = ["stETH", "stETH", "18", "<%= parseUnits('10', 18) %>"]
+
+[clone.pstETH]
+source = "pike-upgradeable-proxy:0.1.0@main"
+options.implementation = "<%= contracts.PTokenRouter.address %>"
+options.owner = "<%= settings.steth_owner %>"
+options.abi = "<%= JSON.stringify(contracts.PTokenRouter.abi) %>"
+
+[invoke.chainlink_set_stETH]
+target = ["chainlinkOracleProvider.Proxy"]
+func = "setAssetConfig"
+fromCall.func = "owner"
+args = ["<%= settings.stETH_address %>", "<%= settings.stETH_chainlinkFeed %>", "<%= settings.stETH_maxStale %>"]
+depends = [ "invoke.initialize_chainlink"]
+
+[invoke.pyth_set_stETH]
+target = ["pythOracleProvider.Proxy"]
+func = "setAssetConfig"
+fromCall.func = "owner"
+args = ["<%= settings.stETH_address %>", "<%= settings.stETH_pythID %>", "<%= settings.stETH_maxStale %>"]
+depends = [ "invoke.initialize_pyth"]
+
+[invoke.mockProvider_set_stETH]
+target = ["MockProvider"]
+func = "setPrice"
+args = ["<%= settings.stETH_address %>", "<%= settings.stETH_mockPrice %>", "18"]
+depends = [ "contract.MockProvider" ]
+
+[invoke.oe_set_stETH]
+target = ["oracleEngine.Proxy"]
+func = "setAssetConfig"
+fromCall.func = "owner"
+args = ["<%= settings.stETH_address %>", "<%= contracts.MockProvider.address %>", "<%= AddressZero %>", "0", "0"]
+depends = [ "contract.MockProvider" ]
+
+[invoke.initialize_pstETH]
+target = [ "pstETH.Proxy" ]
+fromCall.func = "owner"
+func = "initialize(address,address,uint256,uint256,uint256,uint256,string,string,uint8)"
+args = ["<%= settings.stETH_address %>", "<%= core.Proxy.address %>", "<%= settings.stETH_initial_exchange_rate %>", "<%= settings.stETH_reserve_factor %>", "<%= settings.stETH_protocol_seize_factor %>", "<%= settings.stETH_max_borrow_rate %>", "pike-steth", "pstETH", "<%= settings.stETH_decimals %>"]
+depends = [ "clone.pstETH",  "clone.core"]
+
+[invoke.pstETH_reserve_manager]
+target = [ "pstETH.Proxy" ]
+fromCall.func = "owner"
+func = "grantPermission"
+args = ["<%= settings.roles_reserveManagerRole %>", "<%= settings.stETH_reserveManager %>"]
+depends = [ "clone.pstETH" ]
+
+[invoke.pstETH_reserve_withdrawer]
+target = [ "pstETH.Proxy" ]
+fromCall.func = "owner"
+func = "grantPermission"
+args = ["<%= settings.roles_reserveWithdrawerRole %>", "<%= settings.stETH_reserveWithdrawer %>"]
+depends = [ "clone.pstETH" ]
+
+[invoke.set_pstETH_local_configurator]
+target = [ "pstETH.Proxy" ]
+fromCall.func = "owner"
+func = "grantPermission"
+args = ["<%= settings.roles_confRole %>", "<%= settings.stETH_configurator %>"]
+depends = [ "clone.pstETH" ]
+
+[invoke.config_pstETH_IRM]
+target = [ "pstETH.Proxy" ]
+from = "<%= settings.stETH_configurator %>"
+func = "configureInterestRateModel"
+args = ["<%= settings.stETH_baseRate %>", "<%= settings.stETH_multiplier %>", "<%= settings.stETH_firstJumpMultiplier %>", "<%= settings.stETH_secondJumpMultiplier %>", "<%= settings.stETH_firstKink %>", "<%= settings.stETH_secondKink %>"]
+depends = [ "clone.pstETH", "invoke.set_pstETH_local_configurator" ]
+
+[invoke.set_core_supply_guard_pstETH]
+target = [ "core.Proxy" ]
+fromCall.func = "owner"
+func = "grantNestedPermission"
+args = ["<%= settings.roles_supGuardRole %>", "<%= pstETH.Proxy.address %>", "<%= settings.stETH_supplyGuard %>"]
+depends = [ "clone.pstETH"]
+
+[invoke.set_core_borrow_guard_pstETH]
+target = [ "core.Proxy" ]
+fromCall.func = "owner"
+func = "grantNestedPermission"
+args = ["<%= settings.roles_borGuardRole %>", "<%= pstETH.Proxy.address %>", "<%= settings.stETH_borrowGuard %>"]
+
+[invoke.set_pstETH_configurator]
+target = [ "core.Proxy" ]
+fromCall.func = "owner"
+func = "grantNestedPermission"
+args = ["<%= settings.roles_confRole %>", "<%= pstETH.Proxy.address %>","<%= settings.stETH_configurator %>"]
+
+[invoke.support_pstETH]
+target = [ "core.Proxy" ]
+from = "<%= settings.core_configurator %>"
+func = "supportMarket"
+args = ["<%= pstETH.Proxy.address %>"]
+depends = ["invoke.set_core_configurator"]
+
+[invoke.set_pstETH_collateral_factor]
+target = [ "core.Proxy" ]
+from = "<%= settings.core_configurator %>"
+func = "setCollateralFactor"
+args = ["<%= pstETH.Proxy.address %>", "<%= settings.stETH_maxLTV %>", "<%= settings.stETH_LLTV %>"]
+depends = [ "invoke.support_pstETH" ]
+
+[invoke.set_borrow_cap_pSTETH]
+target = [ "core.Proxy" ]
+from = "<%= settings.stETH_borrowGuard %>"
+func = "setMarketBorrowCaps"
+args = [["<%= pstETH.Proxy.address %>"], ["<%= settings.stETH_borrowCap %>"]]
+depends = [ "invoke.set_core_borrow_guard_pstETH" ]
+
+[invoke.set_supply_cap_pSTETH]
+target = [ "core.Proxy" ]
+from = "<%= settings.stETH_supplyGuard %>"
+func = "setMarketSupplyCaps"
+args = [["<%= pstETH.Proxy.address %>"], ["<%= settings.stETH_supplyCap %>"]]
+depends = [ "invoke.set_core_supply_guard_pstETH" ]
+
+
