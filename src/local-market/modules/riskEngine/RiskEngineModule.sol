@@ -75,15 +75,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             revert RiskEngineError.InvalidLiquidationThreshold();
         }
 
+        BaseConfiguration memory oldConfiguration =
+            _getRiskEngineStorage().markets[address(pToken)].baseConfiguration;
         BaseConfiguration storage baseConfiguration =
             _getRiskEngineStorage().markets[address(pToken)].baseConfiguration;
-
-        // remember old values
-        uint256 oldCollateralFactorMantissa = baseConfiguration.collateralFactorMantissa;
-        uint256 oldLiquidationThresholdMantissa =
-            baseConfiguration.liquidationThresholdMantissa;
-        uint256 oldLiquidationIncentiveMantissa =
-            baseConfiguration.liquidationIncentiveMantissa;
 
         // write new values
         baseConfiguration.collateralFactorMantissa = baseConfig.collateralFactorMantissa;
@@ -93,21 +88,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             baseConfig.liquidationIncentiveMantissa;
 
         // Emit event with asset, old collateral factor, and new collateral factor
-        emit NewCollateralFactor(
-            pToken, oldCollateralFactorMantissa, baseConfig.collateralFactorMantissa
-        );
-        // Emit event with asset, old liquidation threshold, and new liquidation threshold
-        emit NewLiquidationThreshold(
-            pToken,
-            oldLiquidationThresholdMantissa,
-            baseConfig.liquidationThresholdMantissa
-        );
-        // Emit event with old incentive, new incentive
-        emit NewLiquidationIncentive(
-            pToken,
-            oldLiquidationIncentiveMantissa,
-            baseConfig.liquidationIncentiveMantissa
-        );
+        emit NewMarketConfiguration(pToken, oldConfiguration, baseConfig);
     }
 
     /**
@@ -123,7 +104,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         newMarket.isListed = true;
         delete newMarket.baseConfiguration;
 
-        _addMarketInternal(0, address(pToken));
+        _addMarketInternal(address(pToken));
 
         emit MarketListed(pToken);
     }
@@ -131,10 +112,56 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     /**
      * @inheritdoc IRiskEngine
      */
-    function configureEModeCategory(
+    function supportEMode(
         uint8 categoryId,
-        BaseConfiguration calldata baseConfig
+        bool isAllowed,
+        address[] calldata pTokens,
+        bool[] calldata collateralPermissions,
+        bool[] calldata borrowPermissions
     ) external {
+        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
+
+        uint256 length = pTokens.length;
+        // not allowed to configure default category
+        if (categoryId == 0) {
+            revert RiskEngineError.InvalidCategory();
+        }
+
+        if (length != collateralPermissions.length || length != borrowPermissions.length)
+        {
+            revert CommonError.NoArrayParity();
+        }
+        for (uint256 i = 0; i < length; i++) {
+            if (!_getRiskEngineStorage().markets[pTokens[i]].isListed) {
+                revert RiskEngineError.NotListed();
+            }
+
+            EModeConfiguration storage newEMode =
+                _getRiskEngineStorage().emodes[categoryId];
+            newEMode.allowed = isAllowed;
+            delete newEMode.baseConfiguration;
+
+            _getRiskEngineStorage().collateralCategory[categoryId][pTokens[i]] =
+                collateralPermissions[i];
+            _getRiskEngineStorage().borrowCategory[categoryId][pTokens[i]] =
+                borrowPermissions[i];
+
+            emit EModeUpdated(
+                categoryId,
+                pTokens[i],
+                isAllowed,
+                collateralPermissions[i],
+                borrowPermissions[i]
+            );
+        }
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function configureEMode(uint8 categoryId, BaseConfiguration calldata baseConfig)
+        external
+    {
         checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
         // can not be default category or not allowed category
         if (categoryId == 0 || !_getRiskEngineStorage().emodes[categoryId].allowed) {
@@ -182,9 +209,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         }
 
         for (uint256 i = 0; i < numMarkets; ++i) {
-            checkNestedPermission(
-                _BORROW_CAP_GUARDIAN_PERMISSION, address(pTokens[i]), msg.sender
-            );
+            checkPermission(_BORROW_CAP_GUARDIAN_PERMISSION, msg.sender);
             _getRiskEngineStorage().borrowCaps[address(pTokens[i])] = newBorrowCaps[i];
             emit NewBorrowCap(pTokens[i], newBorrowCaps[i]);
         }
@@ -205,9 +230,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         }
 
         for (uint256 i; i < numMarkets; ++i) {
-            checkNestedPermission(
-                _SUPPLY_CAP_GUARDIAN_PERMISSION, address(pTokens[i]), msg.sender
-            );
+            checkPermission(_SUPPLY_CAP_GUARDIAN_PERMISSION, msg.sender);
             _getRiskEngineStorage().supplyCaps[address(pTokens[i])] = newSupplyCaps[i];
             emit NewSupplyCap(pTokens[i], newSupplyCaps[i]);
         }
@@ -259,6 +282,66 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         _getRiskEngineStorage().seizeGuardianPaused = state;
         emit ActionPaused("Seize", state);
         return state;
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function switchEMode(uint8 newCategoryId) external {
+        uint8 category = _getRiskEngineStorage().accountCategory[msg.sender];
+
+        // can not swtich if already in e-mode
+        if (category == newCategoryId) {
+            revert RiskEngineError.AlreadyInEMode();
+        }
+        // checks if collateral and borrow category of e-mdoe match the user assets
+        // for default category all assets are allowed for collateral and borrow
+        if (newCategoryId != 0) {
+            // can not swtich if not allowed
+            if (!_getRiskEngineStorage().emodes[newCategoryId].allowed) {
+                revert RiskEngineError.InvalidCategory();
+            }
+            // For each asset the account is in
+            IPToken[] memory assets = _getRiskEngineStorage().accountAssets[msg.sender];
+            for (uint256 i = 0; i < assets.length; i++) {
+                if (
+                    _getRiskEngineStorage().markets[address(assets[i])]
+                        .collateralMembership[msg.sender]
+                        && !_getRiskEngineStorage().collateralCategory[newCategoryId][address(
+                            assets[i]
+                        )]
+                ) {
+                    revert RiskEngineError.InvalidCollateralStatus(address(assets[i]));
+                }
+                if (
+                    _getRiskEngineStorage().markets[address(assets[i])].borrowMembership[msg
+                        .sender]
+                        && !_getRiskEngineStorage().borrowCategory[newCategoryId][address(
+                            assets[i]
+                        )]
+                ) {
+                    revert RiskEngineError.InvalidBorrowStatus(address(assets[i]));
+                }
+            }
+        }
+        // to switch e-mode we check if new category risk params create shortfall
+        (RiskEngineError.Error err,, uint256 shortfall) =
+        getHypotheticalAccountLiquidityInternal(
+            msg.sender, IPToken(address(0)), newCategoryId, 0, 0, _getCollateralFactor
+        );
+        if (err != RiskEngineError.Error.NO_ERROR) {
+            revert RiskEngineError.SwitchEMode(uint256(err));
+        }
+        if (shortfall > 0) {
+            revert RiskEngineError.SwitchEMode(
+                uint256(RiskEngineError.Error.INSUFFICIENT_LIQUIDITY)
+            );
+        }
+
+        //update user category
+        _getRiskEngineStorage().accountCategory[msg.sender] = newCategoryId;
+
+        emit EModeSwitched(msg.sender, category, newCategoryId);
     }
 
     /**
@@ -345,6 +428,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
 
     /// *** Hooks ***
 
+    /**
+     * @inheritdoc IRiskEngine
+     */
     function repayBorrowVerify(IPToken pToken, address account) external {
         /* Get sender tokensHeld and amountOwed underlying from the pToken */
         (, uint256 amountOwed,) = pToken.getAccountSnapshot(account);
@@ -397,7 +483,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         // Should check if account is in emode and pToken is allowed
         if (category != 0) {
             if (
-                !_getRiskEngineStorage().categoryBorrow[category][pToken]
+                !_getRiskEngineStorage().borrowCategory[category][pToken]
                     || !_getRiskEngineStorage().emodes[category].allowed
             ) {
                 return uint256(RiskEngineError.Error.NOT_ALLOWED_TO_BORROW);
@@ -438,7 +524,12 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
 
         (RiskEngineError.Error err,, uint256 shortfall) =
         getHypotheticalAccountLiquidityInternal(
-            borrower, IPToken(pToken), 0, borrowAmount, _getCollateralFactor
+            borrower,
+            IPToken(pToken),
+            _getRiskEngineStorage().accountCategory[borrower],
+            0,
+            borrowAmount,
+            _getCollateralFactor
         );
         if (err != RiskEngineError.Error.NO_ERROR) {
             return uint256(err);
@@ -672,6 +763,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             _getRiskEngineStorage().markets[address(pToken)].collateralMembership[account];
     }
 
+    /**
+     * @inheritdoc IRiskEngine
+     */
     function checkBorrowMembership(address account, IPToken pToken)
         external
         view
@@ -680,6 +774,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         return _getRiskEngineStorage().markets[address(pToken)].borrowMembership[account];
     }
 
+    /**
+     * @inheritdoc IRiskEngine
+     */
     function accountCategory(address account) external view returns (uint8) {
         return _getRiskEngineStorage().accountCategory[account];
     }
@@ -708,7 +805,12 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     {
         (RiskEngineError.Error err, uint256 liquidity, uint256 shortfall) =
         getHypotheticalAccountLiquidityInternal(
-            account, IPToken(address(0)), 0, 0, _getCollateralFactor
+            account,
+            IPToken(address(0)),
+            _getRiskEngineStorage().accountCategory[account],
+            0,
+            0,
+            _getCollateralFactor
         );
 
         return (uint256(err), liquidity, shortfall);
@@ -727,6 +829,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         getHypotheticalAccountLiquidityInternal(
             account,
             IPToken(pTokenModify),
+            _getRiskEngineStorage().accountCategory[account],
             redeemTokens,
             borrowAmount,
             _getCollateralFactor
@@ -758,6 +861,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
          *  seizeTokens = seizeAmount / exchangeRate
          *   = actualRepayAmount * (liquidationIncentive * priceBorrowed) / (priceCollateral * exchangeRate)
          */
+        uint8 emodeCategory = _getRiskEngineStorage().accountCategory[borrower];
         uint256 exchangeRateMantissa = IPToken(pTokenCollateral).exchangeRateStored(); // Note: reverts on error
         uint256 seizeTokens;
         uint256 liquidationIncentiveMantissa;
@@ -765,7 +869,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         ExponentialNoError.Exp memory denominator;
         ExponentialNoError.Exp memory ratio;
 
-        uint8 emodeCategory = _getRiskEngineStorage().accountCategory[borrower];
         if (emodeCategory == 0) {
             liquidationIncentiveMantissa = _getRiskEngineStorage().markets[pTokenCollateral]
                 .baseConfiguration
@@ -793,10 +896,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      */
     function getAllMarkets() external view returns (IPToken[] memory) {
         return _getRiskEngineStorage().allMarkets[0];
-    }
-
-    function getEModeMarkets(uint8 categoryId) external view returns (IPToken[] memory) {
-        return _getRiskEngineStorage().allMarkets[categoryId];
     }
 
     /**
@@ -890,15 +989,17 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             && pToken.reserveFactorMantissa() == 1e18;
     }
 
-    function _addMarketInternal(uint8 categoryId, address pToken) internal {
-        for (
-            uint256 i = 0; i < _getRiskEngineStorage().allMarkets[categoryId].length; i++
-        ) {
-            if (_getRiskEngineStorage().allMarkets[categoryId][i] == IPToken(pToken)) {
+    /**
+     * @notice Add the market to the market's "assets"
+     * @param pToken The market address to add
+     */
+    function _addMarketInternal(address pToken) internal {
+        for (uint256 i = 0; i < _getRiskEngineStorage().allMarkets[0].length; i++) {
+            if (_getRiskEngineStorage().allMarkets[0][i] == IPToken(pToken)) {
                 revert RiskEngineError.AlreadyListed();
             }
         }
-        _getRiskEngineStorage().allMarkets[categoryId].push(IPToken(pToken));
+        _getRiskEngineStorage().allMarkets[0].push(IPToken(pToken));
     }
 
     /**
@@ -916,7 +1017,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint8 category = _getRiskEngineStorage().accountCategory[supplier];
         if (category != 0) {
             if (
-                !_getRiskEngineStorage().categoryCollateral[category][address(pToken)]
+                !_getRiskEngineStorage().collateralCategory[category][address(pToken)]
                     || !_getRiskEngineStorage().emodes[category].allowed
             ) {
                 // should not allowed to enter market if market not supported in emode
@@ -938,7 +1039,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         //  that is, only when we need to perform liquidity checks
         //  and not whenever we want to check if an account is in a particular market as collateral
         marketToJoin.collateralMembership[supplier] = true;
-        _getRiskEngineStorage().accountCollateralAssets[supplier].push(pToken);
         // skip if already added to assets as borrow
         if (!marketToJoin.borrowMembership[supplier]) {
             _getRiskEngineStorage().accountAssets[supplier].push(pToken);
@@ -976,7 +1076,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         //  that is, only when we need to perform liquidity checks
         //  and not whenever we want to check if an account is in a particular market as borrow
         marketToJoin.borrowMembership[borrower] = true;
-        _getRiskEngineStorage().accountBorrowAssets[borrower].push(pToken);
         // skip if already added to assets as collateral
         if (!marketToJoin.collateralMembership[borrower]) {
             _getRiskEngineStorage().accountAssets[borrower].push(pToken);
@@ -997,10 +1096,19 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         returns (RiskEngineError.Error, uint256, uint256)
     {
         return getHypotheticalAccountLiquidityInternal(
-            account, IPToken(address(0)), 0, 0, _getLiquidationThreshold
+            account,
+            IPToken(address(0)),
+            _getRiskEngineStorage().accountCategory[account],
+            0,
+            0,
+            _getLiquidationThreshold
         );
     }
 
+    /**
+     * @notice returns whether user borrowed or not
+     * @param account the address of user to check
+     */
     function hasBorrowed(address account) internal view returns (bool) {
         // For each asset the account is in
         IPToken[] memory assets = _getRiskEngineStorage().accountAssets[account];
@@ -1013,6 +1121,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         return false;
     }
 
+    /**
+     * @notice Internal function to check if redeem is allowed for the redeemer
+     */
     function redeemAllowedInternal(address pToken, address redeemer, uint256 redeemTokens)
         internal
         view
@@ -1035,7 +1146,12 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         /* Otherwise, perform a hypothetical liquidity check to guard against shortfall */
         (RiskEngineError.Error err,, uint256 shortfall) =
         getHypotheticalAccountLiquidityInternal(
-            redeemer, IPToken(pToken), redeemTokens, 0, _getCollateralFactor
+            redeemer,
+            IPToken(pToken),
+            _getRiskEngineStorage().accountCategory[redeemer],
+            redeemTokens,
+            0,
+            _getCollateralFactor
         );
         if (err != RiskEngineError.Error.NO_ERROR) {
             return uint256(err);
@@ -1062,6 +1178,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function getHypotheticalAccountLiquidityInternal(
         address account,
         IPToken pTokenModify,
+        uint8 categoryId,
         uint256 redeemTokens,
         uint256 borrowAmount,
         function (IPToken,uint8) internal view returns (ExponentialNoError.Exp memory)
@@ -1069,7 +1186,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     ) internal view returns (RiskEngineError.Error, uint256, uint256) {
         AccountLiquidityLocalVars memory vars; // Holds all our calculation results
         vars.oracle = IOracleEngine(_getRiskEngineStorage().oracle);
-        vars.accountCategory = _getRiskEngineStorage().accountCategory[account];
 
         // For each asset the account is in
         IPToken[] memory accountAssets = _getRiskEngineStorage().accountAssets[account];
@@ -1089,7 +1205,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             vars.oraclePrice =
                 ExponentialNoError.Exp({mantissa: vars.oraclePriceMantissa});
 
-            vars.threshold = threshold(asset, vars.accountCategory);
+            vars.threshold = threshold(asset, categoryId);
             vars.exchangeRate =
                 ExponentialNoError.Exp({mantissa: vars.exchangeRateMantissa});
 

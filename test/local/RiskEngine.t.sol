@@ -300,23 +300,6 @@ contract LocalRiskEngine is TestLocal {
         re.setBorrowPaused(IPToken(address(0)), true);
     }
 
-    function testExit_FailIfBorrowed() public {
-        address user1 = makeAddr("user1");
-        address depositor = makeAddr("depositor");
-
-        ///porivde liquidity
-        doDeposit(depositor, depositor, address(pWETH), 1e18);
-
-        doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
-
-        doBorrow(user1, user1, address(pWETH), 0.745e18);
-
-        vm.prank(user1);
-        // "NonZeroBorrowBalance()" selector
-        vm.expectRevert(0xe9b593c4);
-        re.exitMarket(address(pWETH));
-    }
-
     function testExit_FailIfPriceZero() public {
         address user1 = makeAddr("user1");
 

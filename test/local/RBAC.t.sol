@@ -89,11 +89,10 @@ contract LocalRBAC is TestLocal {
 
         IRiskEngine.BaseConfiguration memory config =
             IRiskEngine.BaseConfiguration(0, 0, 108e16);
-        // "NestedPermissionDenied(bytes32,address,address)" selector
+        // "PermissionDenied(bytes32,address)" selector
         vm.expectRevert(
             abi.encodePacked(
-                bytes4(0x386bcd36),
-                abi.encode(configurator_permission, address(pWETH), address(1))
+                bytes4(0xc768858b), abi.encode(configurator_permission, address(1))
             )
         );
         re.configureMarket(pWETH, config);

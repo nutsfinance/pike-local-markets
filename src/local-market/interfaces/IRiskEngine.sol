@@ -21,11 +21,29 @@ interface IRiskEngine {
     event NewEModeConfiguration(
         uint8 categoryId, BaseConfiguration oldConfig, BaseConfiguration newConfig
     );
+
+    /// @notice Emitted when new configuration set for e-mode
+    event NewMarketConfiguration(
+        IPToken pToken, BaseConfiguration oldConfig, BaseConfiguration newConfig
+    );
+
     /// @notice Emitted when a new oracle engine is set
     event NewOracleEngine(address oldOracleEngine, address newOracleEngine);
 
     /// @notice Emitted when an admin supports a market
     event MarketListed(IPToken pToken);
+
+    /// @notice Emitted when user switch e-mode
+    event EModeSwitched(address account, uint8 oldCategory, uint8 newCategory);
+
+    /// @notice Emitted when an emode status is updated
+    event EModeUpdated(
+        uint8 categoryId,
+        address pToken,
+        bool allowed,
+        bool collateralStatus,
+        bool borrowStatus
+    );
 
     /// @notice Emitted when an account enters a market
     event MarketEntered(IPToken pToken, address account);
@@ -35,27 +53,6 @@ interface IRiskEngine {
 
     /// @notice Emitted when close factor is changed by admin
     event NewCloseFactor(uint256 oldCloseFactorMantissa, uint256 newCloseFactorMantissa);
-
-    /// @notice Emitted when a collateral factor is changed by admin
-    event NewCollateralFactor(
-        IPToken pToken,
-        uint256 oldCollateralFactorMantissa,
-        uint256 newCollateralFactorMantissa
-    );
-
-    /// @notice Emitted when a liquidation threshold is changed by admin
-    event NewLiquidationThreshold(
-        IPToken pToken,
-        uint256 oldLiquidationThresholdMantissa,
-        uint256 newLiquidationThresholdMantissa
-    );
-
-    /// @notice Emitted when liquidation incentive is changed by admin
-    event NewLiquidationIncentive(
-        IPToken pToken,
-        uint256 oldLiquidationIncentiveMantissa,
-        uint256 newLiquidationIncentiveMantissa
-    );
 
     /// @notice Emitted when an action is paused globally
     event ActionPaused(string action, bool pauseState);
@@ -73,6 +70,15 @@ interface IRiskEngine {
     event DelegateUpdated(
         address indexed approver, address indexed delegate, bool approved
     );
+
+    /**
+     * @notice Switch caller E-Mode category
+     * @dev 0 is initial and default category for all markets
+     * @dev caller should met the requirements for new category to join, meaning
+     * all user collateral and borrow should met new category supported assets
+     * @param newCategoryId The new e-mode category that caller wants to switch
+     */
+    function switchEMode(uint8 newCategoryId) external;
 
     /**
      * @notice Add assets to be included in account liquidity calculation
@@ -103,6 +109,12 @@ interface IRiskEngine {
 
     /// *** Hooks ***
 
+    /**
+     * @notice Checks the account should borrow status after repaying debt
+     * @dev If there is no debt remaining it removes borrow status for account
+     * @param pToken The market to verify the repayment against
+     * @param account The address of account that debt was repaid
+     */
     function repayBorrowVerify(IPToken pToken, address account) external;
 
     /**
@@ -124,6 +136,15 @@ interface IRiskEngine {
      * @param newOracle The address of the new oracle
      */
     function setOracle(address newOracle) external;
+
+    /**
+     * @notice Set new risk params for specified e-mode
+     * @dev Admin function to configure
+     * @param categoryId the id of e-mode to modify
+     * @param baseConfig the struct including collateralFactor, liqThreshold and liqIncentive
+     */
+    function configureEMode(uint8 categoryId, BaseConfiguration calldata baseConfig)
+        external;
 
     /**
      * @notice Sets the closeFactor for a market used when liquidating borrows
@@ -148,6 +169,22 @@ interface IRiskEngine {
      * @param pToken The address of the market (token) to list
      */
     function supportMarket(IPToken pToken) external;
+
+    /**
+     * @notice Add the e-mode and configure its status with amdin access
+     * @param categoryId Id representing e-mode identifier
+     * @param isAllowed The identifier to active or deactivate e-mode
+     * @param pTokens The array of addresses to add to e-mode
+     * @param collateralPermissions The array of collateral status for pTokens in e-mode
+     * @param borrowPermissions The array of borrowable status for pTokens in e-mode
+     */
+    function supportEMode(
+        uint8 categoryId,
+        bool isAllowed,
+        address[] calldata pTokens,
+        bool[] calldata collateralPermissions,
+        bool[] calldata borrowPermissions
+    ) external;
 
     /**
      * @notice Set the given borrow caps for the given pToken markets.
@@ -219,7 +256,7 @@ interface IRiskEngine {
         returns (bool);
 
     /**
-     * @notice Returns whether the given account has borrow
+     * @notice Returns whether the given account has borrow position
      * in the given asset
      * @param account The address of the account to check
      * @param pToken The pToken to check
@@ -229,6 +266,13 @@ interface IRiskEngine {
         external
         view
         returns (bool);
+
+    /**
+     * @notice Returns the active category of account
+     * @param account The address of the account to check
+     * @return Category Id "0" for default and non zero for e-mode
+     */
+    function accountCategory(address account) external view returns (uint8);
 
     /**
      * @notice Determine the current account liquidity with respect to liquidation threshold
@@ -399,17 +443,29 @@ interface IRiskEngine {
     function oracle() external view returns (address);
 
     /**
-     * @return the collateral factor of a pToken
+     * @notice return the collateral factor of a pToken in category
+     * @param categoryId identifier for the category (0 for default and non zero for e-mode)
+     * @param pToken address of asset to check
      */
-    function collateralFactor(IPToken pToken) external view returns (uint256);
+    function collateralFactor(uint8 categoryId, IPToken pToken)
+        external
+        view
+        returns (uint256);
 
     /**
-     * @return the liquidation threshold of a pToken
+     * @notice return the liquidation threshold of a pToken in category
+     * @param categoryId identifier for the category (0 for default and non zero for e-mode)
+     * @param pToken address of asset to check
      */
-    function liquidationThreshold(IPToken pToken) external view returns (uint256);
+    function liquidationThreshold(uint8 categoryId, IPToken pToken)
+        external
+        view
+        returns (uint256);
 
     /**
-     * @return the liquidation incentives of pTokens
+     * @notice return the liquidation incentive of a pToken in category
+     * @param categoryId identifier for the category (0 for default and non zero for e-mode)
+     * @param pToken address of asset to check
      */
     function liquidationIncentive(uint8 categoryId, address pToken)
         external

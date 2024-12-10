@@ -6,15 +6,21 @@ import {
     IDoubleJumpRateModel
 } from "@interfaces/IDoubleJumpRateModel.sol";
 import {DoubleJumpRateStorage} from "@storage/DoubleJumpRateStorage.sol";
+import {IPToken} from "@interfaces/IPToken.sol";
+import {IRBAC} from "@interfaces/IRBAC.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {IRMError} from "@errors/IRMError.sol";
-import {RBACMixin} from "@utils/RBACMixin.sol";
+import {RBACStorage} from "@storage/RBACStorage.sol";
 
 /**
  * @title Pike Markets DoubleJumpRateModel Contract
  * @author NUTS Finance (hello@pike.finance)
  */
-contract DoubleJumpRateModel is IDoubleJumpRateModel, DoubleJumpRateStorage, RBACMixin {
+contract DoubleJumpRateModel is
+    IDoubleJumpRateModel,
+    DoubleJumpRateStorage,
+    RBACStorage
+{
     /**
      * @inheritdoc IDoubleJumpRateModel
      */
@@ -26,7 +32,13 @@ contract DoubleJumpRateModel is IDoubleJumpRateModel, DoubleJumpRateStorage, RBA
         uint256 firstKink,
         uint256 secondKink
     ) external {
-        checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
+        if (
+            !IRBAC(address(IPToken(address(this)).riskEngine())).hasPermission(
+                _CONFIGURATOR_PERMISSION, msg.sender
+            )
+        ) {
+            revert PermissionDenied(_CONFIGURATOR_PERMISSION, msg.sender);
+        }
         InterestRateData storage data = _getIRMStorage();
         if (secondKink == 0) {
             revert CommonError.ZeroValue();

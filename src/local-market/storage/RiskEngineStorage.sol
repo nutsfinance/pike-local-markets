@@ -14,39 +14,23 @@ contract RiskEngineStorage {
          */
         mapping(address => uint256) closeFactorMantissa;
         /**
-         * @notice Max number of assets a single account can participate in (borrow or use as collateral)
-         */
-        uint256 maxAssets;
-        /**
-         * @notice Number of categories
-         */
-        uint8 totalCategories;
-        /**
          * @notice Per-account mapping of "activated category"
          */
         mapping(address => uint8) accountCategory;
         /**
-         * @notice Per-account mapping of "assets you are in collateral", capped by maxAssets
+         * @notice Per-account mapping of "assets you are in"
          */
         mapping(address => IPToken[]) accountAssets;
-        /**
-         * @notice Per-account mapping of "assets you are in collateral", capped by maxAssets
-         */
-        mapping(address => IPToken[]) accountCollateralAssets;
-        /**
-         * @notice Per-account mapping of "assets you are in borrow", capped by maxAssets
-         */
-        mapping(address => IPToken[]) accountBorrowAssets;
         /**
          * @notice Per-category mapping of "markets for collateral"
          * mapping of categoryId -> ptokens -> exist
          */
-        mapping(uint8 => mapping(address => bool)) categoryCollateral;
+        mapping(uint8 => mapping(address => bool)) collateralCategory;
         /**
          * @notice Per-category mapping of "markets for borrow"
          * mapping of categoryId -> ptokens -> exist
          */
-        mapping(uint8 => mapping(address => bool)) categoryBorrow;
+        mapping(uint8 => mapping(address => bool)) borrowCategory;
         /**
          * @notice mapping of pTokens -> Market metadata
          * @dev Used e.g. to determine if a market is supported
@@ -76,7 +60,7 @@ contract RiskEngineStorage {
         /// @notice Whether the delegate is allowed to borrow or redeem on behalf of the user
         //mapping(address user => mapping (address delegate => bool approved)) public approvedDelegates;
         mapping(address => mapping(address => bool)) approvedDelegates;
-        /// @notice A list of all markets in categories (0 is default category includes all markets)
+        /// @notice A list of all markets (0 is default category includes all markets)
         mapping(uint8 => IPToken[]) allMarkets;
     }
 
@@ -117,10 +101,6 @@ contract RiskEngineStorage {
         bool allowed;
         // e-mode risk parameters
         IRiskEngine.BaseConfiguration baseConfiguration;
-        // Per-emode mapping of "accounts in this asset"
-        mapping(address => bool) accountMembership;
-        IPToken[] collateralAssets;
-        IPToken[] borrowAssets;
     }
 
     /// keccak256(abi.encode(uint256(keccak256("pike.LM.RiskEngine")) - 1)) & ~bytes32(uint256(0xff))

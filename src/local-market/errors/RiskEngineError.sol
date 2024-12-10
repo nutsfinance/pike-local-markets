@@ -20,8 +20,10 @@ library RiskEngineError {
         EMODE_NOT_ALLOWED
     }
 
-    error NonZeroBorrowBalance();
     error ExitMarketRedeemRejection(uint256 errorCode);
+    error SwitchEMode(uint256 errorCode);
+    error InvalidCollateralStatus(address pToken);
+    error InvalidBorrowStatus(address pToken);
 
     error MintPaused();
     error BorrowPaused();
@@ -42,6 +44,8 @@ library RiskEngineError {
     error InvalidCategory();
 
     error PTokenNotAllowedToBorrow();
+
+    error AlreadyInEMode();
 
     error DelegationStatusUnchanged();
 }

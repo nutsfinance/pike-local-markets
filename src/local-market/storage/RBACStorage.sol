@@ -23,7 +23,7 @@ abstract contract RBACStorage {
     error NestedPermissionDenied(bytes32, address, address);
     error InvalidPermission();
 
-    function _checkPermission(bytes32 permission, address target) internal view {
+    function _checkPermission(bytes32 permission, address target) internal view virtual {
         _isPermissionValid(permission);
         if (!_getRBACStorage().permissions[permission][target]) {
             revert PermissionDenied(permission, target);
@@ -34,7 +34,7 @@ abstract contract RBACStorage {
         bytes32 permission,
         address nestedAddress,
         address target
-    ) internal view {
+    ) internal view virtual {
         _isPermissionValid(permission);
         if (!_getRBACStorage().nestedPermissions[permission][nestedAddress][target]) {
             revert NestedPermissionDenied(permission, nestedAddress, target);
