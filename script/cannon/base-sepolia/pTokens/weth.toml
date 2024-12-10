@@ -1,11 +1,11 @@
-[contract.mockWETH]
-artifact = "MockTestToken"
-args = ["Wrapped Ether", "WETH", "18", "<%= parseUnits('10', 18) %>"]
+# [contract.mockWETH]
+# artifact = "MockTestToken"
+# args = ["Wrapped Ether", "WETH", "18", "<%= parseUnits('10', 18) %>"]
 
 [clone.pWETH]
 source = "pike-upgradeable-proxy:0.1.0@main"
 options.implementation = "<%= contracts.PTokenRouter.address %>"
-options.owner = "<%= settings.weth_owner %>"
+options.owner = "<%= settings.protocol_owner %>"
 options.abi = "<%= JSON.stringify(contracts.PTokenRouter.abi) %>"
 
 [invoke.chainlink_set_weth]
@@ -19,7 +19,7 @@ depends = [ "invoke.initialize_chainlink"]
 target = ["pythOracleProvider.Proxy"]
 func = "setAssetConfig"
 fromCall.func = "owner"
-args = ["<%= settings.weth_address %>", "<%= settings.weth_pythID %>", "<%= settings.weth_maxStale %>"]
+args = ["<%= settings.weth_address %>", "<%= settings.weth_pythID %>", "0", "<%= settings.weth_maxStale %>"]
 depends = [ "invoke.initialize_pyth"]
 
 [invoke.mockProvider_set_weth]
@@ -42,52 +42,13 @@ func = "initialize(address,address,uint256,uint256,uint256,uint256,string,string
 args = ["<%= settings.weth_address %>", "<%= core.Proxy.address %>", "<%= settings.weth_initial_exchange_rate %>", "<%= settings.weth_reserve_factor %>", "<%= settings.weth_protocol_seize_factor %>", "<%= settings.weth_max_borrow_rate %>", "pike-weth", "pWETH", "<%= settings.weth_decimals %>"]
 depends = [ "clone.pWETH",  "clone.core"]
 
-[invoke.pWETH_reserve_manager]
-target = [ "pWETH.Proxy" ]
-fromCall.func = "owner"
-func = "grantPermission"
-args = ["<%= settings.roles_reserveManagerRole %>", "<%= settings.weth_reserveManager %>"]
-depends = [ "clone.pWETH" ]
-
-[invoke.pWETH_reserve_withdrawer]
-target = [ "pWETH.Proxy" ]
-fromCall.func = "owner"
-func = "grantPermission"
-args = ["<%= settings.roles_reserveWithdrawerRole %>", "<%= settings.weth_reserveWithdrawer %>"]
-depends = [ "clone.pWETH" ]
-
-[invoke.set_pWETH_local_configurator]
-target = [ "pWETH.Proxy" ]
-fromCall.func = "owner"
-func = "grantPermission"
-args = ["<%= settings.roles_confRole %>", "<%= settings.weth_configurator %>"]
-depends = [ "clone.pWETH" ]
 
 [invoke.config_pWETH_IRM]
 target = [ "pWETH.Proxy" ]
-from = "<%= settings.weth_configurator %>"
+from = "<%= settings.core_configurator %>"
 func = "configureInterestRateModel"
 args = ["<%= settings.weth_baseRate %>", "<%= settings.weth_multiplier %>", "<%= settings.weth_firstJumpMultiplier %>", "<%= settings.weth_secondJumpMultiplier %>", "<%= settings.weth_firstKink %>", "<%= settings.weth_secondKink %>"]
-depends = [ "clone.pWETH", "invoke.set_pWETH_local_configurator" ]
-
-[invoke.set_core_supply_guard_pWETH]
-target = [ "core.Proxy" ]
-fromCall.func = "owner"
-func = "grantNestedPermission"
-args = ["<%= settings.roles_supGuardRole %>", "<%= pWETH.Proxy.address %>", "<%= settings.weth_supplyGuard %>"]
-depends = [ "clone.pWETH"]
-
-[invoke.set_core_borrow_guard_pWETH]
-target = [ "core.Proxy" ]
-fromCall.func = "owner"
-func = "grantNestedPermission"
-args = ["<%= settings.roles_borGuardRole %>", "<%= pWETH.Proxy.address %>", "<%= settings.weth_borrowGuard %>"]
-
-[invoke.set_pWETH_configurator]
-target = [ "core.Proxy" ]
-fromCall.func = "owner"
-func = "grantNestedPermission"
-args = ["<%= settings.roles_confRole %>", "<%= pWETH.Proxy.address %>","<%= settings.weth_configurator %>"]
+depends = [ "clone.pWETH", "invoke.set_core_configurator" ]
 
 [invoke.support_pWETH]
 target = [ "core.Proxy" ]
@@ -96,25 +57,32 @@ func = "supportMarket"
 args = ["<%= pWETH.Proxy.address %>"]
 depends = ["invoke.set_core_configurator"]
 
-[invoke.set_pWETH_collateral_factor]
+[invoke.configure_pWETH]
 target = [ "core.Proxy" ]
 from = "<%= settings.core_configurator %>"
-func = "setCollateralFactor"
-args = ["<%= pWETH.Proxy.address %>", "<%= settings.weth_maxLTV %>", "<%= settings.weth_LLTV %>"]
-depends = [ "invoke.support_pWETH" ]
+func = "configureMarket"
+args = ["<%= pWETH.Proxy.address %>", ["<%= settings.weth_maxLTV %>", "<%= settings.weth_LLTV %>", "<%= settings.weth_LiqIncentive %>"]]
+depends = ["invoke.set_core_configurator", "invoke.support_pWETH"]
+
+[invoke.set_close_factor_pWETH]
+target = [ "core.Proxy" ]
+from = "<%= settings.core_configurator %>"
+func = "setCloseFactor"
+args = ["<%= pWETH.Proxy.address %>", "<%= settings.core_closeFactor %>"]
+depends = ["invoke.set_core_configurator", "invoke.support_pWETH"]
 
 [invoke.set_borrow_cap_pWETH]
 target = [ "core.Proxy" ]
-from = "<%= settings.weth_borrowGuard %>"
+from = "<%= settings.core_configurator %>"
 func = "setMarketBorrowCaps"
 args = [["<%= pWETH.Proxy.address %>"], ["<%= settings.weth_borrowCap %>"]]
-depends = [ "invoke.set_core_borrow_guard_pWETH" ]
+depends = ["invoke.set_core_borrow_guard"]
 
 [invoke.set_supply_cap_pWETH]
 target = [ "core.Proxy" ]
-from = "<%= settings.weth_supplyGuard %>"
+from = "<%= settings.core_configurator %>"
 func = "setMarketSupplyCaps"
 args = [["<%= pWETH.Proxy.address %>"], ["<%= settings.weth_supplyCap %>"]]
-depends = [ "invoke.set_core_supply_guard_pWETH" ]
+depends = ["invoke.set_core_supply_guard"]
 
 

@@ -1,4 +1,4 @@
-name = "pike-local-market"
+name = "pike-local-market-beta"
 version = "0.1.0"
 preset = "main"
 description = "Local markets for Pike testnet deployment"
@@ -24,23 +24,17 @@ include = [
 
 [var.owner]
 core_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+protocol_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
 oracleEngine_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
 chainlinkProvider_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
 pythProvider_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-usdc_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-weth_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-steth_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
 
 [var.usdc]
-usdc_reserveManager = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-usdc_reserveWithdrawer = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-usdc_configurator = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-usdc_supplyGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-usdc_borrowGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
 usdc_decimals = "18"
-usdc_address = "<%= contracts.mockUSDC.address %>"
+usdc_address = "0xf10f12A5cB889CA699017898feE16ce82c9557eD"
 usdc_maxLTV = "<%= parseUnits('75', 16) %>" #75%
 usdc_LLTV = "<%= parseUnits('78', 16) %>" #78%
+usdc_LiqIncentive = "<%= parseUnits('105', 16) %>" #1.08%
 usdc_initial_exchange_rate = "<%= parseUnits('1', 18) %>" # 1e18
 usdc_reserve_factor = "<%= parseUnits('5', 16) %>" # 5%
 usdc_protocol_seize_factor = "<%= parseUnits('1', 16) %>" # 1%
@@ -59,15 +53,11 @@ usdc_firstKink = "<%= parseUnits('5', 16) %>"
 usdc_secondKink = "<%= parseUnits('95', 16) %>"
 
 [var.weth]
-weth_reserveManager = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-weth_reserveWithdrawer = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-weth_configurator = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-weth_supplyGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-weth_borrowGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
 weth_decimals = "18"
-weth_address = "<%= contracts.mockWETH.address %>"
+weth_address = "0x565A622533868FA98d4D0D784712bEBBAba0AA64"
 weth_maxLTV = "<%= parseUnits('80', 16) %>" #80%
 weth_LLTV = "<%= parseUnits('83', 16) %>" #83%
+weth_LiqIncentive = "<%= parseUnits('105', 16) %>" #1.08%
 weth_initial_exchange_rate = "<%= parseUnits('1', 18) %>" # 1e18
 weth_reserve_factor = "<%= parseUnits('5', 16) %>" # 5%
 weth_protocol_seize_factor = "<%= parseUnits('1', 16) %>" # 1%
@@ -87,15 +77,11 @@ weth_firstKink = "<%= parseUnits('5', 16) %>"
 weth_secondKink = "<%= parseUnits('95', 16) %>"
 
 [var.steth]
-stETH_reserveManager = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-stETH_reserveWithdrawer = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-stETH_configurator = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-stETH_supplyGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-stETH_borrowGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
 stETH_decimals = "18"
-stETH_address = "<%= contracts.mockstETH.address %>"
+stETH_address = "0x133D6F8071C028C1F89A70d9D2f25798ec74dD3E"
 stETH_maxLTV = "<%= parseUnits('75', 16) %>" #75%
 stETH_LLTV = "<%= parseUnits('79', 16) %>" #79%
+stETH_LiqIncentive = "<%= parseUnits('105', 16) %>" #1.08%
 stETH_initial_exchange_rate = "<%= parseUnits('1', 18) %>" # 1e18
 stETH_reserve_factor = "<%= parseUnits('5', 16) %>" # 5%
 stETH_protocol_seize_factor = "<%= parseUnits('1', 16) %>" # 1%
@@ -115,10 +101,13 @@ stETH_firstKink = "<%= parseUnits('5', 16) %>"
 stETH_secondKink = "<%= parseUnits('50', 16) %>"
 
 [var.params]
+core_reserveManager = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+core_reserveWithdrawer = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+core_supplyGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+core_borrowGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
 core_configurator = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
 core_pauseGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
 core_closeFactor = "<%= parseUnits('50', 16) %>"
-core_incentives = "<%= parseUnits('1.05', 18) %>"
 
 [var.salt]
 salt = "main"
