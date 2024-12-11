@@ -1496,6 +1496,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         }
     }
 
+    /**
+     * @dev Checks permission of given role from assigned risk engine
+     */
     function _checkPermission(bytes32 permission, address target)
         internal
         view

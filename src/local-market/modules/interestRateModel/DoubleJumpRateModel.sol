@@ -32,13 +32,7 @@ contract DoubleJumpRateModel is
         uint256 firstKink,
         uint256 secondKink
     ) external {
-        if (
-            !IRBAC(address(IPToken(address(this)).riskEngine())).hasPermission(
-                _CONFIGURATOR_PERMISSION, msg.sender
-            )
-        ) {
-            revert PermissionDenied(_CONFIGURATOR_PERMISSION, msg.sender);
-        }
+        _checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
         InterestRateData storage data = _getIRMStorage();
         if (secondKink == 0) {
             revert CommonError.ZeroValue();
@@ -153,5 +147,22 @@ contract DoubleJumpRateModel is
         }
 
         return borrows * BASE / (cash + borrows - reserves);
+    }
+
+    /**
+     * @dev Checks permission of given role from assigned risk engine
+     */
+    function _checkPermission(bytes32 permission, address target)
+        internal
+        view
+        override
+    {
+        if (
+            !IRBAC(address(IPToken(address(this)).riskEngine())).hasPermission(
+                permission, target
+            )
+        ) {
+            revert PermissionDenied(permission, target);
+        }
     }
 }
