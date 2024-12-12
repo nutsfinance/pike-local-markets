@@ -1,0 +1,57 @@
+{
+  "address": "0xeB25de08215e107ec96de7d58b20A932089E0E5e",
+  "abi": [
+    {
+      "type": "function",
+      "name": "getPrice",
+      "inputs": [
+        {
+          "name": "asset",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "price",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "setPrice",
+      "inputs": [
+        {
+          "name": "asset",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "price",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "decimals",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    }
+  ],
+  "constructorArgs": [],
+  "linkedLibraries": {},
+  "deployTxnHash": "0x2ee8a028a7d0c8924b8ba7675eb6fb56269831ba148fcc1c5563de0df1a72da9",
+  "deployTxnBlockNumber": "19116324",
+  "deployTimestamp": "1734000936",
+  "sourceName": "test/mocks/MockOracle.sol",
+  "contractName": "MockProvider",
+  "deployedOn": "contract.MockProvider",
+  "gasUsed": 224220,
+  "gasCost": "1000277"
+}

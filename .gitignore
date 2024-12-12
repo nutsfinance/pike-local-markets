@@ -22,6 +22,8 @@ docs/
 deployments/*
 !deployments/base-sepolia
 !deployments/base-sepolia/*
+!deployments/base-sepolia-demo
+!deployments/base-sepolia-demo/*
 
 coverage
 lcov.info
