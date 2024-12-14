@@ -31,51 +31,16 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
         uint256 upperBoundRatio;
     }
 
-    /**
-     * @notice Mapping of asset address to its configuration
-     */
-    mapping(address => AssetConfig) public configs;
+    struct OracleEngineStorage {
+        /**
+         * @notice Mapping of asset address to its configuration
+         */
+        mapping(address => AssetConfig) configs;
+    }
 
-    /**
-     * @notice Event emitted when asset configuration is set
-     */
-    event AssetConfigSet(
-        address indexed asset,
-        address mainOracle,
-        address fallbackOracle,
-        uint256 lowerBoundRatio,
-        uint256 upperBoundRatio
-    );
-
-    /**
-     * @notice Error emitted when bounds are invalid
-     */
-    error InvalidBounds();
-
-    /**
-     * @notice Error emitted when main oracle is invalid
-     */
-    error InvalidMainOracle();
-
-    /**
-     * @notice Error emitted when asset is invalid
-     */
-    error InvalidAsset();
-
-    /**
-     * @notice Error emitted when bounds validation fails
-     */
-    error BoundValidationFailed();
-
-    /**
-     * @notice Error emitted when fallback oracle is invalid
-     */
-    error InvalidFallbackOraclePrice();
-
-    /**
-     * @notice Error emitted when main oracle price is invalid
-     */
-    error InvalidMainOraclePrice();
+    /// keccak256(abi.encode(uint256(keccak256("pike.OE.core")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 internal constant _ORACLE_ENGINE_STORAGE =
+        0x79c5c3edc3173a93bc1571f1b7494470f1d3221dd503efa3fe2d1a0869f4a100;
 
     constructor() {
         _disableInitializers();
@@ -90,12 +55,7 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @notice Set asset configuration
-     * @param asset Address of the asset
-     * @param mainOracle Address of the main oracle
-     * @param fallbackOracle Address of the fallback oracle
-     * @param lowerBoundRatio Lower bound ratio for the main oracle price to be considered valid
-     * @param upperBoundRatio Upper bound ratio for the main oracle price to be considered valid
+     * @inheritdoc IOracleEngine
      */
     function setAssetConfig(
         address asset,
@@ -119,7 +79,7 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
             revert InvalidAsset();
         }
 
-        configs[asset] = AssetConfig({
+        _getOracleEngineStorage().configs[asset] = AssetConfig({
             mainOracle: mainOracle,
             fallbackOracle: fallbackOracle,
             lowerBoundRatio: lowerBoundRatio,
@@ -132,9 +92,7 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @notice Get the price of the market
-     * @param pToken Address of the market
-     * @return price Price of the market scaled by (36 - assetDecimals)
+     * @inheritdoc IOracleEngine
      */
     function getUnderlyingPrice(IPToken pToken)
         external
@@ -146,12 +104,10 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @notice Get the price of the asset
-     * @param asset Address of the asset
-     * @return price Price of the asset scaled by (36 - assetDecimals)
+     * @inheritdoc IOracleEngine
      */
     function getPrice(address asset) public view override returns (uint256 price) {
-        AssetConfig storage config = configs[asset];
+        AssetConfig storage config = _getOracleEngineStorage().configs[asset];
 
         try IOracleProvider(config.mainOracle).getPrice(asset) returns (
             uint256 mainOraclePrice
@@ -198,4 +154,15 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
      * @param newImplementation Address of the new implementation
      */
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    function _getOracleEngineStorage()
+        internal
+        pure
+        returns (OracleEngineStorage storage data)
+    {
+        bytes32 s = _ORACLE_ENGINE_STORAGE;
+        assembly {
+            data.slot := s
+        }
+    }
 }

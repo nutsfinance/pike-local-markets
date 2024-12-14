@@ -9,8 +9,11 @@ import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {TestLocal} from "@helpers/TestLocal.sol";
 import {MockOracle} from "@mocks/MockOracle.sol";
 import {ChainlinkOracleProvider} from "@oracles/ChainlinkOracleProvider.sol";
+import {IChainlinkOracleProvider} from "@oracles/interfaces/IChainlinkOracleProvider.sol";
 import {PythOracleProvider} from "@oracles/PythOracleProvider.sol";
+import {IPythOracleProvider} from "@oracles/interfaces/IPythOracleProvider.sol";
 import {OracleEngine} from "@oracles/OracleEngine.sol";
+import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
 import {MockChainlinkAggregator} from "@mocks/MockChainlinkAggregator.sol";
 import {MockPyth} from "@mocks/MockPyth.sol";
 import "@chainlink/contracts/shared/interfaces/AggregatorV3Interface.sol";
@@ -102,14 +105,14 @@ contract LocalOracle is TestLocal {
 
         // grace period not over
         sequencerUptimeFeed.setRoundData(0, block.timestamp, block.timestamp);
-        vm.expectRevert(ChainlinkOracleProvider.GracePeriodNotOver.selector);
+        vm.expectRevert(IChainlinkOracleProvider.GracePeriodNotOver.selector);
         wethPrice = chainlinkOracleProvider.getPrice(weth);
 
         // sequencer down
         sequencerUptimeFeed.setRoundData(
             1, block.timestamp - gracePeriod - 1, block.timestamp - gracePeriod - 1
         );
-        vm.expectRevert(ChainlinkOracleProvider.SequencerDown.selector);
+        vm.expectRevert(IChainlinkOracleProvider.SequencerDown.selector);
         wethPrice = chainlinkOracleProvider.getPrice(weth);
 
         // stale price
@@ -119,21 +122,21 @@ contract LocalOracle is TestLocal {
         wethPriceFeed.setRoundData(
             2000e8, block.timestamp - 2 hours, block.timestamp - 2 hours
         );
-        vm.expectRevert(ChainlinkOracleProvider.StalePrice.selector);
+        vm.expectRevert(IChainlinkOracleProvider.StalePrice.selector);
         wethPrice = chainlinkOracleProvider.getPrice(weth);
 
         // invalid asset
-        vm.expectRevert(ChainlinkOracleProvider.InvalidAsset.selector);
+        vm.expectRevert(IChainlinkOracleProvider.InvalidAsset.selector);
         chainlinkOracleProvider.setAssetConfig(address(0), wethPriceFeed, 1 hours);
 
         // invalid feed
-        vm.expectRevert(ChainlinkOracleProvider.InvalidFeed.selector);
+        vm.expectRevert(IChainlinkOracleProvider.InvalidFeed.selector);
         chainlinkOracleProvider.setAssetConfig(
             weth, AggregatorV3Interface(address(0)), 1 hours
         );
 
         // invalid stale period
-        vm.expectRevert(ChainlinkOracleProvider.InvalidStalePeriod.selector);
+        vm.expectRevert(IChainlinkOracleProvider.InvalidStalePeriod.selector);
         chainlinkOracleProvider.setAssetConfig(weth, wethPriceFeed, 0);
     }
 
@@ -150,11 +153,11 @@ contract LocalOracle is TestLocal {
         assertEq(wethPrice, 2000e18);
 
         // invalid asset
-        vm.expectRevert(PythOracleProvider.InvalidAsset.selector);
+        vm.expectRevert(IPythOracleProvider.InvalidAsset.selector);
         pythOracleProvider.setAssetConfig(address(0), "weth", 0, 1 hours);
 
         // invalid stale period
-        vm.expectRevert(PythOracleProvider.InvalidMaxStalePeriod.selector);
+        vm.expectRevert(IPythOracleProvider.InvalidMaxStalePeriod.selector);
         pythOracleProvider.setAssetConfig(weth, "weth", 0, 0);
     }
 
@@ -167,7 +170,7 @@ contract LocalOracle is TestLocal {
         pyth.setData(2000e8, 10e8, -8);
 
         // get weth price
-        vm.expectRevert(PythOracleProvider.InvalidMinConfRatio.selector);
+        vm.expectRevert(IPythOracleProvider.InvalidMinConfRatio.selector);
         pythOracleProvider.getPrice(weth);
     }
 
@@ -218,7 +221,7 @@ contract LocalOracle is TestLocal {
 
         // bounds not met
         pyth.setData(4001e8, 0, -8);
-        vm.expectRevert(OracleEngine.BoundValidationFailed.selector);
+        vm.expectRevert(IOracleEngine.BoundValidationFailed.selector);
         wethPrice = oracleEngine.getPrice(weth);
 
         // fallback fails
@@ -230,28 +233,28 @@ contract LocalOracle is TestLocal {
         wethPriceFeed.setRoundData(
             2002e8, block.timestamp - 2 hours, block.timestamp - 2 hours
         );
-        vm.expectRevert(OracleEngine.InvalidFallbackOraclePrice.selector);
+        vm.expectRevert(IOracleEngine.InvalidFallbackOraclePrice.selector);
         wethPrice = oracleEngine.getPrice(weth);
 
         // only main is configured and it fails
         oracleEngine.setAssetConfig(
             weth, address(chainlinkOracleProvider), address(0), 0, 0
         );
-        vm.expectRevert(OracleEngine.InvalidMainOraclePrice.selector);
+        vm.expectRevert(IOracleEngine.InvalidMainOraclePrice.selector);
         wethPrice = oracleEngine.getPrice(weth);
 
         // invalid bounds
-        vm.expectRevert(OracleEngine.InvalidBounds.selector);
+        vm.expectRevert(IOracleEngine.InvalidBounds.selector);
         oracleEngine.setAssetConfig(
             weth, address(chainlinkOracleProvider), address(0), 2, 1
         );
 
         // invalid main oracle
-        vm.expectRevert(OracleEngine.InvalidMainOracle.selector);
+        vm.expectRevert(IOracleEngine.InvalidMainOracle.selector);
         oracleEngine.setAssetConfig(weth, address(0), address(0), 0, 0);
 
         // invalid asset
-        vm.expectRevert(OracleEngine.InvalidAsset.selector);
+        vm.expectRevert(IOracleEngine.InvalidAsset.selector);
         oracleEngine.setAssetConfig(
             address(0), address(chainlinkOracleProvider), address(0), 0, 0
         );

@@ -1,20 +1,29 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {IOracleProvider} from "@oracles/interfaces/IOracleProvider.sol";
+import {
+    IChainlinkOracleProvider,
+    AggregatorV3Interface
+} from "@oracles/interfaces/IChainlinkOracleProvider.sol";
 import {OwnableUpgradeable} from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {IERC20Metadata} from
     "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import "@chainlink/contracts/shared/interfaces/AggregatorV3Interface.sol";
 import {UUPSUpgradeable} from
     "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract ChainlinkOracleProvider is
-    IOracleProvider,
+    IChainlinkOracleProvider,
     UUPSUpgradeable,
     OwnableUpgradeable
 {
+    struct OracleProviderStorage {
+        /**
+         * @notice Mapping of asset address to its configuration
+         */
+        mapping(address => AssetConfig) configs;
+    }
+
     struct AssetConfig {
         /**
          * @notice Chainlink feed for the asset
@@ -27,56 +36,18 @@ contract ChainlinkOracleProvider is
     }
 
     /**
-     * @notice Grace period time after the sequencer is back up
-     */
-    uint256 private constant GRACE_PERIOD_TIME = 3600;
-
-    /**
      * @notice Chainlink feed for the sequencer uptime
      */
     AggregatorV3Interface public immutable sequencerUptimeFeed;
 
-    /**
-     * @notice Mapping of asset address to its configuration
-     */
-    mapping(address => AssetConfig) public configs;
+    /// keccak256(abi.encode(uint256(keccak256("pike.OE.provider")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 internal constant _ORACLE_PROVIDER_STORAGE =
+        0x5fa1a95efabc4eee5395b3503834a3e8dddcd4f606102ddd245db9714a38bb00;
 
     /**
-     * @notice Event emitted when asset configuration is set
+     * @notice Grace period time after the sequencer is back up
      */
-    event AssetConfigSet(
-        address asset, AggregatorV3Interface feed, uint256 maxStalePeriod
-    );
-
-    /**
-     * @notice Error emitted when asset is invalid
-     */
-    error InvalidAsset();
-
-    /**
-     * @notice Error emitted when feed is invalid
-     */
-    error InvalidFeed();
-
-    /**
-     * @notice Error emitted when stale period is invalid
-     */
-    error InvalidStalePeriod();
-
-    /**
-     * @notice Error emitted when price is stale
-     */
-    error StalePrice();
-
-    /**
-     * @notice Error emitted when sequencer is down
-     */
-    error SequencerDown();
-
-    /**
-     * @notice Error emitted when grace period is not over
-     */
-    error GracePeriodNotOver();
+    uint256 private constant GRACE_PERIOD_TIME = 3600;
 
     /**
      * @notice Contract constructor
@@ -96,10 +67,7 @@ contract ChainlinkOracleProvider is
     }
 
     /**
-     * @notice Set the asset configuration
-     * @param asset Address of the asset
-     * @param feed Chainlink feed for the asset
-     * @param maxStalePeriod Maximum stale period for the price feed
+     * @inheritdoc IChainlinkOracleProvider
      */
     function setAssetConfig(
         address asset,
@@ -118,7 +86,7 @@ contract ChainlinkOracleProvider is
             revert InvalidStalePeriod();
         }
 
-        configs[asset] = AssetConfig(feed, maxStalePeriod);
+        _getProviderStorage().configs[asset] = AssetConfig(feed, maxStalePeriod);
         emit AssetConfigSet(asset, feed, maxStalePeriod);
     }
 
@@ -130,7 +98,7 @@ contract ChainlinkOracleProvider is
     function getPrice(address asset) external view override returns (uint256) {
         _validateSequencerStatus();
 
-        AssetConfig storage config = configs[asset];
+        AssetConfig storage config = _getProviderStorage().configs[asset];
         uint256 priceDecimals = config.feed.decimals();
         (, int256 price,, uint256 updatedAt,) = config.feed.latestRoundData();
 
@@ -178,6 +146,17 @@ contract ChainlinkOracleProvider is
         uint256 timeSinceUp = block.timestamp - startedAt;
         if (timeSinceUp <= GRACE_PERIOD_TIME) {
             revert GracePeriodNotOver();
+        }
+    }
+
+    function _getProviderStorage()
+        internal
+        pure
+        returns (OracleProviderStorage storage data)
+    {
+        bytes32 s = _ORACLE_PROVIDER_STORAGE;
+        assembly {
+            data.slot := s
         }
     }
 }
