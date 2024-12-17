@@ -2,8 +2,19 @@
 pragma solidity 0.8.28;
 
 import {RBACStorage} from "@storage/RBACStorage.sol";
+import {OwnableMixin} from "@utils/OwnableMixin.sol";
 
-contract RBACMixin is RBACStorage {
+contract RBACMixin is RBACStorage, OwnableMixin {
+    /**
+     * @dev Checks if target address has permission or Admin
+     */
+    function checkPermissionOrAdmin(bytes32 permission, address target) internal view {
+        _isPermissionValid(permission);
+        if (!_getRBACStorage().permissions[permission][target] && target != _owner()) {
+            revert PermissionDenied(permission, target);
+        }
+    }
+
     /**
      * @dev Checks if target address has permission
      */

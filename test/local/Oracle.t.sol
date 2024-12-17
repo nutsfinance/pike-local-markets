@@ -85,7 +85,8 @@ contract LocalOracle is TestLocal {
 
         // deploy oracle engine
         address oracleEngineImplementation = address(new OracleEngine());
-        data = abi.encodeCall(OracleEngine.initialize, (_testState.admin));
+        data =
+            abi.encodeCall(OracleEngine.initialize, (_testState.admin, _testState.admin));
         ERC1967Proxy oracleEngineProxy =
             new ERC1967Proxy(oracleEngineImplementation, data);
         oracleEngine = OracleEngine(address(oracleEngineProxy));

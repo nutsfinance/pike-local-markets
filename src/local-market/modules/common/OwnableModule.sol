@@ -13,6 +13,21 @@ contract OwnableModule is IOwnable, OwnableMixin {
     /**
      * @inheritdoc IOwnable
      */
+    function transferOwnership(address newOwner) external override onlyOwner {
+        Ownable2StepStorage storage data = _getOwnableStorage();
+
+        address oldOwner = data.owner;
+        if (newOwner == address(0)) {
+            revert CommonError.ZeroAddress();
+        }
+
+        data.owner = newOwner;
+        emit OwnerChanged(oldOwner, newOwner);
+    }
+
+    /**
+     * @inheritdoc IOwnable
+     */
     function renounceNomination() external override {
         Ownable2StepStorage storage data = _getOwnableStorage();
 

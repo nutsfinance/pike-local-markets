@@ -4,12 +4,10 @@ pragma solidity 0.8.28;
 import {IPToken} from "@interfaces/IPToken.sol";
 import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
 import {IOracleProvider} from "@oracles/interfaces/IOracleProvider.sol";
-import {OwnableUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {UUPSUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {AccessControlUpgradeable} from
+    "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
-contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
+contract OracleEngine is IOracleEngine, AccessControlUpgradeable {
     struct AssetConfig {
         /**
          * @notice Main oracle address for the asset
@@ -38,6 +36,8 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
         mapping(address => AssetConfig) configs;
     }
 
+    bytes32 internal constant _CONFIGURATOR_PERMISSION = "CONFIGURATOR";
+
     /// keccak256(abi.encode(uint256(keccak256("pike.OE.core")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 internal constant _ORACLE_ENGINE_STORAGE =
         0x79c5c3edc3173a93bc1571f1b7494470f1d3221dd503efa3fe2d1a0869f4a100;
@@ -50,8 +50,9 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
      * @notice Initialize the contract
      * @param owner Address of the owner
      */
-    function initialize(address owner) public initializer {
-        __Ownable_init(owner);
+    function initialize(address owner, address configurator) public initializer {
+        _grantRole(DEFAULT_ADMIN_ROLE, owner);
+        _grantRole(_CONFIGURATOR_PERMISSION, configurator);
     }
 
     /**
@@ -63,7 +64,7 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
         address fallbackOracle,
         uint256 lowerBoundRatio,
         uint256 upperBoundRatio
-    ) external onlyOwner {
+    ) external onlyRole(_CONFIGURATOR_PERMISSION) {
         if (
             (lowerBoundRatio != 0 && upperBoundRatio != 0)
                 && lowerBoundRatio > upperBoundRatio
@@ -148,12 +149,6 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
             }
         }
     }
-
-    /**
-     * @notice Authorize upgrade
-     * @param newImplementation Address of the new implementation
-     */
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function _getOracleEngineStorage()
         internal

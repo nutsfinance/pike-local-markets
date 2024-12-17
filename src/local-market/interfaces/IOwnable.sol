@@ -37,6 +37,13 @@ interface IOwnable {
     function acceptOwnership() external;
 
     /**
+     * @notice Allows the current owner to transfer ownership a new owner.
+     * @dev The owner does not need to accept ownership and go through nominating process.
+     * @param newOwner The address that is to become owner.
+     */
+    function transferOwnership(address newOwner) external;
+
+    /**
      * @notice Allows the current owner to nominate a new owner.
      * @dev The nominated owner will have to call `acceptOwnership` in a separate transaction
      * in order to finalize the action and become the new contract owner.

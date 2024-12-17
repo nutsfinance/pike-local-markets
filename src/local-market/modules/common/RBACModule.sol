@@ -4,13 +4,12 @@ pragma solidity 0.8.28;
 import {IRBAC} from "@interfaces/IRBAC.sol";
 import {RBACMixin} from "@utils/RBACMixin.sol";
 import {CommonError} from "@errors/CommonError.sol";
-import {OwnableMixin} from "@utils/OwnableMixin.sol";
 
 /**
  * @title Contract for facilitating role based access control.
  * See IRBAC.
  */
-contract RBACModule is IRBAC, RBACMixin, OwnableMixin {
+contract RBACModule is IRBAC, RBACMixin {
     /**
      * @inheritdoc IRBAC
      */
