@@ -2,13 +2,21 @@
 pragma solidity 0.8.28;
 
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
+import {IPToken} from "@interfaces/IPToken.sol";
+import {IRBAC} from "@interfaces/IRBAC.sol";
+import {IOwnable} from "@interfaces/IOwnable.sol";
 import {OwnableUpgradeable} from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Timelock} from "@factory/Timelock.sol";
 import {UUPSUpgradeable} from
     "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from
     "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IFactory} from "@factory/interfaces/IFactory.sol";
+import {InitialModuleBeacon} from "@modules/InitialModuleBeacon.sol";
+import {PTokenModule} from "@modules/pToken/PTokenModule.sol";
+import {OracleEngine} from "@oracles/OracleEngine.sol";
 
 /**
  * @title Pike Markets Factory Contract
@@ -21,15 +29,10 @@ contract Factory is
     ReentrancyGuardUpgradeable
 {
     struct FactoryStorage {
+        /**
+         * @dev Incremental unique identifier for deployed protocol, used as protocol Id
+         */
         uint256 protocolCount;
-        /**
-         * @dev This is the account that has governance control over the protocol.
-         */
-        address governance;
-        /**
-         * @dev Pending governance address,
-         */
-        address pendingGovernance;
         /**
          * @dev Beacon for the RiskEngine implementation.
          */
@@ -39,91 +42,168 @@ contract Factory is
          */
         address oracleEngineBeacon;
         /**
+         * @dev Beacon for the Timelock implementation.
+         */
+        address timelockBeacon;
+        /**
          * @dev Beacon for the PToken implementation.
          */
         address pTokenBeacon;
         /**
-         * @dev mapping protocol id -> info
+         * @dev mapping protocol id -> protocol info
          */
         mapping(uint256 => ProtocolInfo) protocolRegistry;
+        /**
+         * @dev mapping protocol id -> index -> pToken
+         */
+        mapping(uint256 => mapping(uint256 => address)) markets;
+        bytes32[7] permissions;
     }
+
+    bytes32 internal constant _CONFIGURATOR_PERMISSION = "CONFIGURATOR";
+    bytes32 internal constant _PROTOCOL_OWNER_PERMISSION = "PROTOCOL_OWNER";
+    bytes32 internal constant _PAUSE_GUARDIAN_PERMISSION = "PAUSE_GUARDIAN";
+    bytes32 internal constant _BORROW_CAP_GUARDIAN_PERMISSION = "BORROW_CAP_GUARDIAN";
+    bytes32 internal constant _SUPPLY_CAP_GUARDIAN_PERMISSION = "SUPPLY_CAP_GUARDIAN";
+    bytes32 internal constant _RESERVE_MANAGER_PERMISSION = "RESERVE_MANAGER";
+    bytes32 internal constant _RESERVE_WITHDRAWER_PERMISSION = "RESERVE_WITHDRAWER";
 
     /// keccak256(abi.encode(uint256(keccak256("pike.facotry")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 internal constant _FACTORY_STORAGE =
         0xac42ae8baafcf09ffeb99e08f7111e43bf0a7cdbccbc7a91974415e2c3c2d700;
 
-    modifier onlyGovernance() {
-        require(msg.sender == _getFactoryStorage().governance, "not governance");
-        _;
+    constructor() {
+        _getFactoryStorage().permissions = [
+            _PROTOCOL_OWNER_PERMISSION,
+            _CONFIGURATOR_PERMISSION,
+            _PAUSE_GUARDIAN_PERMISSION,
+            _BORROW_CAP_GUARDIAN_PERMISSION,
+            _SUPPLY_CAP_GUARDIAN_PERMISSION,
+            _RESERVE_MANAGER_PERMISSION,
+            _RESERVE_WITHDRAWER_PERMISSION
+        ];
+        _disableInitializers();
     }
 
     /**
      * @dev Initializes the Pike Market factory contract.
      */
     function initialize(
-        address _governance,
+        address _initialOwner,
         address _riskEngineBeacon,
         address _oracleEngineBeacon,
-        address _pTokenBeacon
+        address _pTokenBeacon,
+        address _timelockBeacon
     ) public initializer {
         __ReentrancyGuard_init();
+        __Ownable_init(_initialOwner);
         FactoryStorage storage $ = _getFactoryStorage();
-        $.governance = _governance;
 
         $.riskEngineBeacon = _riskEngineBeacon;
         $.oracleEngineBeacon = _oracleEngineBeacon;
         $.pTokenBeacon = _pTokenBeacon;
+        $.timelockBeacon = _timelockBeacon;
     }
 
     /**
      * @inheritdoc IFactory
      */
-    function deployProtocol(Governor memory initialState) external onlyGovernance {}
-
-    /**
-     * @inheritdoc IFactory
-     */
-    function deployPToken(PToken memory initialState) external {
-        if (
-            msg.sender
-                != _getFactoryStorage().protocolRegistry[initialState.protocolId]
-                    .governor
-                    .governorAddress
-        ) {
-            revert InvalidGovernor();
-        }
-    }
-
-    /**
-     * @dev Propose the govenance address.
-     * @param _governance Address of the new governance.
-     */
-    function proposeGovernance(address _governance) public {
-        require(msg.sender == _getFactoryStorage().governance, "not governance");
-        _getFactoryStorage().pendingGovernance = _governance;
-        emit GovernanceProposed(_governance);
-    }
-
-    /**
-     * @dev Accept the govenance address.
-     */
-    function acceptGovernance() public {
+    function deployProtocol(address initialGovernor)
+        external
+        onlyOwner
+        returns (address riskEngine, address oracleEngine, address governorTimelock)
+    {
         FactoryStorage storage $ = _getFactoryStorage();
-        require(msg.sender == $.pendingGovernance, "not pending governance");
-        $.governance = $.pendingGovernance;
-        $.pendingGovernance = address(0);
-        emit GovernanceModified($.governance);
+        // initiate timelock with governor address as proposer and executor
+        address[] memory proposers = new address[](1);
+        address[] memory executors = new address[](1);
+        proposers[0] = initialGovernor;
+        executors[0] = initialGovernor;
+        bytes memory timelockInit = abi.encodeCall(
+            Timelock.initialize, (initialGovernor, 0, proposers, executors)
+        );
+        governorTimelock = address(new BeaconProxy($.timelockBeacon, timelockInit));
+        // initiate risk engine
+        bytes memory riskEngineInit =
+            abi.encodeCall(InitialModuleBeacon.initialize, (address(this)));
+        riskEngine = address(new BeaconProxy($.riskEngineBeacon, riskEngineInit));
+        // initiate oracle engine with timelock as configurator
+        bytes memory oracleEngineInit =
+            abi.encodeCall(OracleEngine.initialize, (owner(), governorTimelock));
+        oracleEngine = address(new BeaconProxy($.oracleEngineBeacon, oracleEngineInit));
+
+        // set oracle engine
+        IRiskEngine(riskEngine).setOracle(address(oracleEngine));
+
+        // set Governor timelock permissions
+        for (uint256 i = 1; i < $.permissions.length; i++) {
+            IRBAC(riskEngine).grantPermission($.permissions[i], governorTimelock);
+        }
+
+        // set protocol owner permission
+        IRBAC(riskEngine).grantPermission($.permissions[0], owner());
+        // set configurator permission for factory
+        IRBAC(riskEngine).grantPermission($.permissions[1], address(this));
+        // transfer ownership to protocol owner
+        IOwnable(riskEngine).transferOwnership(owner());
+
+        ProtocolInfo storage protocolInfo = $.protocolRegistry[++$.protocolCount];
+        protocolInfo.protocolId = $.protocolCount;
+        protocolInfo.initialGovernor = initialGovernor;
+        protocolInfo.riskEngine = riskEngine;
+        protocolInfo.oracleEngine = oracleEngine;
+        protocolInfo.timelock = governorTimelock;
+        protocolInfo.protocolOwner = owner();
+
+        emit ProtocolDeployed(
+            protocolInfo.protocolId, riskEngine, governorTimelock, initialGovernor
+        );
+    }
+
+    /**
+     * @inheritdoc IFactory
+     */
+    function deployPToken(PTokenSetup memory setupParams)
+        external
+        nonReentrant
+        returns (address pToken)
+    {
+        FactoryStorage storage $ = _getFactoryStorage();
+        ProtocolInfo memory protocolInfo = $.protocolRegistry[setupParams.protocolId];
+        if (msg.sender != protocolInfo.timelock) {
+            revert InvalidTimelock();
+        }
+
+        bytes memory pTokenInit =
+            abi.encodeCall(InitialModuleBeacon.initialize, (address(this)));
+        pToken = address(new BeaconProxy($.pTokenBeacon, pTokenInit));
+
+        // initiate pToken
+        PTokenModule(pToken).initialize(
+            setupParams.underlying,
+            IRiskEngine(protocolInfo.riskEngine),
+            setupParams.initialExchangeRateMantissa,
+            setupParams.reserveFactorMantissa,
+            setupParams.protocolSeizeShareMantissa,
+            setupParams.borrowRateMaxMantissa,
+            setupParams.name,
+            setupParams.symbol,
+            setupParams.decimals
+        );
+        // set pToken in risk engine
+        IRiskEngine(protocolInfo.riskEngine).supportMarket(IPToken(pToken));
+
+        uint256 index = $.protocolRegistry[setupParams.protocolId].numOfMarkets++;
+        $.markets[protocolInfo.protocolId][index] = pToken;
+
+        emit PTokenDeployed(protocolInfo.protocolId, index, pToken, protocolInfo.timelock);
     }
 
     /**
      * @notice Authorize upgrade
      * @param newImplementation Address of the new implementation
      */
-    function _authorizeUpgrade(address newImplementation)
-        internal
-        override
-        onlyGovernance
-    {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     function _getFactoryStorage() internal pure returns (FactoryStorage storage data) {
         bytes32 s = _FACTORY_STORAGE;
