@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 contract UpgradeStorage {
+    /// @custom:storage-location erc7201:eip1967.proxy.implementation
     struct ProxyData {
         address implementation;
         bool simulatingUpgrade;

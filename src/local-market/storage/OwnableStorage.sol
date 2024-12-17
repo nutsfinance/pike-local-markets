@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 abstract contract OwnableStorage {
+    /// @custom:storage-location erc7201:pike.core.Ownable
     struct Ownable2StepStorage {
         address owner;
         address pendingOwner;

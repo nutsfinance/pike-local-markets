@@ -28,6 +28,7 @@ contract Factory is
     OwnableUpgradeable,
     ReentrancyGuardUpgradeable
 {
+    /// @custom:storage-location erc7201:pike.facotry
     struct FactoryStorage {
         /**
          * @dev Incremental unique identifier for deployed protocol, used as protocol Id

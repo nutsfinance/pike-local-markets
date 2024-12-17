@@ -29,6 +29,7 @@ contract OracleEngine is IOracleEngine, AccessControlUpgradeable {
         uint256 upperBoundRatio;
     }
 
+    /// @custom:storage-location erc7201:pike.OE.core
     struct OracleEngineStorage {
         /**
          * @notice Mapping of asset address to its configuration

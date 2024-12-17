@@ -15,6 +15,7 @@ contract PythOracleProvider is
     UUPSUpgradeable,
     OwnableUpgradeable
 {
+    /// @custom:storage-location erc7201:pike.OE.provider
     struct OracleProviderStorage {
         /**
          * @notice Mapping of asset address to its configuration

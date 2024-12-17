@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 contract DoubleJumpRateStorage {
+    /// @custom:storage-location erc7201:pike.LM.DJR
     struct InterestRateData {
         /**
          * @notice The multiplier of utilization rate that gives the slope of the interest rate

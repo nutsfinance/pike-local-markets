@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 abstract contract RBACStorage {
+    /// @custom:storage-location erc7201:pike.LM.RBAC
     struct RBACData {
         mapping(bytes32 => mapping(address => bool)) permissions;
         mapping(bytes32 => mapping(address => mapping(address => bool))) nestedPermissions;

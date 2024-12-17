@@ -7,6 +7,7 @@ import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
 
 contract RiskEngineStorage {
+    /// @custom:storage-location erc7201:pike.LM.RiskEngine
     struct RiskEngineData {
         /**
          * @notice Multiplier used to calculate the maximum repayAmount when liquidating a borrow

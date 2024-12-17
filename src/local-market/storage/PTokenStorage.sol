@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 
 contract PTokenStorage {
+    /// @custom:storage-location erc7201:pike.LM.PToken
     struct PTokenData {
         /**
          * @dev Guard variable for re-entrancy checks
