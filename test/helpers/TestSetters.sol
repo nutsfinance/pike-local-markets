@@ -16,6 +16,14 @@ contract TestSetters is TestStructs, TestGetters {
         _testState.debug = debug;
     }
 
+    function setFactory(address factory) public {
+        _testState.factory = factory;
+    }
+
+    function setTimelock(address timelock) public {
+        _testState.timelock = timelock;
+    }
+
     function setRiskEngine(address re) public {
         _testState.riskEngine = re;
     }

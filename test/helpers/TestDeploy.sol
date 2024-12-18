@@ -2,6 +2,13 @@
 pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
+import {Timelock} from "@factory/Timelock.sol";
+import {Factory} from "@factory/Factory.sol";
+import {UpgradeableBeacon} from
+    "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import {console} from "forge-std/console.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {CannonDeploy} from "@helpers/TestDeployFactory.sol";
 import {TestSetters} from "@helpers/TestSetters.sol";
 import {DiamondCutFacet} from "@mocks/Diamond/facets/DiamondCutFacet.sol";
 import {Diamond} from "@mocks/Diamond/Diamond.sol";
@@ -9,6 +16,7 @@ import {DiamondLoupeFacet} from "@mocks/Diamond/facets/DiamondLoupeFacet.sol";
 import {strings} from "@mocks/Diamond/libraries/Strings.sol";
 import {IDiamondCut} from "@mocks/Diamond/IDiamondCut.sol";
 import {InitialModuleBundle} from "@modules/InitialModuleBundle.sol";
+import {InitialModuleBeacon} from "@modules/InitialModuleBeacon.sol";
 import {RBACModule, IRBAC} from "@modules/common/RBACModule.sol";
 import {RiskEngineModule, IRiskEngine} from "@modules/riskEngine/RiskEngineModule.sol";
 import {DoubleJumpRateModel} from "@modules/interestRateModel/DoubleJumpRateModel.sol";
@@ -16,7 +24,7 @@ import {PTokenModule, IPToken} from "@modules/pToken/PTokenModule.sol";
 import {MockToken, MockReentrantToken} from "@mocks/MockToken.sol";
 import {MockOracle} from "@mocks/MockOracle.sol";
 
-contract TestDeploy is TestSetters {
+contract TestDeploy is TestSetters, CannonDeploy {
     using strings for *;
 
     bytes32 constant configurator_permission =
@@ -61,6 +69,32 @@ contract TestDeploy is TestSetters {
         setOracle(oracle);
 
         deployRiskEngine();
+    }
+
+    function deployProtocolFactory() public virtual {
+        runFactory();
+        address oracleImpl = getAddress[keccak256("OracleEngine")];
+        address oracle = address(new UpgradeableBeacon(oracleImpl, getAdmin()));
+        setOracle(oracle);
+        address riskEngine = getAddress[keccak256("reBeacon")];
+        setRiskEngine(riskEngine);
+        address timelock = deployTimelock();
+        setTimelock(timelock);
+        address pToken = getAddress[keccak256("pTokenBeacon")];
+        setPToken("beacon", pToken);
+
+        bytes memory factoryInit = abi.encodeCall(
+            Factory.initialize, (getAdmin(), riskEngine, oracle, pToken, timelock)
+        );
+
+        Factory factory = new Factory();
+        address factoryProxy = address(new ERC1967Proxy(address(factory), factoryInit));
+        setFactory(factoryProxy);
+    }
+
+    function deployTimelock() internal returns (address) {
+        address timelockImpl = address(new Timelock());
+        return address(new UpgradeableBeacon(timelockImpl, getAdmin()));
     }
 
     function deployPToken(

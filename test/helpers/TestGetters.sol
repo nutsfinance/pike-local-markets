@@ -5,6 +5,8 @@ import "cannon-std/Cannon.sol";
 import "forge-std/Test.sol";
 
 import {TestState} from "@helpers/TestState.sol";
+import {Factory} from "@factory/Factory.sol";
+import {Timelock} from "@factory/Timelock.sol";
 
 import {IOwnable} from "@interfaces/IOwnable.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
@@ -47,6 +49,22 @@ contract TestGetters is Test, TestState {
             return RiskEngineModule(_testState.riskEngine);
         } else {
             return RiskEngineModule(vm.getAddress("core.Proxy"));
+        }
+    }
+
+    function getFactory() public view returns (Factory factory) {
+        if (getLocatState()) {
+            return Factory(_testState.factory);
+        } else {
+            return Factory(vm.getAddress("factory.Proxy"));
+        }
+    }
+
+    function getTimelock() public view returns (Timelock timelock) {
+        if (getLocatState()) {
+            return Timelock(payable(_testState.timelock));
+        } else {
+            return Timelock(payable(vm.getAddress("timelock.Proxy")));
         }
     }
 
