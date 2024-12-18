@@ -74,15 +74,6 @@ contract Factory is
         0xac42ae8baafcf09ffeb99e08f7111e43bf0a7cdbccbc7a91974415e2c3c2d700;
 
     constructor() {
-        _getFactoryStorage().permissions = [
-            _PROTOCOL_OWNER_PERMISSION,
-            _CONFIGURATOR_PERMISSION,
-            _PAUSE_GUARDIAN_PERMISSION,
-            _BORROW_CAP_GUARDIAN_PERMISSION,
-            _SUPPLY_CAP_GUARDIAN_PERMISSION,
-            _RESERVE_MANAGER_PERMISSION,
-            _RESERVE_WITHDRAWER_PERMISSION
-        ];
         _disableInitializers();
     }
 
@@ -104,6 +95,15 @@ contract Factory is
         $.oracleEngineBeacon = _oracleEngineBeacon;
         $.pTokenBeacon = _pTokenBeacon;
         $.timelockBeacon = _timelockBeacon;
+        $.permissions = [
+            _PROTOCOL_OWNER_PERMISSION,
+            _CONFIGURATOR_PERMISSION,
+            _PAUSE_GUARDIAN_PERMISSION,
+            _BORROW_CAP_GUARDIAN_PERMISSION,
+            _SUPPLY_CAP_GUARDIAN_PERMISSION,
+            _RESERVE_MANAGER_PERMISSION,
+            _RESERVE_WITHDRAWER_PERMISSION
+        ];
     }
 
     /**
@@ -112,7 +112,11 @@ contract Factory is
     function deployProtocol(address initialGovernor)
         external
         onlyOwner
-        returns (address riskEngine, address oracleEngine, address governorTimelock)
+        returns (
+            address riskEngine,
+            address oracleEngine,
+            address payable governorTimelock
+        )
     {
         FactoryStorage storage $ = _getFactoryStorage();
         // initiate timelock with governor address as proposer and executor
@@ -123,11 +127,14 @@ contract Factory is
         bytes memory timelockInit = abi.encodeCall(
             Timelock.initialize, (initialGovernor, 0, proposers, executors)
         );
-        governorTimelock = address(new BeaconProxy($.timelockBeacon, timelockInit));
+        governorTimelock =
+            payable(address(new BeaconProxy($.timelockBeacon, timelockInit)));
+
         // initiate risk engine
         bytes memory riskEngineInit =
             abi.encodeCall(InitialModuleBeacon.initialize, (address(this)));
         riskEngine = address(new BeaconProxy($.riskEngineBeacon, riskEngineInit));
+
         // initiate oracle engine with timelock as configurator
         bytes memory oracleEngineInit =
             abi.encodeCall(OracleEngine.initialize, (owner(), governorTimelock));
@@ -191,6 +198,8 @@ contract Factory is
             setupParams.symbol,
             setupParams.decimals
         );
+        // transfer ownership to protocol owner
+        IOwnable(pToken).transferOwnership(owner());
         // set pToken in risk engine
         IRiskEngine(protocolInfo.riskEngine).supportMarket(IPToken(pToken));
 
@@ -198,6 +207,63 @@ contract Factory is
         $.markets[protocolInfo.protocolId][index] = pToken;
 
         emit PTokenDeployed(protocolInfo.protocolId, index, pToken, protocolInfo.timelock);
+    }
+
+    /**
+     * @inheritdoc IFactory
+     */
+    function riskEngineBeacon() external view returns (address) {
+        return _getFactoryStorage().riskEngineBeacon;
+    }
+
+    /**
+     * @inheritdoc IFactory
+     */
+    function oracleEngineBeacon() external view returns (address) {
+        return _getFactoryStorage().oracleEngineBeacon;
+    }
+
+    /**
+     * @inheritdoc IFactory
+     */
+    function pTokenBeacon() external view returns (address) {
+        return _getFactoryStorage().pTokenBeacon;
+    }
+
+    /**
+     * @inheritdoc IFactory
+     */
+    function timelockBeacon() external view returns (address) {
+        return _getFactoryStorage().timelockBeacon;
+    }
+
+    /**
+     * @inheritdoc IFactory
+     */
+    function protocolCount() external view returns (uint256) {
+        return _getFactoryStorage().protocolCount;
+    }
+
+    /**
+     * @inheritdoc IFactory
+     */
+    function getProtocolInfo(uint256 protocolId)
+        external
+        view
+        returns (ProtocolInfo memory)
+    {
+        return _getFactoryStorage().protocolRegistry[protocolId];
+    }
+
+    /**
+     * @inheritdoc IFactory
+     */
+    function getMarket(uint256 protocolId, uint256 index)
+        external
+        view
+        returns (address)
+    {
+        return _getFactoryStorage().markets[protocolId][index];
     }
 
     /**

@@ -65,7 +65,11 @@ interface IFactory {
      */
     function deployProtocol(address governor)
         external
-        returns (address riskEngine, address oracleEngine, address governorTimelock);
+        returns (
+            address riskEngine,
+            address oracleEngine,
+            address payable governorTimelock
+        );
 
     /**
      * @dev Deploys a new pToken for the deployed protocol
@@ -79,4 +83,50 @@ interface IFactory {
     function deployPToken(PTokenSetup memory setupParams)
         external
         returns (address pToken);
+
+    /**
+     * @notice Returns the address of the risk engine beacon.
+     */
+    function riskEngineBeacon() external view returns (address);
+
+    /**
+     * @notice Returns the address of the oracle engine beacon.
+     */
+    function oracleEngineBeacon() external view returns (address);
+
+    /**
+     * @notice Returns the address of the pToken beacon.
+     */
+    function pTokenBeacon() external view returns (address);
+
+    /**
+     * @notice Returns the address of the timelock beacon.
+     */
+    function timelockBeacon() external view returns (address);
+
+    /**
+     * @notice Returns the total number of deployed protocols.
+     * @dev protocol ids start from 1
+     */
+    function protocolCount() external view returns (uint256);
+
+    /**
+     * @notice Fetches the information of a protocol by its ID.
+     * @param protocolId The ID of the protocol.
+     */
+    function getProtocolInfo(uint256 protocolId)
+        external
+        view
+        returns (ProtocolInfo memory);
+
+    /**
+     * @notice Fetches the address of a market (pToken) by protocol ID and index.
+     * @param protocolId The ID of the protocol.
+     * @param index The index of deployed pToken starting from 0
+     * @return The address of the specified market.
+     */
+    function getMarket(uint256 protocolId, uint256 index)
+        external
+        view
+        returns (address);
 }
