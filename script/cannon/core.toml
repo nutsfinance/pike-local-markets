@@ -45,7 +45,7 @@ abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
 from = "<%= settings.protocol_owner %>"
 func = "setOracle"
 args = ["<%= oracleEngine.Proxy.address %>"]
-depends = ["invoke.set_core_configurator"]
+depends = ["invoke.set_core_protocol_owner"]
 
 [invoke.set_core_configurator]
 target = [ "core.Proxy" ]
