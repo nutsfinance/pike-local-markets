@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "forge-std/Test.sol";
 import {Factory, IFactory} from "@factory/Factory.sol";
 import {IRBAC} from "@modules/common/RBACModule.sol";
-import {Timelock} from "@factory/Timelock.sol";
+import {Timelock} from "@governance/Timelock.sol";
 import {PTokenModule} from "@modules/pToken/PTokenModule.sol";
 import {IPToken, IERC20} from "@interfaces/IPToken.sol";
 import {IOwnable} from "@interfaces/IOwnable.sol";

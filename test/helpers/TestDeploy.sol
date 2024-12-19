@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
-import {Timelock} from "@factory/Timelock.sol";
+import {Timelock} from "@governance/Timelock.sol";
 import {Factory} from "@factory/Factory.sol";
 import {UpgradeableBeacon} from
     "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";

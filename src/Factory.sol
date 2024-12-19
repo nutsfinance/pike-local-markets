@@ -8,7 +8,7 @@ import {IRBAC} from "@interfaces/IRBAC.sol";
 import {IOwnable} from "@interfaces/IOwnable.sol";
 import {OwnableUpgradeable} from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {Timelock} from "@factory/Timelock.sol";
+import {Timelock} from "@governance/Timelock.sol";
 import {UUPSUpgradeable} from
     "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from

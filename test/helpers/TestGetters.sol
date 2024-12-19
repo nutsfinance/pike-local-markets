@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 
 import {TestState} from "@helpers/TestState.sol";
 import {Factory} from "@factory/Factory.sol";
-import {Timelock} from "@factory/Timelock.sol";
+import {Timelock} from "@governance/Timelock.sol";
 
 import {IOwnable} from "@interfaces/IOwnable.sol";
 import {IPToken} from "@interfaces/IPToken.sol";

@@ -22,7 +22,8 @@ remappings = [
   "@errors/=src/local-market/errors/",
   "@utils/=src/local-market/utils/",
   "@oracles/=src/oracles/",
-  "@factory/=src/factory/"
+  "@governance/=src/governance/",
+  "@factory/=src/"
 ]
 ffi = true
 
