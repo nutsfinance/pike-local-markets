@@ -63,6 +63,14 @@ contract RiskEngineStorage {
         mapping(address => mapping(address => bool)) approvedDelegates;
         /// @notice A list of all markets (0 is default category includes all markets)
         mapping(uint8 => IPToken[]) allMarkets;
+        /**
+         * @notice protocol owner share percentage from reserves
+         */
+        uint256 ownerShareMantissa;
+        /**
+         * @notice configurator share percentage from reserves
+         */
+        uint256 configuratorShareMantissa;
     }
 
     /**

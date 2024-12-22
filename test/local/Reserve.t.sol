@@ -63,7 +63,7 @@ contract LocalReserve is TestLocal {
         vm.startPrank(getAdmin());
         uint256 reserveBefore = pWETH.totalReserves();
 
-        pWETH.reduceReserves(value);
+        pWETH.reduceReservesEmergency(value);
 
         uint256 reserveAfter = pWETH.totalReserves();
 
@@ -130,7 +130,7 @@ contract LocalReserve is TestLocal {
         vm.prank(getAdmin());
         // "ReduceReservesCashNotAvailable()" selector
         vm.expectRevert(0x3345e999);
-        pUSDC.reduceReserves(1e18 + 1);
+        pUSDC.reduceReservesEmergency(1e18 + 1);
     }
 
     function testReduceReserve_FailIfNotValid() public {
@@ -139,6 +139,6 @@ contract LocalReserve is TestLocal {
         vm.prank(getAdmin());
         // "ReduceReservesCashValidation()" selector
         vm.expectRevert(0xf1a5300a);
-        pUSDC.reduceReserves(1e18);
+        pUSDC.reduceReservesEmergency(1e18);
     }
 }

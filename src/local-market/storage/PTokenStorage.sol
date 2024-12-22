@@ -67,6 +67,14 @@ contract PTokenStorage {
          */
         uint256 totalSupply;
         /**
+         * @notice Total amount of reserves accumulated for owner
+         */
+        uint256 ownerReserves;
+        /**
+         * @notice Total amount of reserves accumulated for configurator
+         */
+        uint256 configuratorReserves;
+        /**
          * @notice Official record of token balances for each account
          */
         mapping(address => uint256) accountTokens;
@@ -100,6 +108,8 @@ contract PTokenStorage {
         uint256 totalBorrow;
         uint256 totalReserve;
         uint256 accBorrowIndex;
+        uint256 ownerReserve;
+        uint256 configuratorReserve;
     }
 
     /// keccak256(abi.encode(uint256(keccak256("pike.LM.PToken")) - 1)) & ~bytes32(uint256(0xff))

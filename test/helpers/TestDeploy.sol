@@ -30,6 +30,9 @@ contract TestDeploy is TestSetters, CannonDeploy {
     bytes32 constant configurator_permission =
         0x434f4e464947555241544f520000000000000000000000000000000000000000;
 
+    bytes32 constant emergency_withdrawer =
+        0x454d455247454e43595f57495448445241574552000000000000000000000000;
+
     bytes32 constant protocol_owner =
         0x50524f544f434f4c5f4f574e4552000000000000000000000000000000000000;
 
@@ -236,6 +239,7 @@ contract TestDeploy is TestSetters, CannonDeploy {
 
         IRBAC(riskEngine).grantPermission(reserve_manager_permission, getAdmin());
         IRBAC(riskEngine).grantPermission(reserve_withdrawer_permission, getAdmin());
+        IRBAC(riskEngine).grantPermission(emergency_withdrawer, getAdmin());
 
         IRiskEngine(riskEngine).setOracle(getOracle());
 

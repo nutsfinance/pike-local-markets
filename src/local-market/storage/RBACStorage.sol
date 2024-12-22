@@ -19,6 +19,7 @@ abstract contract RBACStorage {
     bytes32 internal constant _SUPPLY_CAP_GUARDIAN_PERMISSION = "SUPPLY_CAP_GUARDIAN";
     bytes32 internal constant _RESERVE_MANAGER_PERMISSION = "RESERVE_MANAGER";
     bytes32 internal constant _RESERVE_WITHDRAWER_PERMISSION = "RESERVE_WITHDRAWER";
+    bytes32 internal constant _EMERGENCY_WITHDRAWER_PERMISSION = "EMERGENCY_WITHDRAWER";
 
     error PermissionDenied(bytes32, address);
     error NestedPermissionDenied(bytes32, address, address);
@@ -45,6 +46,7 @@ abstract contract RBACStorage {
     function _isPermissionValid(bytes32 permission) internal pure {
         if (
             permission != _CONFIGURATOR_PERMISSION
+                && permission != _EMERGENCY_WITHDRAWER_PERMISSION
                 && permission != _PROTOCOL_OWNER_PERMISSION
                 && permission != _PAUSE_GUARDIAN_PERMISSION
                 && permission != _BORROW_CAP_GUARDIAN_PERMISSION

@@ -205,10 +205,22 @@ interface IPToken is IERC4626 {
     function setProtocolSeizeShare(uint256 newProtocolSeizeShareMantissa) external;
 
     /**
-     * @notice Accrues interest and reduces reserves by transferring to reserve protocol contract
-     * @param reduceAmount Amount of reduction to reserves
+     * @notice Accrues interest and reduces reserves by transferring to emergency guardian
+     * @param reduceAmount Amount of reduction to total reserves
      */
-    function reduceReserves(uint256 reduceAmount) external;
+    function reduceReservesEmergency(uint256 reduceAmount) external;
+
+    /**
+     * @notice Accrues interest and reduces reserves by transferring to protocol owner
+     * @param reduceAmount Amount of reduction to owner reserves
+     */
+    function reduceReservesOwner(uint256 reduceAmount) external;
+
+    /**
+     * @notice Accrues interest and reduces reserves by transferring to governor
+     * @param reduceAmount Amount of reduction to configurator reserves
+     */
+    function reduceReservesConfigurator(uint256 reduceAmount) external;
 
     /**
      * @notice A public function to sweep accidental ERC-20 transfers to this contract.

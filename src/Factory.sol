@@ -58,7 +58,7 @@ contract Factory is
          * @dev mapping protocol id -> index -> pToken
          */
         mapping(uint256 => mapping(uint256 => address)) markets;
-        bytes32[7] permissions;
+        bytes32[8] permissions;
     }
 
     bytes32 internal constant _CONFIGURATOR_PERMISSION = "CONFIGURATOR";
@@ -68,6 +68,7 @@ contract Factory is
     bytes32 internal constant _SUPPLY_CAP_GUARDIAN_PERMISSION = "SUPPLY_CAP_GUARDIAN";
     bytes32 internal constant _RESERVE_MANAGER_PERMISSION = "RESERVE_MANAGER";
     bytes32 internal constant _RESERVE_WITHDRAWER_PERMISSION = "RESERVE_WITHDRAWER";
+    bytes32 internal constant _EMERGENCY_WITHDRAWER_PERMISSION = "EMERGENCY_WITHDRAWER";
 
     /// keccak256(abi.encode(uint256(keccak256("pike.facotry")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 internal constant _FACTORY_STORAGE =
@@ -97,6 +98,7 @@ contract Factory is
         $.timelockBeacon = _timelockBeacon;
         $.permissions = [
             _PROTOCOL_OWNER_PERMISSION,
+            _EMERGENCY_WITHDRAWER_PERMISSION,
             _CONFIGURATOR_PERMISSION,
             _PAUSE_GUARDIAN_PERMISSION,
             _BORROW_CAP_GUARDIAN_PERMISSION,
@@ -144,14 +146,16 @@ contract Factory is
         IRiskEngine(riskEngine).setOracle(address(oracleEngine));
 
         // set Governor timelock permissions
-        for (uint256 i = 1; i < $.permissions.length; i++) {
+        for (uint256 i = 2; i < $.permissions.length; i++) {
             IRBAC(riskEngine).grantPermission($.permissions[i], governorTimelock);
         }
 
         // set protocol owner permission
         IRBAC(riskEngine).grantPermission($.permissions[0], owner());
+        // set protocol owner permission
+        IRBAC(riskEngine).grantPermission($.permissions[1], owner());
         // set configurator permission for factory
-        IRBAC(riskEngine).grantPermission($.permissions[1], address(this));
+        IRBAC(riskEngine).grantPermission($.permissions[2], address(this));
         // transfer ownership to protocol owner
         IOwnable(riskEngine).transferOwnership(owner());
 

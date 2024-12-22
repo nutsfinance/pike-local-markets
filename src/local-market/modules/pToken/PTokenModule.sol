@@ -63,10 +63,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         string memory symbol_,
         uint8 decimals_
     ) external onlyOwner {
-        if (
-            _getPTokenStorage().accrualBlockTimestamp != 0
-                || _getPTokenStorage().borrowIndex != 0
-        ) {
+        PTokenData storage $ = _getPTokenStorage();
+        if ($.accrualBlockTimestamp != 0 || $.borrowIndex != 0) {
             revert CommonError.AlreadyInitialized();
         }
         if (initialExchangeRateMantissa_ == 0 || borrowRateMaxMantissa_ == 0) {
@@ -77,27 +75,27 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         }
 
         // Set initial exchange rate
-        _getPTokenStorage().initialExchangeRateMantissa = initialExchangeRateMantissa_;
+        $.initialExchangeRateMantissa = initialExchangeRateMantissa_;
 
         _setProtocolSeizeShareMantissa(protocolSeizeShareMantissa_);
 
-        _getPTokenStorage().borrowRateMaxMantissa = borrowRateMaxMantissa_;
+        $.borrowRateMaxMantissa = borrowRateMaxMantissa_;
 
         // set risk engine
         _setRiskEngine(riskEngine_);
 
         // Initialize block timestamp and borrow index (block timestamp is set to current block timestamp)
-        _getPTokenStorage().accrualBlockTimestamp = _getBlockTimestamp();
-        _getPTokenStorage().borrowIndex = _MANTISSA_ONE;
+        $.accrualBlockTimestamp = _getBlockTimestamp();
+        $.borrowIndex = _MANTISSA_ONE;
 
         _setReserveFactorFresh(reserveFactorMantissa_);
 
-        _getPTokenStorage().name = name_;
-        _getPTokenStorage().symbol = symbol_;
-        _getPTokenStorage().decimals = decimals_;
+        $.name = name_;
+        $.symbol = symbol_;
+        $.decimals = decimals_;
 
         // Set underlying and sanity check it
-        _getPTokenStorage().underlying = underlying_;
+        $.underlying = underlying_;
         IERC20(underlying_).totalSupply();
     }
 
@@ -140,11 +138,41 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     /**
      * @inheritdoc IPToken
      */
-    function reduceReserves(uint256 reduceAmount) external nonReentrant {
-        _checkPermission(_RESERVE_WITHDRAWER_PERMISSION, msg.sender);
-        accrueInterest();
-        // _reduceReservesFresh emits reserve-reduction-specific logs on errors, so we don't need to.
-        _reduceReservesFresh(reduceAmount);
+    function reduceReservesEmergency(uint256 reduceAmount) external nonReentrant {
+        _checkPermission(_EMERGENCY_WITHDRAWER_PERMISSION, msg.sender);
+        PTokenData storage $ = _getPTokenStorage();
+        // _reduceReserves emits reserve-reduction-specific logs on errors, so we don't need to.
+        uint256 totalReservesNew = _reduceReserves(reduceAmount, $.totalReserves);
+
+        // store new reserve
+        $.totalReserves = totalReservesNew;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function reduceReservesOwner(uint256 reduceAmount) external nonReentrant {
+        _checkPermission(_PROTOCOL_OWNER_PERMISSION, msg.sender);
+        PTokenData storage $ = _getPTokenStorage();
+        // _reduceReserves emits reserve-reduction-specific logs on errors, so we don't need to.
+        uint256 ownerReservesNew = _reduceReserves(reduceAmount, $.ownerReserves);
+
+        // store new reserve
+        $.ownerReserves = ownerReservesNew;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function reduceReservesConfigurator(uint256 reduceAmount) external nonReentrant {
+        _checkPermission(_PROTOCOL_OWNER_PERMISSION, msg.sender);
+        PTokenData storage $ = _getPTokenStorage();
+        // _reduceReserves emits reserve-reduction-specific logs on errors, so we don't need to.
+        uint256 configuratorReservesNew =
+            _reduceReserves(reduceAmount, $.configuratorReserves);
+
+        // store new reserve
+        $.configuratorReserves = configuratorReservesNew;
     }
 
     /**
@@ -640,9 +668,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     function accrueInterest() public {
         /* Remember the initial block timestamp */
         uint256 currentBlockTimestamp = _getBlockTimestamp();
+        PTokenData storage $ = _getPTokenStorage();
 
         /* Short-circuit accumulating 0 interest */
-        if (_getPTokenStorage().accrualBlockTimestamp == currentBlockTimestamp) {
+        if ($.accrualBlockTimestamp == currentBlockTimestamp) {
             return;
         }
 
@@ -652,9 +681,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         if (
             IInterestRateModel(address(this)).getBorrowRate(
                 getCash(), snapshot.totalBorrow, snapshot.totalReserve
-            ) > _getPTokenStorage().borrowRateMaxMantissa
+            ) > $.borrowRateMaxMantissa
         ) {
-            _getPTokenStorage().accrualBlockTimestamp = currentBlockTimestamp;
+            $.accrualBlockTimestamp = currentBlockTimestamp;
             return;
         }
 
@@ -663,10 +692,12 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         // (No safe failures beyond this point)
 
         /* We write the previously calculated values into storage */
-        _getPTokenStorage().accrualBlockTimestamp = currentBlockTimestamp;
-        _getPTokenStorage().borrowIndex = snapshot.accBorrowIndex;
-        _getPTokenStorage().totalBorrows = snapshot.totalBorrow;
-        _getPTokenStorage().totalReserves = snapshot.totalReserve;
+        $.accrualBlockTimestamp = currentBlockTimestamp;
+        $.borrowIndex = snapshot.accBorrowIndex;
+        $.totalBorrows = snapshot.totalBorrow;
+        $.totalReserves = snapshot.totalReserve;
+        $.ownerReserves = snapshot.ownerReserve;
+        $.configuratorReserves = snapshot.configuratorReserve;
 
         /* We emit an AccrueInterest event */
         emit AccrueInterest(
@@ -749,16 +780,16 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
             mintAmountIn = mintTokensIn.mul_(exchangeRate);
         }
 
+        PTokenData storage $ = _getPTokenStorage();
+
         /* Fail if mint not allowed */
-        uint256 allowed = _getPTokenStorage().riskEngine.mintAllowed(
-            minter, address(this), mintAmountIn
-        );
+        uint256 allowed = $.riskEngine.mintAllowed(minter, address(this), mintAmountIn);
         if (allowed != 0) {
             revert PTokenError.MintRiskEngineRejection(allowed);
         }
 
         /* Verify market's block timestamp equals current block timestamp */
-        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
+        if ($.accrualBlockTimestamp != _getBlockTimestamp()) {
             revert PTokenError.MintFreshnessCheck();
         }
 
@@ -788,9 +819,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
          *  accountTokensNew = accountTokens[onBehalfOf] + mintTokens
          * And write them into storage
          */
-        _getPTokenStorage().totalSupply = _getPTokenStorage().totalSupply + mintTokens;
-        _getPTokenStorage().accountTokens[onBehalfOf] =
-            _getPTokenStorage().accountTokens[onBehalfOf] + mintTokens;
+        $.totalSupply = $.totalSupply + mintTokens;
+        $.accountTokens[onBehalfOf] = $.accountTokens[onBehalfOf] + mintTokens;
 
         /* We emit a Mint event, and a Transfer event */
         emit Deposit(minter, onBehalfOf, actualMintAmount, mintTokens);
@@ -842,16 +872,16 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         /* redeemAmount = redeemTokens x exchangeRateCurrent */
         uint256 redeemAmount = exchangeRate.mul_ScalarTruncate(redeemTokens);
 
+        PTokenData storage $ = _getPTokenStorage();
         /* Fail if redeem not allowed */
-        uint256 allowed = _getPTokenStorage().riskEngine.redeemAllowed(
-            address(this), onBehalfOf, redeemTokens
-        );
+        uint256 allowed =
+            $.riskEngine.redeemAllowed(address(this), onBehalfOf, redeemTokens);
         if (allowed != 0) {
             revert PTokenError.RedeemRiskEngineRejection(allowed);
         }
 
         /* Verify market's block timestamp equals current block timestamp */
-        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
+        if ($.accrualBlockTimestamp != _getBlockTimestamp()) {
             revert PTokenError.RedeemFreshnessCheck();
         }
 
@@ -871,9 +901,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
          * We write the previously calculated values into storage.
          *  Note: Avoid token reentrancy attacks by writing reduced supply before external transfer.
          */
-        _getPTokenStorage().totalSupply = _getPTokenStorage().totalSupply - redeemTokens;
-        _getPTokenStorage().accountTokens[onBehalfOf] =
-            _getPTokenStorage().accountTokens[onBehalfOf] - redeemTokens;
+        $.totalSupply = $.totalSupply - redeemTokens;
+        $.accountTokens[onBehalfOf] = $.accountTokens[onBehalfOf] - redeemTokens;
 
         /*
          * We invoke doTransferOut for the receiver and the redeemAmount.
@@ -899,16 +928,16 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     function borrowFresh(address borrower, address onBehalfOf, uint256 borrowAmount)
         internal
     {
+        PTokenData storage $ = _getPTokenStorage();
         /* Fail if borrow not allowed */
-        uint256 allowed = _getPTokenStorage().riskEngine.borrowAllowed(
-            address(this), onBehalfOf, borrowAmount
-        );
+        uint256 allowed =
+            $.riskEngine.borrowAllowed(address(this), onBehalfOf, borrowAmount);
         if (allowed != 0) {
             revert PTokenError.BorrowRiskEngineRejection(allowed);
         }
 
         /* Verify market's block timestamp equals current block timestamp */
-        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
+        if ($.accrualBlockTimestamp != _getBlockTimestamp()) {
             revert PTokenError.BorrowFreshnessCheck();
         }
 
@@ -924,7 +953,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
          */
         uint256 accountBorrowsPrev = borrowBalanceStoredInternal(onBehalfOf);
         uint256 accountBorrowsNew = accountBorrowsPrev + borrowAmount;
-        uint256 totalBorrowsNew = _getPTokenStorage().totalBorrows + borrowAmount;
+        uint256 totalBorrowsNew = $.totalBorrows + borrowAmount;
 
         /////////////////////////
         // EFFECTS & INTERACTIONS
@@ -934,10 +963,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
          * We write the previously calculated values into storage.
          *  Note: Avoid token reentrancy attacks by writing increased borrow before external transfer.
         `*/
-        _getPTokenStorage().accountBorrows[onBehalfOf].principal = accountBorrowsNew;
-        _getPTokenStorage().accountBorrows[onBehalfOf].interestIndex =
-            _getPTokenStorage().borrowIndex;
-        _getPTokenStorage().totalBorrows = totalBorrowsNew;
+        $.accountBorrows[onBehalfOf].principal = accountBorrowsNew;
+        $.accountBorrows[onBehalfOf].interestIndex = $.borrowIndex;
+        $.totalBorrows = totalBorrowsNew;
 
         /*
          * We invoke doTransferOut for the borrower and the borrowAmount.
@@ -964,14 +992,15 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         internal
         returns (uint256)
     {
+        PTokenData storage $ = _getPTokenStorage();
         /* Fail if repayBorrow not allowed */
-        uint256 allowed = _getPTokenStorage().riskEngine.repayBorrowAllowed(address(this));
+        uint256 allowed = $.riskEngine.repayBorrowAllowed(address(this));
         if (allowed != 0) {
             revert PTokenError.RepayBorrowRiskEngineRejection(allowed);
         }
 
         /* Verify market's block timestamp equals current block timestamp */
-        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
+        if ($.accrualBlockTimestamp != _getBlockTimestamp()) {
             revert PTokenError.RepayBorrowFreshnessCheck();
         }
 
@@ -1000,17 +1029,14 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
          *  totalBorrowsNew = totalBorrows - actualRepayAmount
          */
         uint256 accountBorrowsNew = accountBorrowsPrev - actualRepayAmount;
-        uint256 totalBorrowsNew = _getPTokenStorage().totalBorrows - actualRepayAmount;
+        uint256 totalBorrowsNew = $.totalBorrows - actualRepayAmount;
 
         /* We write the previously calculated values into storage */
-        _getPTokenStorage().accountBorrows[onBehalfOf].principal = accountBorrowsNew;
-        _getPTokenStorage().accountBorrows[onBehalfOf].interestIndex =
-            _getPTokenStorage().borrowIndex;
-        _getPTokenStorage().totalBorrows = totalBorrowsNew;
+        $.accountBorrows[onBehalfOf].principal = accountBorrowsNew;
+        $.accountBorrows[onBehalfOf].interestIndex = $.borrowIndex;
+        $.totalBorrows = totalBorrowsNew;
 
-        _getPTokenStorage().riskEngine.repayBorrowVerify(
-            IPToken(address(this)), onBehalfOf
-        );
+        $.riskEngine.repayBorrowVerify(IPToken(address(this)), onBehalfOf);
 
         /* We emit a RepayBorrow event */
         emit RepayBorrow(
@@ -1121,9 +1147,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         address borrower,
         uint256 seizeTokens
     ) internal {
+        PTokenData storage $ = _getPTokenStorage();
         /* Fail if seize not allowed */
-        uint256 allowed =
-            _getPTokenStorage().riskEngine.seizeAllowed(address(this), seizerToken);
+        uint256 allowed = $.riskEngine.seizeAllowed(address(this), seizerToken);
         if (allowed != 0) {
             revert PTokenError.LiquidateSeizeRiskEngineRejection(allowed);
         }
@@ -1134,33 +1160,31 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
          *  liquidatorTokensNew = accountTokens[liquidator] + seizeTokens
          */
         uint256 protocolSeizeTokens = seizeTokens.mul_(
-            ExponentialNoError.Exp({
-                mantissa: _getPTokenStorage().protocolSeizeShareMantissa
-            })
+            ExponentialNoError.Exp({mantissa: $.protocolSeizeShareMantissa})
         );
         uint256 liquidatorSeizeTokens = seizeTokens - protocolSeizeTokens;
         ExponentialNoError.Exp memory exchangeRate =
             ExponentialNoError.Exp({mantissa: exchangeRateStoredInternal()});
-        uint256 protocolSeizeAmount = exchangeRate.mul_ScalarTruncate(protocolSeizeTokens);
-        uint256 totalReservesNew = _getPTokenStorage().totalReserves + protocolSeizeAmount;
+
+        (uint256 ownerShare, uint256 configuratorShare, uint256 newProtocolSeizeAmount) =
+            _getReserveShares(exchangeRate.mul_ScalarTruncate(protocolSeizeTokens));
 
         /////////////////////////
         // EFFECTS & INTERACTIONS
         // (No safe failures beyond this point)
 
         /* We write the calculated values into storage */
-        _getPTokenStorage().totalReserves = totalReservesNew;
-        _getPTokenStorage().totalSupply =
-            _getPTokenStorage().totalSupply - protocolSeizeTokens;
-        _getPTokenStorage().accountTokens[borrower] =
-            _getPTokenStorage().accountTokens[borrower] - seizeTokens;
-        _getPTokenStorage().accountTokens[liquidator] =
-            _getPTokenStorage().accountTokens[liquidator] + liquidatorSeizeTokens;
+        $.totalReserves += newProtocolSeizeAmount;
+        $.ownerReserves += ownerShare;
+        $.configuratorReserves += configuratorShare;
+        $.totalSupply -= protocolSeizeTokens;
+        $.accountTokens[borrower] -= seizeTokens;
+        $.accountTokens[liquidator] += liquidatorSeizeTokens;
 
         /* Emit a Transfer event */
         emit Transfer(borrower, liquidator, liquidatorSeizeTokens);
         emit Transfer(borrower, address(this), protocolSeizeTokens);
-        emit ReservesAdded(address(this), protocolSeizeAmount, totalReservesNew);
+        emit ReservesAdded(address(this), newProtocolSeizeAmount, totalReservesNew);
     }
 
     /**
@@ -1205,9 +1229,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     function _transferTokens(address spender, address src, address dst, uint256 tokens)
         internal
     {
+        PTokenData storage $ = _getPTokenStorage();
+
         /* Fail if transfer not allowed */
-        uint256 allowed =
-            _getPTokenStorage().riskEngine.transferAllowed(address(this), src, tokens);
+        uint256 allowed = $.riskEngine.transferAllowed(address(this), src, tokens);
         if (allowed != 0) {
             revert PTokenError.TransferRiskEngineRejection(allowed);
         }
@@ -1222,15 +1247,15 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         }
 
         /* Do the calculations, checking for {under,over}flow */
-        uint256 srcTokensNew = _getPTokenStorage().accountTokens[src] - tokens;
-        uint256 dstTokensNew = _getPTokenStorage().accountTokens[dst] + tokens;
+        uint256 srcTokensNew = $.accountTokens[src] - tokens;
+        uint256 dstTokensNew = $.accountTokens[dst] + tokens;
 
         /////////////////////////
         // EFFECTS & INTERACTIONS
         // (No safe failures beyond this point)
 
-        _getPTokenStorage().accountTokens[src] = srcTokensNew;
-        _getPTokenStorage().accountTokens[dst] = dstTokensNew;
+        $.accountTokens[src] = srcTokensNew;
+        $.accountTokens[dst] = dstTokensNew;
 
         /* We emit a Transfer event */
         emit Transfer(src, dst, tokens);
@@ -1297,9 +1322,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         // totalReserves + actualAddAmount
         uint256 totalReservesNew;
         uint256 actualAddAmount;
+        PTokenData storage $ = _getPTokenStorage();
 
         // Verify market's block timestamp equals current block timestamp
-        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
+        if ($.accrualBlockTimestamp != _getBlockTimestamp()) {
             revert PTokenError.AddReservesFactorFreshCheck();
         }
 
@@ -1316,10 +1342,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
 
         actualAddAmount = doTransferIn(msg.sender, addAmount);
 
-        totalReservesNew = _getPTokenStorage().totalReserves + actualAddAmount;
+        totalReservesNew = $.totalReserves + actualAddAmount;
 
         // Store reserves[n+1] = reserves[n] + actualAddAmount
-        _getPTokenStorage().totalReserves = totalReservesNew;
+        $.totalReserves = totalReservesNew;
 
         /* Emit NewReserves(admin, actualAddAmount, reserves[n+1]) */
         emit ReservesAdded(msg.sender, actualAddAmount, totalReservesNew);
@@ -1330,9 +1356,12 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @dev Requires fresh interest accrual
      * @param reduceAmount Amount of reduction to reserves
      */
-    function _reduceReservesFresh(uint256 reduceAmount) internal {
-        // totalReserves - reduceAmount
-        uint256 totalReservesNew;
+    function _reduceReserves(uint256 reduceAmount, uint256 totalReserve)
+        internal
+        returns (uint256 newReserve)
+    {
+        accrueInterest();
+        // newReserve = totalReserves - reduceAmount
 
         // Verify market's block timestamp equals current block timestamp
         if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
@@ -1345,7 +1374,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         }
 
         // Check reduceAmount ≤ reserves[n] (totalReserves)
-        if (reduceAmount > _getPTokenStorage().totalReserves) {
+        if (reduceAmount > totalReserve) {
             revert PTokenError.ReduceReservesCashValidation();
         }
 
@@ -1353,15 +1382,12 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         // EFFECTS & INTERACTIONS
         // (No safe failures beyond this point)
 
-        totalReservesNew = _getPTokenStorage().totalReserves - reduceAmount;
-
-        // Store reserves[n+1] = reserves[n] - reduceAmount
-        _getPTokenStorage().totalReserves = totalReservesNew;
+        newReserve = totalReserve - reduceAmount;
 
         // doTransferOut reverts if anything goes wrong, since we can't be sure if side effects occurred.
         doTransferOut(msg.sender, reduceAmount);
 
-        emit ReservesReduced(msg.sender, reduceAmount, totalReservesNew);
+        emit ReservesReduced(msg.sender, reduceAmount, newReserve);
     }
 
     function _setRiskEngine(IRiskEngine newRiskEngine) internal {
@@ -1379,12 +1405,16 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         view
         returns (PendingSnapshot memory snapshot)
     {
-        /* Read the previous values out of storage */
-        snapshot.totalBorrow = _getPTokenStorage().totalBorrows;
-        snapshot.totalReserve = _getPTokenStorage().totalReserves;
-        snapshot.accBorrowIndex = _getPTokenStorage().borrowIndex;
+        PTokenData storage $ = _getPTokenStorage();
 
-        uint256 accruedBlockTimestamp = _getPTokenStorage().accrualBlockTimestamp;
+        /* Read the previous values out of storage */
+        snapshot.totalBorrow = $.totalBorrows;
+        snapshot.totalReserve = $.totalReserves;
+        snapshot.accBorrowIndex = $.borrowIndex;
+        snapshot.ownerReserve = $.ownerReserves;
+        snapshot.configuratorReserve = $.configuratorReserves;
+
+        uint256 accruedBlockTimestamp = $.accrualBlockTimestamp;
 
         if (_getBlockTimestamp() > accruedBlockTimestamp && snapshot.totalBorrow > 0) {
             /* Calculate the current borrow interest rate */
@@ -1407,10 +1437,17 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
             uint256 interestAccumulated =
                 interestFactor.mul_ScalarTruncate(snapshot.totalBorrow);
 
-            snapshot.totalBorrow = snapshot.totalBorrow + interestAccumulated;
-            snapshot.totalReserve = ExponentialNoError.Exp({
-                mantissa: _getPTokenStorage().reserveFactorMantissa
-            }).mul_ScalarTruncateAddUInt(interestAccumulated, snapshot.totalReserve);
+            (uint256 ownerShare, uint256 configuratorShare, uint256 newAccumulatedReserve)
+            = _getReserveShares(
+                ExponentialNoError.Exp({mantissa: $.reserveFactorMantissa})
+                    .mul_ScalarTruncate(interestAccumulated)
+            );
+
+            // Update snapshot values
+            snapshot.totalBorrow += interestAccumulated;
+            snapshot.totalReserve += newAccumulatedReserve;
+            snapshot.ownerReserve += ownerShare;
+            snapshot.configuratorReserve += configuratorShare;
             snapshot.accBorrowIndex = interestFactor.mul_ScalarTruncateAddUInt(
                 snapshot.accBorrowIndex, snapshot.accBorrowIndex
             );
@@ -1476,6 +1513,32 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         if (!_getPTokenStorage().riskEngine.delegateAllowed(onBehalfOf, msg.sender)) {
             revert PTokenError.DelegateNotAllowed();
         }
+    }
+
+    /**
+     * @dev Function to simply retrieve block number
+     *  This exists mainly for inheriting test contracts to stub this result.
+     */
+    function _getReserveShares(uint256 accumulatedReserve)
+        internal
+        view
+        returns (
+            uint256 ownerShare,
+            uint256 configuratorShare,
+            uint256 newAccumulatedReserve
+        )
+    {
+        (uint256 ownerShareMantissa, uint256 configuratorShareMantissa) =
+            _getPTokenStorage().riskEngine.getReserveShares();
+
+        // Split reserves between owner and configurator
+        ownerShare = ExponentialNoError.Exp({mantissa: ownerShareMantissa})
+            .mul_ScalarTruncate(accumulatedReserve);
+        configuratorShare = ExponentialNoError.Exp({mantissa: configuratorShareMantissa})
+            .mul_ScalarTruncate(accumulatedReserve);
+
+        // Adjust total reserves after splitting shares
+        newAccumulatedReserve = accumulatedReserve - ownerShare - configuratorShare;
     }
 
     /**

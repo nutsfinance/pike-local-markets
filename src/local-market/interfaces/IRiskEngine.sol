@@ -30,6 +30,11 @@ interface IRiskEngine {
     /// @notice Emitted when a new oracle engine is set
     event NewOracleEngine(address oldOracleEngine, address newOracleEngine);
 
+    /// @notice Emitted when reserve share percentages are updated
+    event NewReserveShares(
+        uint256 newOwnerShareMantissa, uint256 newConfiguratorShareMantissa
+    );
+
     /// @notice Emitted when an admin supports a market
     event MarketListed(IPToken pToken);
 
@@ -70,6 +75,18 @@ interface IRiskEngine {
     event DelegateUpdated(
         address indexed approver, address indexed delegate, bool approved
     );
+
+    /**
+     * @notice Updates the reserve share percentages for the owner and configurator that applies
+     * to all ptokens.
+     * @dev needs protocol owner access to update
+     * @param newOwnerShareMantissa The new share of reserve percentage for the owner (scaled by 1e18).
+     * @param newConfiguratorShareMantissa The new share of reserve percentage for the configurator (scaled by 1e18).
+     */
+    function setReserveShares(
+        uint256 newOwnerShareMantissa,
+        uint256 newConfiguratorShareMantissa
+    ) external;
 
     /**
      * @notice Switch caller E-Mode category
@@ -242,6 +259,18 @@ interface IRiskEngine {
      * @return A dynamic list with the assets the account has entered
      */
     function getAssetsIn(address account) external view returns (IPToken[] memory);
+
+    /**
+     * @notice Retrieves the reserve shares for the protocol owner and configurator (governor).
+     * @dev These shares represent the percentage of accumulated reserves allocated to the protocol owner
+     * and configurator across all pTokens. Shares are expressed as mantissa values (scaled by 1e18)
+     * @return ownerShareMantissa The percentage of accumulated total reserves for protocol owner
+     * @return configuratorShareMantissa The percentage of accumulated total reserves for configurator
+     */
+    function getReserveShares()
+        external
+        view
+        returns (uint256 ownerShareMantissa, uint256 configuratorShareMantissa);
 
     /**
      * @notice Returns whether the given account is entered (enabled as collateral)
