@@ -1168,13 +1168,14 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
 
         (uint256 ownerShare, uint256 configuratorShare, uint256 newProtocolSeizeAmount) =
             _getReserveShares(exchangeRate.mul_ScalarTruncate(protocolSeizeTokens));
+        uint256 totalReservesNew = $.totalReserves + newProtocolSeizeAmount;
 
         /////////////////////////
         // EFFECTS & INTERACTIONS
         // (No safe failures beyond this point)
 
         /* We write the calculated values into storage */
-        $.totalReserves += newProtocolSeizeAmount;
+        $.totalReserves = totalReservesNew;
         $.ownerReserves += ownerShare;
         $.configuratorReserves += configuratorShare;
         $.totalSupply -= protocolSeizeTokens;

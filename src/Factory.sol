@@ -111,7 +111,11 @@ contract Factory is
     /**
      * @inheritdoc IFactory
      */
-    function deployProtocol(address initialGovernor)
+    function deployProtocol(
+        address initialGovernor,
+        uint256 ownerShareMantissa,
+        uint256 configuratorShareMantissa
+    )
         external
         onlyOwner
         returns (
@@ -144,6 +148,10 @@ contract Factory is
 
         // set oracle engine
         IRiskEngine(riskEngine).setOracle(address(oracleEngine));
+        // set owner and governor share percentage
+        IRiskEngine(riskEngine).setReserveShares(
+            ownerShareMantissa, configuratorShareMantissa
+        );
 
         // set Governor timelock permissions
         for (uint256 i = 2; i < $.permissions.length; i++) {
@@ -168,7 +176,10 @@ contract Factory is
         protocolInfo.protocolOwner = owner();
 
         emit ProtocolDeployed(
-            protocolInfo.protocolId, riskEngine, governorTimelock, initialGovernor
+            protocolInfo.protocolId,
+            riskEngine,
+            governorTimelock,
+            protocolInfo.initialGovernor
         );
     }
 

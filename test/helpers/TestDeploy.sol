@@ -51,6 +51,9 @@ contract TestDeploy is TestSetters, CannonDeploy {
     bytes32 constant reserve_withdrawer_permission =
         0x524553455256455f574954484452415745520000000000000000000000000000;
 
+    uint256 ownerShare = 30e16; //30%
+    uint256 configuratorShare = 20e16; //20%
+
     uint256 initialExchangeRate = 1e18;
     uint256 reserveFactor = 10e16;
     uint256 protocolSeizeShare = 1e16;

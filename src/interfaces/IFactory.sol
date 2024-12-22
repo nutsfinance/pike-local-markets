@@ -62,8 +62,14 @@ interface IFactory {
      * @dev Deploys a new timelock and set governor as default admin and set
      * access on timelock to manage risk engine in order to modify markets
      * @param governor address of governor that is set as admin of timelock contract
+     * @param ownerShareMantissa percentage of accumulated reserve that reserve for protocol owner
+     * @param configuratorShareMantissa percentage of accumulated reserve that reserve for governor
      */
-    function deployProtocol(address governor)
+    function deployProtocol(
+        address governor,
+        uint256 ownerShareMantissa,
+        uint256 configuratorShareMantissa
+    )
         external
         returns (
             address riskEngine,

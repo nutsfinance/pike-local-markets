@@ -56,7 +56,7 @@ contract LocalFactory is TestLocal {
         vm.startPrank(getAdmin());
 
         (address riskEngine, address oracleEngine, address payable governorTimelock) =
-            factory.deployProtocol(governor);
+            factory.deployProtocol(governor, ownerShare, configuratorShare);
         re = IRiskEngine(riskEngine);
         oe = OracleEngine(oracleEngine);
         governorTL = Timelock(governorTimelock);
@@ -85,7 +85,7 @@ contract LocalFactory is TestLocal {
     function testDeployedProtocol_FailIfNotOwner() public {
         vm.startPrank(governor);
         vm.expectRevert();
-        factory.deployProtocol(governor);
+        factory.deployProtocol(governor, ownerShare, configuratorShare);
         vm.stopPrank();
     }
 
