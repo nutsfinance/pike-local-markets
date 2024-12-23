@@ -152,7 +152,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @inheritdoc IPToken
      */
     function reduceReservesOwner(uint256 reduceAmount) external nonReentrant {
-        _checkPermission(_PROTOCOL_OWNER_PERMISSION, msg.sender);
+        _checkPermission(_OWNER_WITHDRAWER_PERMISSION, msg.sender);
         PTokenData storage $ = _getPTokenStorage();
         // _reduceReserves emits reserve-reduction-specific logs on errors, so we don't need to.
         uint256 ownerReservesNew = _reduceReserves(reduceAmount, $.ownerReserves);
@@ -165,7 +165,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @inheritdoc IPToken
      */
     function reduceReservesConfigurator(uint256 reduceAmount) external nonReentrant {
-        _checkPermission(_PROTOCOL_OWNER_PERMISSION, msg.sender);
+        _checkPermission(_RESERVE_WITHDRAWER_PERMISSION, msg.sender);
         PTokenData storage $ = _getPTokenStorage();
         // _reduceReserves emits reserve-reduction-specific logs on errors, so we don't need to.
         uint256 configuratorReservesNew =
@@ -178,7 +178,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     /**
      * @inheritdoc IPToken
      */
-    function sweepToken(IERC20 token) external onlyOwner {
+    function sweepToken(IERC20 token) external {
+        _checkPermission(_RESERVE_WITHDRAWER_PERMISSION, msg.sender);
         if (address(token) == _getPTokenStorage().underlying) {
             revert PTokenError.SweepNotAllowed();
         }
