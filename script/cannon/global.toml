@@ -6,3 +6,41 @@ roles_protocol_owner= "0x50524f544f434f4c5f4f574e4552000000000000000000000000000
 roles_pauseGuardRole = "0x50415553455f475541524449414e000000000000000000000000000000000000"
 roles_reserveManagerRole = "0x524553455256455f4d414e414745520000000000000000000000000000000000"
 roles_reserveWithdrawerRole = "0x524553455256455f574954484452415745520000000000000000000000000000"
+
+[contract.InitialModuleBeacon]
+artifact = "InitialModuleBeacon"
+
+[contract.DoubleJumpRateModel]
+artifact = "DoubleJumpRateModel"
+
+[contract.RBACModule]
+artifact = "RBACModule"
+
+[contract.PTokenModule]
+artifact = "PTokenModule"
+
+[contract.RiskEngineModule]
+artifact = "RiskEngineModule"
+
+[contract.OracleEngine]
+artifact = "OracleEngine"
+
+[contract.Timelock]
+artifact = "Timelock"
+
+#PToken
+[router.PTokenRouter]
+contracts = [
+    "InitialModuleBeacon",
+    "DoubleJumpRateModel",
+    "RBACModule",
+    "PTokenModule",
+]
+
+#RiskEngine
+[router.RiskEngineRouter]
+contracts = [
+    "InitialModuleBeacon",
+    "RBACModule",
+    "RiskEngineModule",
+]

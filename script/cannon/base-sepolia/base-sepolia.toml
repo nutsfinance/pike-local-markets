@@ -4,11 +4,11 @@ preset = "main"
 description = "Pike markets with factory"
 
 include = [
-    # global params 
+    # global implementation deployment 
     "../global.toml",
 
     # core factory deployment
-    "../core.toml",
+    # "../core.toml",
 
     # pTokens
     # "./pTokens/usdc.toml",

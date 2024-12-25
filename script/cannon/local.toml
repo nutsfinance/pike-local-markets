@@ -2,48 +2,18 @@ name = "pike-market-local"
 version = "0.1.0"
 description = "Build factory beacon routers"
 
+include = [
+    # global implementation deployment 
+    "./global.toml",
+]
+
 [var.owner]
 owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-
-[contract.InitialModuleBeacon]
-artifact = "InitialModuleBeacon"
-
-[contract.DoubleJumpRateModel]
-artifact = "DoubleJumpRateModel"
-
-[contract.RBACModule]
-artifact = "RBACModule"
-
-[contract.PTokenModule]
-artifact = "PTokenModule"
-
-[contract.RiskEngineModule]
-artifact = "RiskEngineModule"
-
-[contract.OracleEngine]
-artifact = "OracleEngine"
-
-#PToken
-[router.PTokenRouter]
-contracts = [
-    "InitialModuleBeacon",
-    "DoubleJumpRateModel",
-    "RBACModule",
-    "PTokenModule",
-]
-
-#Core
-[router.CoreRouter]
-contracts = [
-    "InitialModuleBeacon",
-    "RBACModule",
-    "RiskEngineModule",
-]
 
 [contract.reBeacon]
 artifact = "UpgradeableBeacon"
 args = [
-  "<%= contracts.CoreRouter.address %>",
+  "<%= contracts.RiskEngineRouter.address %>",
   "<%= settings.owner %>"
 ]
 
