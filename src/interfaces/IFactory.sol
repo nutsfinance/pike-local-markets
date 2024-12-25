@@ -86,7 +86,7 @@ interface IFactory {
      * @param setupParams struct with initial risk params of pToken
      * @return pToken address of deployed proxy contract
      */
-    function deployPToken(PTokenSetup memory setupParams)
+    function deployMarket(PTokenSetup memory setupParams)
         external
         returns (address pToken);
 

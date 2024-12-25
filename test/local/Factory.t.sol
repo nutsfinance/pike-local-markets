@@ -92,7 +92,7 @@ contract LocalFactory is TestLocal {
     function testDeployedPToken_FailIfNotOwner() public {
         vm.startPrank(governor);
         vm.expectRevert();
-        factory.deployPToken(ptokenSetup);
+        factory.deployMarket(ptokenSetup);
         vm.stopPrank();
 
         vm.startPrank(getAdmin());
@@ -103,8 +103,8 @@ contract LocalFactory is TestLocal {
         targets[1] = address(factory);
         bytes[] memory payloads = new bytes[](2);
 
-        payloads[0] = abi.encodeCall(factory.deployPToken, (ptokenSetup));
-        payloads[1] = abi.encodeCall(factory.deployPToken, (ptokenSetup));
+        payloads[0] = abi.encodeCall(factory.deployMarket, (ptokenSetup));
+        payloads[1] = abi.encodeCall(factory.deployMarket, (ptokenSetup));
 
         vm.expectRevert();
         governorTL.emergencyExecute(targets[0], values[0], payloads[0]);
@@ -122,8 +122,8 @@ contract LocalFactory is TestLocal {
         targets[0] = address(factory);
         targets[1] = address(factory);
         bytes[] memory payloads = new bytes[](2);
-        payloads[0] = abi.encodeCall(factory.deployPToken, (ptokenSetup));
-        payloads[1] = abi.encodeCall(factory.deployPToken, (ptokenSetup));
+        payloads[0] = abi.encodeCall(factory.deployMarket, (ptokenSetup));
+        payloads[1] = abi.encodeCall(factory.deployMarket, (ptokenSetup));
 
         governorTL.emergencyExecute(targets[0], values[0], payloads[0]);
         governorTL.emergencyExecuteBatch(targets, values, payloads);
@@ -147,8 +147,8 @@ contract LocalFactory is TestLocal {
         targets[0] = address(factory);
         targets[1] = address(factory);
         bytes[] memory payloads = new bytes[](2);
-        payloads[0] = abi.encodeCall(factory.deployPToken, (ptokenSetup));
-        payloads[1] = abi.encodeCall(factory.deployPToken, (ptokenSetup));
+        payloads[0] = abi.encodeCall(factory.deployMarket, (ptokenSetup));
+        payloads[1] = abi.encodeCall(factory.deployMarket, (ptokenSetup));
 
         vm.expectRevert();
         governorTL.emergencyExecuteBatch(targets, values, payloads);

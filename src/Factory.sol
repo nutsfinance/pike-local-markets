@@ -186,7 +186,7 @@ contract Factory is
     /**
      * @inheritdoc IFactory
      */
-    function deployPToken(PTokenSetup memory setupParams)
+    function deployMarket(PTokenSetup memory setupParams)
         external
         nonReentrant
         returns (address pToken)
