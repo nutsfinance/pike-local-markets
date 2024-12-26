@@ -142,10 +142,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         _checkPermission(_EMERGENCY_WITHDRAWER_PERMISSION, msg.sender);
         PTokenData storage $ = _getPTokenStorage();
         // _reduceReserves emits reserve-reduction-specific logs on errors, so we don't need to.
-        uint256 totalReservesNew = _reduceReserves(reduceAmount, $.totalReserves);
 
         // store new reserve
-        $.totalReserves = totalReservesNew;
+        $.totalReserves = _reduceReserves(reduceAmount, $.totalReserves);
     }
 
     /**
@@ -155,10 +154,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         _checkPermission(_OWNER_WITHDRAWER_PERMISSION, msg.sender);
         PTokenData storage $ = _getPTokenStorage();
         // _reduceReserves emits reserve-reduction-specific logs on errors, so we don't need to.
-        uint256 ownerReservesNew = _reduceReserves(reduceAmount, $.ownerReserves);
 
         // store new reserve
-        $.ownerReserves = ownerReservesNew;
+        $.ownerReserves = _reduceReserves(reduceAmount, $.ownerReserves);
+        $.totalReserves -= reduceAmount;
     }
 
     /**
@@ -168,11 +167,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         _checkPermission(_RESERVE_WITHDRAWER_PERMISSION, msg.sender);
         PTokenData storage $ = _getPTokenStorage();
         // _reduceReserves emits reserve-reduction-specific logs on errors, so we don't need to.
-        uint256 configuratorReservesNew =
-            _reduceReserves(reduceAmount, $.configuratorReserves);
 
         // store new reserve
-        $.configuratorReserves = configuratorReservesNew;
+        $.configuratorReserves = _reduceReserves(reduceAmount, $.configuratorReserves);
+        $.totalReserves -= reduceAmount;
     }
 
     /**
@@ -525,6 +523,20 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     /**
      * @inheritdoc IPToken
      */
+    function ownerReserves() external view returns (uint256) {
+        return _getPTokenStorage().ownerReserves;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function configuratorReserves() external view returns (uint256) {
+        return _getPTokenStorage().configuratorReserves;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function totalReserves() external view returns (uint256) {
         return _getPTokenStorage().totalReserves;
     }
@@ -634,6 +646,22 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     function totalReservesCurrent() external view returns (uint256) {
         PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
         return snapshot.totalReserve;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function ownerReservesCurrent() external view returns (uint256) {
+        PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+        return snapshot.ownerReserve;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
+    function configuratorReservesCurrent() external view returns (uint256) {
+        PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
+        return snapshot.configuratorReserve;
     }
 
     /**
@@ -1167,9 +1195,11 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         ExponentialNoError.Exp memory exchangeRate =
             ExponentialNoError.Exp({mantissa: exchangeRateStoredInternal()});
 
-        (uint256 ownerShare, uint256 configuratorShare, uint256 newProtocolSeizeAmount) =
-            _getReserveShares(exchangeRate.mul_ScalarTruncate(protocolSeizeTokens));
-        uint256 totalReservesNew = $.totalReserves + newProtocolSeizeAmount;
+        uint256 accumulatedReserve = exchangeRate.mul_ScalarTruncate(protocolSeizeTokens);
+
+        (uint256 ownerShare, uint256 configuratorShare) =
+            _getReserveShares(accumulatedReserve);
+        uint256 totalReservesNew = $.totalReserves + accumulatedReserve;
 
         /////////////////////////
         // EFFECTS & INTERACTIONS
@@ -1186,7 +1216,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         /* Emit a Transfer event */
         emit Transfer(borrower, liquidator, liquidatorSeizeTokens);
         emit Transfer(borrower, address(this), protocolSeizeTokens);
-        emit ReservesAdded(address(this), newProtocolSeizeAmount, totalReservesNew);
+        emit ReservesAdded(address(this), accumulatedReserve, totalReservesNew);
     }
 
     /**
@@ -1439,15 +1469,16 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
             uint256 interestAccumulated =
                 interestFactor.mul_ScalarTruncate(snapshot.totalBorrow);
 
-            (uint256 ownerShare, uint256 configuratorShare, uint256 newAccumulatedReserve)
-            = _getReserveShares(
-                ExponentialNoError.Exp({mantissa: $.reserveFactorMantissa})
-                    .mul_ScalarTruncate(interestAccumulated)
-            );
+            uint256 accumulatedReserve = ExponentialNoError.Exp({
+                mantissa: $.reserveFactorMantissa
+            }).mul_ScalarTruncate(interestAccumulated);
+
+            (uint256 ownerShare, uint256 configuratorShare) =
+                _getReserveShares(accumulatedReserve);
 
             // Update snapshot values
             snapshot.totalBorrow += interestAccumulated;
-            snapshot.totalReserve += newAccumulatedReserve;
+            snapshot.totalReserve += accumulatedReserve;
             snapshot.ownerReserve += ownerShare;
             snapshot.configuratorReserve += configuratorShare;
             snapshot.accBorrowIndex = interestFactor.mul_ScalarTruncateAddUInt(
@@ -1524,11 +1555,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     function _getReserveShares(uint256 accumulatedReserve)
         internal
         view
-        returns (
-            uint256 ownerShare,
-            uint256 configuratorShare,
-            uint256 newAccumulatedReserve
-        )
+        returns (uint256 ownerShare, uint256 configuratorShare)
     {
         (uint256 ownerShareMantissa, uint256 configuratorShareMantissa) =
             _getPTokenStorage().riskEngine.getReserveShares();
@@ -1538,9 +1565,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
             .mul_ScalarTruncate(accumulatedReserve);
         configuratorShare = ExponentialNoError.Exp({mantissa: configuratorShareMantissa})
             .mul_ScalarTruncate(accumulatedReserve);
-
-        // Adjust total reserves after splitting shares
-        newAccumulatedReserve = accumulatedReserve - ownerShare - configuratorShare;
     }
 
     /**

@@ -184,6 +184,11 @@ contract LocalOracle is TestLocal {
         oracleEngine.setAssetConfig(
             weth, address(chainlinkOracleProvider), address(0), 0, 0
         );
+        // assert the set configs
+        IOracleEngine.AssetConfig memory config = oracleEngine.configs(address(weth));
+        assertEq(config.mainOracle, address(chainlinkOracleProvider));
+        assertEq(config.fallbackOracle, address(0));
+
         wethPriceFeed.setRoundData(2002e8, block.timestamp, block.timestamp);
 
         uint256 wethPrice = oracleEngine.getPrice(weth);

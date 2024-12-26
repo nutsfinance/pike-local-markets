@@ -205,6 +205,10 @@ contract LocalRBAC is TestLocal {
         // "NotNominated()" selector
         vm.expectRevert(0x9ceae3db);
         IOwnable(address(re)).renounceNomination();
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        IOwnable(address(re)).transferOwnership(address(0));
         vm.stopPrank();
 
         vm.prank(address(1));

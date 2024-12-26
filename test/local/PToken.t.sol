@@ -335,6 +335,58 @@ contract LocalPToken is TestLocal {
         doLiquidate(lp);
     }
 
+    function testLiquidate_SuccessInEMode() public {
+        address user1 = makeAddr("user1");
+        address depositor = makeAddr("depositor");
+        address liquidator = makeAddr("liquidator");
+        address[] memory pToken = new address[](2);
+        bool[] memory collateralPermissions = new bool[](2);
+        bool[] memory borrowPermissions = new bool[](2);
+
+        pToken[0] = address(pWETH);
+        pToken[1] = address(pUSDC);
+
+        collateralPermissions[0] = true;
+        collateralPermissions[1] = true;
+        borrowPermissions[0] = true;
+        borrowPermissions[1] = true;
+
+        IRiskEngine.BaseConfiguration memory baseConfig =
+            IRiskEngine.BaseConfiguration(82.5e16, 82.5e16, 102e16);
+
+        vm.startPrank(getAdmin());
+
+        re.supportEMode(2, true, pToken, collateralPermissions, borrowPermissions);
+        re.configureEMode(2, baseConfig);
+
+        vm.stopPrank();
+
+        ///porivde liquidity
+        doDeposit(depositor, depositor, address(pUSDC), 2000e6);
+
+        doDepositAndEnter(user1, user1, address(pWETH), 1e18);
+        doBorrow(user1, user1, address(pUSDC), 1450e6);
+
+        vm.prank(user1);
+        re.switchEMode(2);
+
+        // 1450 / 0.825(weth liq threshold) = 1757.57 is liquidation threshold price for collateral
+
+        mockOracle.setPrice(address(pWETH), 1757e6, 18);
+
+        LiquidationParams memory lp = LiquidationParams({
+            prankAddress: liquidator,
+            userToLiquidate: user1,
+            collateralPToken: address(pWETH),
+            borrowedPToken: address(pUSDC),
+            repayAmount: 725e6,
+            expectRevert: false,
+            error: ""
+        });
+
+        doLiquidate(lp);
+    }
+
     function testDeposit_FailIfReenter() public {
         address depositor = makeAddr("depositor");
 

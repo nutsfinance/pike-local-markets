@@ -64,6 +64,8 @@ contract LocalReserve is TestLocal {
         uint256 reserveBefore = pWETH.totalReserves();
 
         pWETH.reduceReservesEmergency(value);
+        pWETH.reduceReservesOwner(0);
+        pWETH.reduceReservesConfigurator(0);
 
         uint256 reserveAfter = pWETH.totalReserves();
 
@@ -105,6 +107,13 @@ contract LocalReserve is TestLocal {
         assertEq(pWETH.protocolSeizeShareMantissa(), newSeizeShare);
     }
 
+    function testSetReserveShares_Fail() public {
+        // "InvalidReserveShare()" selector
+        vm.prank(getAdmin());
+        vm.expectRevert(0x8415fb41);
+        re.setReserveShares(ONE_MANTISSA, ONE_MANTISSA);
+    }
+
     function testSetReserveFactor() public {
         // 10%
         uint256 newReserveFactor = 5e16;
@@ -140,5 +149,32 @@ contract LocalReserve is TestLocal {
         // "ReduceReservesCashValidation()" selector
         vm.expectRevert(0xf1a5300a);
         pUSDC.reduceReservesEmergency(1e18);
+    }
+
+    function testReduceReserve_FailIfNotPermitted() public {
+        deal(address(pUSDC.asset()), address(pUSDC), 1e18);
+
+        vm.startPrank(address(1));
+        // "PermissionDenied(bytes32,address)" selector
+        vm.expectRevert(
+            abi.encodePacked(
+                bytes4(0xc768858b), abi.encode(emergency_withdrawer, address(1))
+            )
+        );
+        pUSDC.reduceReservesEmergency(1e18);
+
+        // "PermissionDenied(bytes32,address)" selector
+        vm.expectRevert(
+            abi.encodePacked(
+                bytes4(0xc768858b), abi.encode(reserve_withdrawer_permission, address(1))
+            )
+        );
+        pUSDC.reduceReservesConfigurator(1e18);
+
+        // "PermissionDenied(bytes32,address)" selector
+        vm.expectRevert(
+            abi.encodePacked(bytes4(0xc768858b), abi.encode(owner_withdrawer, address(1)))
+        );
+        pUSDC.reduceReservesOwner(1e18);
     }
 }
