@@ -8,27 +8,6 @@ import {AccessControlUpgradeable} from
     "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 contract OracleEngine is IOracleEngine, AccessControlUpgradeable {
-    struct AssetConfig {
-        /**
-         * @notice Main oracle address for the asset
-         */
-        address mainOracle;
-        /**
-         * @notice Fallback oracle address for the asset
-         */
-        address fallbackOracle;
-        /**
-         * @notice Lower bound ratio for the main oracle price to be considered valid
-         * @dev Scaled by 1e18 i.e., 1e18 = 1
-         */
-        uint256 lowerBoundRatio;
-        /**
-         * @notice Upper bound ratio for the main oracle price to be considered valid
-         * @dev Scaled by 1e18 i.e., 1e18 = 1
-         */
-        uint256 upperBoundRatio;
-    }
-
     /// @custom:storage-location erc7201:pike.OE.core
     struct OracleEngineStorage {
         /**
@@ -103,6 +82,13 @@ contract OracleEngine is IOracleEngine, AccessControlUpgradeable {
         returns (uint256)
     {
         return getPrice(pToken.asset());
+    }
+
+    /**
+     * @inheritdoc IOracleEngine
+     */
+    function configs(address pToken) external view returns (AssetConfig memory) {
+        return _getOracleEngineStorage().configs[pToken];
     }
 
     /**

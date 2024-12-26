@@ -1095,16 +1095,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     {
         Market storage marketToJoin = _getRiskEngineStorage().markets[address(pToken)];
 
-        if (!marketToJoin.isListed) {
-            // market is not listed, cannot join
-            return RiskEngineError.Error.MARKET_NOT_LISTED;
-        }
-
-        if (marketToJoin.borrowMembership[borrower] == true) {
-            // already joined
-            return RiskEngineError.Error.NO_ERROR;
-        }
-
         // NOTE: we store these somewhat redundantly as a significant optimization
         //  this avoids having to iterate through the list for the most common use cases
         //  that is, only when we need to perform liquidity checks
@@ -1137,22 +1127,6 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             0,
             _getLiquidationThreshold
         );
-    }
-
-    /**
-     * @notice returns whether user borrowed or not
-     * @param account the address of user to check
-     */
-    function hasBorrowed(address account) internal view returns (bool) {
-        // For each asset the account is in
-        IPToken[] memory assets = _getRiskEngineStorage().accountAssets[account];
-        for (uint256 i = 0; i < assets.length; i++) {
-            // Read the balances and exchange rate from the pToken
-            if (assets[i].borrowBalanceCurrent(account) != 0) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

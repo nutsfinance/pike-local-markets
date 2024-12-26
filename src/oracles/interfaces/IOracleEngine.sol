@@ -4,6 +4,27 @@ pragma solidity 0.8.28;
 import {IPToken} from "@interfaces/IPToken.sol";
 
 interface IOracleEngine {
+    struct AssetConfig {
+        /**
+         * @notice Main oracle address for the asset
+         */
+        address mainOracle;
+        /**
+         * @notice Fallback oracle address for the asset
+         */
+        address fallbackOracle;
+        /**
+         * @notice Lower bound ratio for the main oracle price to be considered valid
+         * @dev Scaled by 1e18 i.e., 1e18 = 1
+         */
+        uint256 lowerBoundRatio;
+        /**
+         * @notice Upper bound ratio for the main oracle price to be considered valid
+         * @dev Scaled by 1e18 i.e., 1e18 = 1
+         */
+        uint256 upperBoundRatio;
+    }
+
     /**
      * @notice Event emitted when asset configuration is set
      */
@@ -74,4 +95,10 @@ interface IOracleEngine {
      * @return price The price of the asset
      */
     function getPrice(address asset) external view returns (uint256);
+
+    /**
+     * @notice Get the configs of a asset
+     * @param pToken The address of the pToken
+     */
+    function configs(address pToken) external view returns (AssetConfig memory);
 }

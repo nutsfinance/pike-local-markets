@@ -274,6 +274,20 @@ interface IPToken is IERC4626 {
     function totalReservesCurrent() external view returns (uint256);
 
     /**
+     * @notice Returns the current total remaing reserves plus
+     * pending accrued interest for protocol owner
+     * @return The total reserves with interest
+     */
+    function ownerReservesCurrent() external view returns (uint256);
+
+    /**
+     * @notice Returns the current total remaing reserves plus
+     * pending accrued interest for configurator
+     * @return The total reserves with interest
+     */
+    function configuratorReservesCurrent() external view returns (uint256);
+
+    /**
      * @notice Calculate account's borrow balance using the pending updated borrowIndex
      * @param account The address whose balance should be calculated
      * @return The calculated balance
@@ -321,6 +335,16 @@ interface IPToken is IERC4626 {
      * @notice Returns the last updated total reserve without pending interest
      */
     function totalReserves() external view returns (uint256);
+
+    /**
+     * @notice Returns the last updated remaining reserves for protocol owner
+     */
+    function ownerReserves() external view returns (uint256);
+
+    /**
+     * @notice Returns the last updated remaining reserves for configurator
+     */
+    function configuratorReserves() external view returns (uint256);
 
     /**
      * @notice Returns the last stored borrow index

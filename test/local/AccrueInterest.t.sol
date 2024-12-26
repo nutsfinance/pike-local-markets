@@ -152,6 +152,8 @@ contract LocalAccrueInterest is TestLocal {
         uint256 borrowCurrent = pWETH.borrowBalanceCurrent(user1);
         uint256 totalBorrowCurrent = pWETH.totalBorrowsCurrent();
         uint256 totalReserveCurrent = pWETH.totalReservesCurrent();
+        uint256 ownerReservesCurrent = pWETH.ownerReservesCurrent();
+        uint256 configuratorReservesCurrent = pWETH.configuratorReservesCurrent();
 
         uint256 currentSupplyRate = IInterestRateModel(address(pWETH)).getSupplyRate(
             pWETH.getCash(),
@@ -169,12 +171,22 @@ contract LocalAccrueInterest is TestLocal {
         uint256 borrowStored = pWETH.borrowBalanceStored(user1);
         uint256 totalBorrowStored = pWETH.totalBorrows();
         uint256 totalReserveStored = pWETH.totalReserves();
+        uint256 ownerReservesStored = pWETH.ownerReserves();
+        uint256 configuratorReservesStored = pWETH.configuratorReserves();
 
         assertEq(exchangeRateStored, exchangeRateCurrent, "unexpected exchange rate");
         assertEq(borrowStored, borrowCurrent, "unexpected borrow amount");
         assertEq(totalBorrowStored, totalBorrowCurrent, "unexpected total borrow amount");
         assertEq(
             totalReserveStored, totalReserveCurrent, "unexpected total reserve amount"
+        );
+        assertEq(
+            ownerReservesCurrent, ownerReservesStored, "unexpected total reserve amount"
+        );
+        assertEq(
+            configuratorReservesCurrent,
+            configuratorReservesStored,
+            "unexpected total reserve amount"
         );
         assertEq(currentBorrowRate, pWETH.borrowRatePerSecond(), "unexpected borrow rate");
         assertEq(currentSupplyRate, pWETH.supplyRatePerSecond(), "unexpected supply rate");
