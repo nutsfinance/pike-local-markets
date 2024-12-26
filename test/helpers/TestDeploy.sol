@@ -249,6 +249,7 @@ contract TestDeploy is TestSetters, CannonDeploy {
         IRBAC(riskEngine).grantPermission(owner_withdrawer, getAdmin());
 
         IRiskEngine(riskEngine).setOracle(getOracle());
+        IRiskEngine(riskEngine).setReserveShares(30e16, 20e16);
 
         vm.stopPrank();
 
