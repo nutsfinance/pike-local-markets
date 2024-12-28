@@ -5,7 +5,7 @@ artifact = "src/factory/Factory.sol:Factory"
 artifact = "src/factory/Timelock.sol:Timelock"
 
 [contract.InitialModuleBeacon]
-artifact = "src/local-market/modules/InitialModuleBeacon.sol:InitialModuleBeacon"
+artifact = "src/pike-market/modules/InitialModuleBeacon.sol:InitialModuleBeacon"
 
 [contract.DoubleJumpRateModel]
 artifact = "DoubleJumpRateModel"

@@ -6,9 +6,9 @@ The following contracts are within the scope for audit. The project follows a mo
 
 ### Core Contracts
 
-#### Local Markets
+#### Pike Markets
 
-**Errors** The following libraries define custom error messages used in local markets:
+**Errors** The following libraries define custom error messages used in pike markets:
 
 - `CommonError.sol`
 - `IRMError.sol`

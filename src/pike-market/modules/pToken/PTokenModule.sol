@@ -43,7 +43,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     }
 
     /**
-     * @notice Initialize the local market
+     * @notice Initialize the pike market
      * @param underlying_ The address of the underlying token
      * @param riskEngine_ The address of the RiskEngine
      * @param initialExchangeRateMantissa_ The initial exchange rate, scaled by 1e18
