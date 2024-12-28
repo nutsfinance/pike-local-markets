@@ -1,12 +1,12 @@
 ![Endpoint Badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2Fzakrad%2F76be8eb437f8ba3a2f6b2ee5b7de9eb9%2Fraw%2FPike_local_market_line_coverage.json&style=flat-square) ![Static Badge](https://img.shields.io/badge/Built_with-Foundry-yellow?style=flat-square) ![Static Badge](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
 
-# Pike Local Market Protocol
+# Pike Market Protocol
 
-Local Market is a decentralized lending and borrowing protocol built for EVMs, designed to provide a secure, scalable, and flexible environment for users to manage their digital assets. It allows users to supply assets to earn yield or borrow against collateralized assets through the pToken contracts.
+Pike Market is a decentralized lending and borrowing protocol built for EVMs, designed to provide a secure, scalable, and flexible environment for users to manage their digital assets. It allows users to supply assets to earn yield or borrow against collateralized assets through the pToken contracts.
 
 ## Overview
 
-In Local Market, users can:
+In Pike Market, users can:
 
 - **Supply** ERC-20 tokens to the protocol to receive pTokens (interest bearing tokens).
 - **Borrow** assets by using pTokens as collateral.
@@ -19,7 +19,7 @@ The protocol is built using modular, upgradeable components following the [route
 
 ## Contracts
 
-Local Market uses several core contracts to facilitate lending and borrowing:
+Pike Market uses several core contracts to facilitate lending and borrowing:
 
 ### pToken (pERC20)
 
@@ -60,7 +60,7 @@ For detailed security assumptions and contracts scope, please refer to the [Audi
 
 ### Installation
 
-To run the Pike Local Market, clone the repository and install the necessary dependencies. Ensure you have [yarn](https://yarnpkg.com/lang/en/docs/install/) or [npm](https://docs.npmjs.com/cli/install) installed.
+To run the Pike Market, clone the repository and install the necessary dependencies. Ensure you have [yarn](https://yarnpkg.com/lang/en/docs/install/) or [npm](https://docs.npmjs.com/cli/install) installed.
 
 ```bash
 $ git clone https://github.com/nutsfinance/pike-local-markets.git
@@ -106,7 +106,7 @@ yarn deploy:testnet # or dryrun before `yarn deploy:testnet:dryrun`
 
 ```bash
 Contracts
-│   ├── local-market
+│   ├── pike-market
 │   │   ├── errors
 │   │   │   ├── CommonError.sol
 │   │   │   ├── IRMError.sol
