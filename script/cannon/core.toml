@@ -42,4 +42,3 @@ options.owner = "<%= settings.core_owner %>"
 options.abi = "<%= JSON.stringify(contracts.Factory.abi) %>"
 options.salt = "Factory"
 
-

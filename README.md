@@ -21,6 +21,12 @@ The protocol is built using modular, upgradeable components following the [route
 
 Pike Market uses several core contracts to facilitate lending and borrowing:
 
+### Factory
+
+The Factory contract is designed to automate the deployment of complete protocol instances, streamlining the creation and management of contracts for governance models to efficiently oversee their markets. Providing a higher-level abstraction above all deployed contracts within the Pike Markets ecosystem. It utilizes a timelock mechanism for each new protocol, allowing curators to manage market configurations. Over time, governance of these timelock contracts transitions to a dual-layer governance model.
+
+![Factory System Diagram](https://i.imgur.com/XZflV1O.png)
+
 ### pToken (pERC20)
 
 The pToken module for managing supplied and borrowed assets. Each pToken (e.g., pUSDC, pWETH) represents a user’s stake in a lending market, and users interact with these contracts to supply and withdraw assets, or borrow and repay loans.
@@ -106,48 +112,56 @@ yarn deploy:testnet # or dryrun before `yarn deploy:testnet:dryrun`
 
 ```bash
 Contracts
-│   ├── pike-market
-│   │   ├── errors
-│   │   │   ├── CommonError.sol
-│   │   │   ├── IRMError.sol
-│   │   │   ├── PTokenError.sol
-│   │   │   └── RiskEngineError.sol
-│   │   ├── interfaces
-│   │   │   ├── IInterestRateModel.sol
-│   │   │   ├── IDoubleJumpRateModel.sol
-│   │   │   ├── IOwnable.sol
-│   │   │   ├── IPToken.sol
-│   │   │   ├── IRBAC.sol
-│   │   │   ├── IRiskEngine.sol
-│   │   │   └── IUpgrade.sol
-│   │   ├── modules
-│   │   │   ├── InitialModuleBundle.sol
-│   │   │   ├── common
-│   │   │   │   ├── OwnableModule.sol
-│   │   │   │   ├── RBACModule.sol
-│   │   │   │   └── UpgradeModule.sol
-│   │   │   ├── interestRateModel
-│   │   │   │   └── DoubleJumpRateModel.sol
-│   │   │   ├── pToken
-│   │   │   │   └── PTokenModule.sol
-│   │   │   └── riskEngine
-│   │   │       └── RiskEngineModule.sol
-│   │   ├── storage
-│   │   │   ├── DoubleJumpRateStorage.sol
-│   │   │   ├── OwnableStorage.sol
-│   │   │   ├── PTokenStorage.sol
-│   │   │   ├── RBACStorage.sol
-│   │   │   ├── RiskEngineStorage.sol
-│   │   │   ├── UpgradeStorage.sol
-│   │   └── utils
-│   │       ├── ExponentialNoError.sol
-│   │       ├── OwnableMixin.sol
-│   │       └── RBACMixin.sol
-└── └── oracles
-        ├── ChainlinkOracleProvider.sol
-        ├── OracleEngine.sol
-        ├── PythOracleProvider.sol
-        └── interfaces
-            ├── IOracleEngine.sol
-            └── IOracleProvider.sol
+├── Factory.sol
+├── governance
+│   └── Timelock.sol
+├── interfaces
+│   └── IFactory.sol
+├── oracles
+│   ├── ChainlinkOracleProvider.sol
+│   ├── OracleEngine.sol
+│   ├── PythOracleProvider.sol
+│   └── interfaces
+│       ├── IChainlinkOracleProvider.sol
+│       ├── IOracleEngine.sol
+│       ├── IOracleProvider.sol
+│       └── IPythOracleProvider.sol
+└── pike-market
+    ├── errors
+    │   ├── CommonError.sol
+    │   ├── IRMError.sol
+    │   ├── PTokenError.sol
+    │   └── RiskEngineError.sol
+    ├── interfaces
+    │   ├── IDoubleJumpRateModel.sol
+    │   ├── IInterestRateModel.sol
+    │   ├── IOwnable.sol
+    │   ├── IPToken.sol
+    │   ├── IRBAC.sol
+    │   ├── IRiskEngine.sol
+    │   └── IUpgrade.sol
+    ├── modules
+    │   ├── InitialModuleBeacon.sol
+    │   ├── InitialModuleBundle.sol
+    │   ├── common
+    │   │   ├── OwnableModule.sol
+    │   │   ├── RBACModule.sol
+    │   │   └── UpgradeModule.sol
+    │   ├── interestRateModel
+    │   │   └── DoubleJumpRateModel.sol
+    │   ├── pToken
+    │   │   └── PTokenModule.sol
+    │   └── riskEngine
+    │       └── RiskEngineModule.sol
+    ├── storage
+    │   ├── DoubleJumpRateStorage.sol
+    │   ├── OwnableStorage.sol
+    │   ├── PTokenStorage.sol
+    │   ├── RBACStorage.sol
+    │   ├── RiskEngineStorage.sol
+    │   └── UpgradeStorage.sol
+    └── utils
+        ├── ExponentialNoError.sol
+        ├── OwnableMixin.sol
+        └── RBACMixin.sol
 ```
