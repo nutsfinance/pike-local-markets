@@ -1,5 +1,5 @@
 {
-  "address": "0x5E94367d34B8c61B09573A755a89Eff1ca2629AC",
+  "address": "0xa8801C51d02268b05cf1562e8c20FD1D3D6F24c3",
   "abi": [
     {
       "type": "constructor",
@@ -454,12 +454,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x6f8e9886404c141667b6d0355a559aa3534ab32ea6d80c4944e61dc8dcbcff96",
-  "deployTxnBlockNumber": "19988271",
-  "deployTimestamp": "1735744830",
+  "deployTxnHash": "0x6721525282428c70e7f53eefd991b8b410ba97a88334b1dd2cca93240dcdaaae",
+  "deployTxnBlockNumber": "22061825",
+  "deployTimestamp": "1735926190",
   "sourceName": "src/oracles/OracleEngine.sol",
   "contractName": "OracleEngine",
   "deployedOn": "contract.OracleEngine",
   "gasUsed": 1056504,
-  "gasCost": "1000355"
+  "gasCost": "1000257"
 }

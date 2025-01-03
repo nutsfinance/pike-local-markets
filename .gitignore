@@ -22,6 +22,10 @@ docs/
 deployments/*
 !deployments/base-sepolia
 !deployments/base-sepolia/*
+!deployments/arb-sepolia
+!deployments/arb-sepolia/*
+!deployments/op-sepolia
+!deployments/op-sepolia/*
 !deployments/base-sepolia-demo
 !deployments/base-sepolia-demo/*
 
