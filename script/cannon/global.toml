@@ -1,3 +1,8 @@
+name = "pike-markets"
+version = "0.1.0"
+preset = "with-factory"
+description = "Pike markets"
+
 [var.roles]
 roles_confRole = "0x434f4e464947555241544f520000000000000000000000000000000000000000"
 roles_supGuardRole = "0x535550504c595f4341505f475541524449414e00000000000000000000000000"
