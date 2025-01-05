@@ -261,6 +261,10 @@ contract LocalRiskEngine is TestLocal {
     function testSupportMarket_FailIfAlreadyListedOrUnsupported() public {
         vm.startPrank(getAdmin());
 
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        re.supportMarket(IPToken(address(0)));
+
         // "AlreadyListed()" selector
         vm.expectRevert(0xa3d582ec);
         re.supportMarket(pUSDC);
