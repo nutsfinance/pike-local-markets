@@ -115,6 +115,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      */
     function supportMarket(IPToken pToken) external {
         checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
+        if (address(pToken) == address(0)) {
+            revert CommonError.ZeroAddress();
+        }
         RiskEngineData storage $ = _getRiskEngineStorage();
         if ($.markets[address(pToken)].isListed) {
             revert RiskEngineError.AlreadyListed();
