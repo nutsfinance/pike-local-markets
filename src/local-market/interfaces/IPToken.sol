@@ -1,28 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {
+    IERC4626, IERC20
+} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 
-interface IPToken is IERC20 {
+interface IPToken is IERC4626 {
     /**
      * @notice Event emitted when risk engine is changed
      */
     event NewRiskEngine(IRiskEngine oldRiskEngine, IRiskEngine newRiskEngine);
-
-    /**
-     * @notice Event emitted when tokens are minted
-     */
-    event Mint(
-        address minter, address onBehalfOf, uint256 mintAmount, uint256 mintTokens
-    );
-
-    /**
-     * @notice Event emitted when tokens are redeemed
-     */
-    event Redeem(
-        address redeemer, address onBehalfOf, uint256 redeemAmount, uint256 redeemTokens
-    );
 
     /**
      * @notice Event emitted when underlying is borrowed
@@ -94,51 +82,44 @@ interface IPToken is IERC20 {
     /**
      * @notice Sender supplies assets into the market and receives pTokens in exchange
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
-     * @param mintAmount The amount of the underlying asset to supply
+     * @param tokenAmount The amount of token to mint for supply
+     * @param receiver User whom the supply will be attributed to
+     * @return amount of supplied underlying asset
      */
-    function mint(uint256 mintAmount) external;
+    function mint(uint256 tokenAmount, address receiver) external returns (uint256);
 
     /**
-     * @notice Sender calls on-behalf of minter.
-     * sender supplies assets into the market and minter receives pTokens in exchange
+     * @notice sender supplies assets into the market and minter receives pTokens in exchange
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
-     * @param onBehalfOf User whom the supply will be attributed to
      * @param mintAmount The amount of the underlying asset to supply
+     * @param receiver User whom the supply will be attributed to
+     * @return amount of minted tokens
      */
-    function mintOnBehalfOf(address onBehalfOf, uint256 mintAmount) external;
+    function deposit(uint256 mintAmount, address receiver) external returns (uint256);
 
     /**
      * @notice Sender redeems pTokens in exchange for the underlying asset
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
      * @param redeemTokens The number of pTokens to redeem into underlying
+     * @param receiver The address to receive underlying redeemed asset
+     * @param owner The address which account for redeem tokens
+     * @return amount of redeemed underlying asset
      */
-    function redeem(uint256 redeemTokens) external;
-
-    /**
-     * @notice Sender redeems assets on behalf of redeemer address. This function is only available
-     *  for senders, explicitly marked as delegates of the supplier using `riskEngine.updateDelegate`
-     * @dev Accrues interest whether or not the operation succeeds, unless reverted
-     * @param onBehalfOf The user on behalf of whom to redeem
-     * @param redeemTokens The number of pTokens to redeem into underlying
-     */
-    function redeemOnBehalfOf(address onBehalfOf, uint256 redeemTokens) external;
+    function redeem(uint256 redeemTokens, address receiver, address owner)
+        external
+        returns (uint256);
 
     /**
      * @notice Sender redeems pTokens in exchange for a specified amount of underlying asset
      * @dev Accrues interest whether or not the operation succeeds, unless reverted
      * @param redeemAmount The amount of underlying to redeem
+     * @param receiver The address to receive underlying redeemed asset
+     * @param owner The address which account for redeem tokens
+     * @return amount of burnt tokens
      */
-    function redeemUnderlying(uint256 redeemAmount) external;
-
-    /**
-     * @notice Sender redeems underlying assets on behalf of some other address. This function is only available
-     *   for senders, explicitly marked as delegates of the supplier using `riskEngine.updateDelegate`
-     * @dev Accrues interest whether or not the operation succeeds, unless reverted
-     * @param onBehalfOf, on behalf of whom to redeem
-     * @param redeemAmount The amount of underlying to receive from redeeming pTokens
-     */
-    function redeemUnderlyingOnBehalfOf(address onBehalfOf, uint256 redeemAmount)
-        external;
+    function withdraw(uint256 redeemAmount, address receiver, address owner)
+        external
+        returns (uint256);
 
     /**
      * @notice Sender borrows assets from the protocol to their own address
@@ -367,10 +348,99 @@ interface IPToken is IERC20 {
     /**
      * @notice Returns the pToken underlying token address
      */
-    function underlying() external view returns (address);
+    function asset() external view returns (address);
 
     /**
      * @notice Returns the protocol seize share
      */
     function protocolSeizeShareMantissa() external view returns (uint256);
+
+    /**
+     * @notice Converts an underlying amount to the equivalent amount of pTokens
+     * based on the current total supply and assets.
+     * @dev calculate pToken per underlying, accounting for a zero total supply case.
+     * @param assets The amount of underlying to convert to pTokens.
+     * @return The equivalent amount of pTokens.
+     */
+    function convertToShares(uint256 assets) external view returns (uint256);
+
+    /**
+     * @notice Converts a pToken amount to the equivalent amount of underlying
+     * based on the current total supply and assets.
+     * @dev calculate underlying per pToken, accounting for a zero total supply case.
+     * @param shares The amount of pTokens to convert to underlying.
+     * @return The equivalent amount of underlying.
+     */
+    function convertToAssets(uint256 shares) external view returns (uint256);
+
+    /**
+     * @notice Returns the maximum number of pTokens that can be minted for a given receiver,
+     * based on the current exchange rate.
+     * @param receiver The address for which pTokens are being minted.
+     * @return The maximum amount of pTokens that can be minted for the receiver.
+     */
+    function maxMint(address receiver) external view returns (uint256);
+
+    /**
+     * @notice Returns the maximum amount of underlying that can be deposited,
+     * considering the risk engine’s mint allowance and any supply cap.
+     * @param account The address for which assets are being deposited (unused in this implementation).
+     * @return The maximum deposit amount, based on mint allowance and any supply cap.
+     */
+    function maxDeposit(address account) external view returns (uint256);
+
+    /**
+     * @notice Returns the maximum number of pTokens that can be redeemed by an account owner,
+     * based on current exchange rate and risk limits.
+     * @param owner The address of the account from which pTokens are redeemed.
+     * @return maxShares The maximum amount of pTokens that can be redeemed by the owner.
+     */
+    function maxRedeem(address owner) external view returns (uint256 maxShares);
+
+    /**
+     * @notice Returns the maximum amount of underlying can be withdrawn by owner,
+     * based on risk engine limits.
+     * @param owner The address of the account from which underlying are withdrawn.
+     * @return The maximum amount of underlying that can be withdrawn by owner.
+     */
+    function maxWithdraw(address owner) external view returns (uint256);
+
+    /**
+     * @notice Returns the actual amount of pTokens that would be minted
+     * for a given underlying amount if deposited.
+     * @param assets The amount of underlying assets to deposit.
+     * @return shares The calculated amount of pTokens corresponding to the deposit.
+     */
+    function previewDeposit(uint256 assets) external view returns (uint256 shares);
+
+    /**
+     * @notice Calculates the actual amount of underlying assets required
+     * to mint a given amount of pTokens.
+     * @param shares The number of pTokens to mint.
+     * @return assets The required amount of underlying for minting the specified pTokens.
+     */
+    function previewMint(uint256 shares) external view returns (uint256 assets);
+
+    /**
+     * @notice Calculates the actual number of pTokens required
+     * to withdraw a specified amount of underlying.
+     * @param assets The desired amount of underlying to withdraw.
+     * @return shares The pTokens needed to facilitate the withdrawal of the underlying.
+     */
+    function previewWithdraw(uint256 assets) external view returns (uint256 shares);
+
+    /**
+     * @notice Determines the actual amount of underlying redeemable for a given amount of pTokens.
+     * @param shares The number of pTokens to redeem.
+     * @return assets The equivalent amount of underlying for the redeemed pTokens.
+     */
+    function previewRedeem(uint256 shares) external view returns (uint256 assets);
+
+    /**
+     * @notice Returns the total amount of underlying assets managed by the protocol,
+     * including underlying balance, borrows, and reserves with accruing interests.
+     * @return The total supplied assets,
+     * calculated as cash plus total borrows minus total reserves.
+     */
+    function totalAssets() external view returns (uint256);
 }

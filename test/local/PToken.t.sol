@@ -86,7 +86,7 @@ contract LocalPToken is TestLocal {
     }
 
     function testSweep_FailIfUnderlying() public {
-        IERC20 underlying = IERC20(pUSDC.underlying());
+        IERC20 underlying = IERC20(pUSDC.asset());
         vm.prank(getAdmin());
         // "SweepNotAllowed()" selector
         vm.expectRevert(0x00b5509b);
@@ -96,7 +96,11 @@ contract LocalPToken is TestLocal {
     function testMintBehalfOf_FailIfAddressIsZero() public {
         // "ZeroAddress()" selector
         vm.expectRevert(0xd92e233d);
-        pUSDC.mintOnBehalfOf(address(0), 0);
+        pUSDC.deposit(0, address(0));
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        pUSDC.mint(0, address(0));
     }
 
     function testLiquidateBorrow_FailIfPTokenCollateralIsInvalid() public {
@@ -133,23 +137,48 @@ contract LocalPToken is TestLocal {
     function testRedeem_FailIfNotAllowed() public {
         address user1 = makeAddr("user1");
         address depositor = makeAddr("depositor");
+        uint256 liquidity = 1e18;
+
+        // no withdraw before deposit
+        assertEq(
+            pUSDC.maxWithdraw(user1), 0, "does not match max withdraw before deposit"
+        );
+        assertEq(pWETH.convertToShares(liquidity), liquidity);
+        assertEq(pWETH.convertToAssets(liquidity), liquidity);
 
         ///porivde liquidity
-        doDeposit(depositor, depositor, address(pWETH), 1e18);
+        doDeposit(depositor, depositor, address(pWETH), liquidity);
 
         doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
 
-        doBorrow(user1, user1, address(pWETH), 0.745e18);
+        doBorrow(user1, user1, address(pWETH), 0.7e18);
+        uint256 maxWithdraw = pUSDC.maxWithdraw(user1);
+        uint256 maxRedeem = pUSDC.maxRedeem(user1);
+        assertEq(pUSDC.maxRedeem(user1), pUSDC.convertToShares(maxWithdraw));
+        assertEq(maxWithdraw, pUSDC.convertToAssets(maxRedeem));
+
+        vm.prank(user1);
+        pUSDC.withdraw(maxWithdraw, user1, user1);
 
         vm.prank(user1);
         // "RedeemRiskEngineRejection(uint256)" selector
         vm.expectRevert(abi.encodePacked(bytes4(0x9759ead5), uint256(3)));
-        pUSDC.redeemUnderlying(1000e6);
+        pUSDC.withdraw(1, user1, user1);
 
         vm.prank(depositor);
         // "RedeemTransferOutNotPossible()" selector
         vm.expectRevert(0x91240a1b);
-        pWETH.redeemUnderlying(1e18);
+        pWETH.withdraw(1e18, depositor, depositor);
+
+        mockOracle.setPrice(address(pWETH), 2500e6, 18);
+        // no withdraw with shortfall
+        assertEq(
+            pUSDC.maxWithdraw(user1), 0, "does not match max withdraw with shortfall"
+        );
+
+        changeList(address(pUSDC), false);
+        // no withdraw after unlisted
+        assertEq(pUSDC.maxWithdraw(user1), 0, "does not match max withdraw after unlist");
     }
 
     function testBorrow_FailIfNotEnoughCash() public {
@@ -161,7 +190,7 @@ contract LocalPToken is TestLocal {
 
         doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
 
-        deal(address(pWETH.underlying()), address(pWETH), 0);
+        deal(address(pWETH.asset()), address(pWETH), 0);
         //"BorrowCashNotAvailable()" selector
         doBorrowRevert(
             user1, user1, address(pWETH), 0.745e18, abi.encodePacked(bytes4(0x48c25881))

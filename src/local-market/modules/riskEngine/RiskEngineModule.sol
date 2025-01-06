@@ -532,6 +532,43 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     /**
      * @inheritdoc IRiskEngine
      */
+    function maxWithdraw(address pToken, address account)
+        external
+        view
+        returns (uint256)
+    {
+        if (!_getRiskEngineStorage().markets[pToken].isListed) {
+            return 0;
+        }
+
+        uint256 underlyingBalance = IPToken(pToken).balanceOfUnderlying(account);
+
+        // Get the normalized price of the asset
+        uint256 oraclePriceMantissa = IOracleEngine(_getRiskEngineStorage().oracle)
+            .getUnderlyingPrice(IPToken(pToken));
+
+        ExponentialNoError.Exp memory oraclePrice =
+            ExponentialNoError.Exp({mantissa: oraclePriceMantissa});
+
+        (RiskEngineError.Error err, uint256 withdrawLiquidity) =
+            getWithdrawLiquidityInternal(account, _getCollateralFactor);
+        if (err != RiskEngineError.Error.NO_ERROR) {
+            return 0;
+        }
+
+        if (
+            !_getRiskEngineStorage().markets[pToken].accountMembership[account]
+                || underlyingBalance.mul_(oraclePrice) < withdrawLiquidity
+        ) {
+            return underlyingBalance;
+        } else {
+            return withdrawLiquidity.div_(oraclePrice);
+        }
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
     function getAssetsIn(address account) external view returns (IPToken[] memory) {
         IPToken[] memory assetsIn = _getRiskEngineStorage().accountAssets[account];
 
@@ -777,6 +814,18 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         );
     }
 
+    function hasBorrowed(address account) internal view returns (bool) {
+        // For each asset the account is in
+        IPToken[] memory assets = _getRiskEngineStorage().accountAssets[account];
+        for (uint256 i = 0; i < assets.length; i++) {
+            // Read the balances and exchange rate from the pToken
+            if (assets[i].borrowBalanceCurrent(account) != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function redeemAllowedInternal(address pToken, address redeemer, uint256 redeemTokens)
         internal
         view
@@ -893,6 +942,74 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
                 0,
                 vars.sumBorrowPlusEffects - vars.sumCollateral
             );
+        }
+    }
+
+    /**
+     * @notice Calculates the available withdrawal liquidity for an account,
+     * factoring in thresholds and collateral.
+     * @dev Returns liquidity in underlying asset terms,
+     * or zero if insufficient liquidity or price error occurs.
+     * @param account The account to check.
+     * @param threshold The threshold factor function for liquidity calculation.
+     * @return Error code and maximum withdrawable amount.
+     */
+    function getWithdrawLiquidityInternal(
+        address account,
+        function (IPToken) internal view returns (ExponentialNoError.Exp memory) threshold
+    ) internal view returns (RiskEngineError.Error, uint256) {
+        AccountLiquidityLocalVars memory vars; // Holds all our calculation results
+
+        // For each asset the account is in
+        IPToken[] memory assets = _getRiskEngineStorage().accountAssets[account];
+        for (uint256 i = 0; i < assets.length; i++) {
+            IPToken asset = assets[i];
+
+            // Read the balances and exchange rate from the pToken
+            (vars.pTokenBalance, vars.borrowBalance, vars.exchangeRateMantissa) =
+                asset.getAccountSnapshot(account);
+
+            vars.threshold = threshold(asset);
+            vars.exchangeRate =
+                ExponentialNoError.Exp({mantissa: vars.exchangeRateMantissa});
+
+            // Get the normalized price of the asset
+            vars.oraclePriceMantissa =
+                IOracleEngine(_getRiskEngineStorage().oracle).getUnderlyingPrice(asset);
+            if (vars.oraclePriceMantissa == 0) {
+                return (RiskEngineError.Error.PRICE_ERROR, 0);
+            }
+
+            vars.oraclePrice =
+                ExponentialNoError.Exp({mantissa: vars.oraclePriceMantissa});
+
+            // Pre-compute a conversion factor from tokens -> ether (normalized price value) w/o threshold
+            vars.tokensToDenom = vars.oraclePrice.mul_(vars.exchangeRate);
+
+            // sumLiquidity += tokensToDenom * pTokenBalance
+            vars.sumLiquidity = vars.tokensToDenom.mul_ScalarTruncateAddUInt(
+                vars.pTokenBalance, vars.sumLiquidity
+            );
+
+            // sumCollateral += tokensToDenom * threshold * pTokenBalance
+            vars.sumCollateral = (vars.tokensToDenom.mul_(vars.threshold))
+                .mul_ScalarTruncateAddUInt(vars.pTokenBalance, vars.sumCollateral);
+
+            // sumBorrowPlusEffects += oraclePrice * borrowBalance
+            vars.sumBorrowPlusEffects = vars.oraclePrice.mul_ScalarTruncateAddUInt(
+                vars.borrowBalance, vars.sumBorrowPlusEffects
+            );
+        }
+
+        // These are safe, as the underflow condition is checked first
+        if (vars.sumCollateral > vars.sumBorrowPlusEffects) {
+            uint256 excessCollateral = vars.sumCollateral - vars.sumBorrowPlusEffects;
+            return (
+                RiskEngineError.Error.NO_ERROR,
+                excessCollateral * vars.sumLiquidity / vars.sumCollateral
+            );
+        } else {
+            return (RiskEngineError.Error.INSUFFICIENT_LIQUIDITY, 0);
         }
     }
 

@@ -21,7 +21,7 @@ contract TestHelpers is TestUtilities {
             console.log("-[User %s]--------------", params.onBehalfOf);
         }
 
-        if (action == Action.SUPPLY || action == Action.REPAY) {
+        if (action == Action.MINT || action == Action.SUPPLY || action == Action.REPAY) {
             deal(params.tokenAddress, user, params.amount);
             vm.prank(user);
             IERC20(params.tokenAddress).approve(params.pToken, params.amount);
@@ -31,8 +31,23 @@ contract TestHelpers is TestUtilities {
             user, params.onBehalfOf, params.pToken, params.tokenAddress
         );
 
+        uint256 preview;
+
         vm.recordLogs();
-        if (action == Action.SUPPLY) {
+        if (action == Action.MINT) {
+            if (getDebug()) {
+                console.log(
+                    "Minting %s of %s", params.amount, IPToken(params.tokenAddress).name()
+                );
+            }
+
+            preview = IPToken(params.pToken).previewMint(params.amount);
+            vm.prank(user);
+            if (params.expectRevert) {
+                vm.expectRevert(params.error);
+            }
+            IPToken(params.pToken).mint(params.amount, params.onBehalfOf);
+        } else if (action == Action.SUPPLY) {
             if (getDebug()) {
                 console.log(
                     "Depositing %s of %s",
@@ -41,19 +56,12 @@ contract TestHelpers is TestUtilities {
                 );
             }
 
-            if (onBehalfOf) {
-                vm.prank(user);
-                if (params.expectRevert) {
-                    vm.expectRevert(params.error);
-                }
-                IPToken(params.pToken).mintOnBehalfOf(params.onBehalfOf, params.amount);
-            } else {
-                vm.prank(user);
-                if (params.expectRevert) {
-                    vm.expectRevert(params.error);
-                }
-                IPToken(params.pToken).mint(params.amount);
+            preview = IPToken(params.pToken).previewDeposit(params.amount);
+            vm.prank(user);
+            if (params.expectRevert) {
+                vm.expectRevert(params.error);
             }
+            IPToken(params.pToken).deposit(params.amount, params.onBehalfOf);
         } else if (action == Action.REPAY) {
             if (getDebug()) {
                 console.log(
@@ -109,21 +117,12 @@ contract TestHelpers is TestUtilities {
                 );
             }
 
-            if (onBehalfOf) {
-                vm.prank(user);
-                if (params.expectRevert) {
-                    vm.expectRevert(params.error);
-                }
-                IPToken(params.pToken).redeemUnderlyingOnBehalfOf(
-                    params.onBehalfOf, params.amount
-                );
-            } else {
-                vm.prank(user);
-                if (params.expectRevert) {
-                    vm.expectRevert(params.error);
-                }
-                IPToken(params.pToken).redeemUnderlying(params.amount);
+            preview = IPToken(params.pToken).previewWithdraw(params.amount);
+            vm.prank(user);
+            if (params.expectRevert) {
+                vm.expectRevert(params.error);
             }
+            IPToken(params.pToken).withdraw(params.amount, user, params.onBehalfOf);
         } else if (action == Action.WITHDRAW) {
             if (getDebug()) {
                 console.log(
@@ -131,19 +130,12 @@ contract TestHelpers is TestUtilities {
                 );
             }
 
-            if (onBehalfOf) {
-                vm.prank(user);
-                if (params.expectRevert) {
-                    vm.expectRevert(params.error);
-                }
-                IPToken(params.pToken).redeemOnBehalfOf(params.onBehalfOf, params.amount);
-            } else {
-                vm.prank(user);
-                if (params.expectRevert) {
-                    vm.expectRevert(params.error);
-                }
-                IPToken(params.pToken).redeem(params.amount);
+            preview = IPToken(params.pToken).previewRedeem(params.amount);
+            vm.prank(user);
+            if (params.expectRevert) {
+                vm.expectRevert(params.error);
             }
+            IPToken(params.pToken).redeem(params.amount, user, params.onBehalfOf);
         }
 
         ActionStateData memory afterAction = getActionStateData(
@@ -153,6 +145,7 @@ contract TestHelpers is TestUtilities {
         requireActionDataValid(
             action,
             params.pToken,
+            preview,
             params.amount,
             beforeAction,
             afterAction,
@@ -243,7 +236,27 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.SUPPLY,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
+                amount: amount,
+                expectRevert: false,
+                error: "",
+                prankAddress: prankAddress,
+                onBehalfOf: onBehalfOf
+            })
+        );
+    }
+
+    function doMint(
+        address prankAddress,
+        address onBehalfOf,
+        address pToken,
+        uint256 amount
+    ) public {
+        doAction(
+            ActionParameters({
+                action: Action.MINT,
+                pToken: pToken,
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: false,
                 error: "",
@@ -263,7 +276,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.SUPPLY,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: false,
                 error: "",
@@ -285,7 +298,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.SUPPLY,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: true,
                 error: err,
@@ -305,7 +318,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.BORROW,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: false,
                 error: "",
@@ -326,7 +339,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.BORROW,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: true,
                 error: err,
@@ -346,7 +359,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.REPAY,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: false,
                 error: "",
@@ -367,7 +380,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.REPAY,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: true,
                 error: err,
@@ -387,7 +400,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.WITHDRAW,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: false,
                 error: "",
@@ -408,7 +421,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.WITHDRAW,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: true,
                 error: err,
@@ -428,7 +441,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.WITHDRAW_UNDERLYING,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: false,
                 error: "",
@@ -449,7 +462,7 @@ contract TestHelpers is TestUtilities {
             ActionParameters({
                 action: Action.WITHDRAW_UNDERLYING,
                 pToken: pToken,
-                tokenAddress: IPToken(pToken).underlying(),
+                tokenAddress: IPToken(pToken).asset(),
                 amount: amount,
                 expectRevert: true,
                 error: err,
@@ -468,6 +481,16 @@ contract TestHelpers is TestUtilities {
         IRiskEngine re = pToken.riskEngine();
         vm.prank(prankAddress);
         re.updateDelegate(delegate, approved);
+    }
+
+    function doAllow(
+        address prankAddress,
+        address delegate,
+        IPToken pToken,
+        uint256 value
+    ) public {
+        vm.prank(prankAddress);
+        pToken.approve(delegate, value);
     }
 
     function doTransfer(
@@ -524,7 +547,7 @@ contract TestHelpers is TestUtilities {
             console.log("-[Liquidator %s]--------------", lp.prankAddress);
         }
 
-        address underlyingRepayToken = IPToken(lp.borrowedPToken).underlying();
+        address underlyingRepayToken = IPToken(lp.borrowedPToken).asset();
 
         deal(underlyingRepayToken, lp.prankAddress, lp.repayAmount);
         vm.prank(lp.prankAddress);

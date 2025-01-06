@@ -142,7 +142,7 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
         override
         returns (uint256)
     {
-        return getPrice(pToken.underlying());
+        return getPrice(pToken.asset());
     }
 
     /**

@@ -176,8 +176,27 @@ contract LocalRiskEngine is TestLocal {
         uint256[] memory caps = new uint256[](1);
         caps[0] = mintAmount - 1;
 
+        changeList(address(pWETH), false);
+
+        // max deposit 0 for unlisted
+        assertEq(0, pWETH.maxDeposit(address(0)), "maxDeposit does not match unlisted");
+
+        // max deposit uint256 max by default
+        assertEq(
+            type(uint256).max,
+            pUSDC.maxDeposit(address(0)),
+            "maxDeposit does not uint256 max"
+        );
+
         vm.prank(getAdmin());
         re.setMarketSupplyCaps(markets, caps);
+        // applied cap
+        assertEq(caps[0], pUSDC.maxDeposit(address(0)), "maxDeposit does not match cap");
+        assertEq(
+            caps[0],
+            pUSDC.maxMint(address(0)) * pUSDC.exchangeRateCurrent() / ONE_MANTISSA,
+            "maxDeposit does not match cap"
+        );
 
         // "BorrowRiskEngineRejection(7)" selector
         doDepositRevert(

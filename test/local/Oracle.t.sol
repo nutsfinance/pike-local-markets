@@ -88,7 +88,7 @@ contract LocalOracle is TestLocal {
             new ERC1967Proxy(oracleEngineImplementation, data);
         oracleEngine = OracleEngine(address(oracleEngineProxy));
 
-        weth = pWETH.underlying();
+        weth = pWETH.asset();
     }
 
     function testChainlinkOracleProvider() public {

@@ -35,6 +35,7 @@ contract TestStructs {
         uint256 totalBorrow;
         uint256 totalReserve;
         uint256 totalSupply;
+        uint256 totalSupplyUnderlying;
     }
 
     struct UserData {
@@ -81,6 +82,7 @@ contract TestStructs {
     }
 
     enum Action {
+        MINT,
         SUPPLY,
         WITHDRAW,
         WITHDRAW_UNDERLYING,

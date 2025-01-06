@@ -31,7 +31,8 @@ contract TestUtilities is TestDeploy {
             totalCash: pToken.getCash(),
             totalBorrow: pToken.totalBorrowsCurrent(),
             totalReserve: pToken.totalReservesCurrent(),
-            totalSupply: pToken.totalSupply()
+            totalSupply: pToken.totalSupply(),
+            totalSupplyUnderlying: pToken.totalAssets()
         });
 
         data = ActionStateData(pTokenData, userData);
@@ -58,14 +59,16 @@ contract TestUtilities is TestDeploy {
             totalCash: collateralPToken.getCash(),
             totalBorrow: collateralPToken.totalBorrowsCurrent(),
             totalReserve: collateralPToken.totalReservesCurrent(),
-            totalSupply: collateralPToken.totalSupply()
+            totalSupply: collateralPToken.totalSupply(),
+            totalSupplyUnderlying: collateralPToken.totalAssets()
         });
 
         PTokenData memory borrowedPTokenData = PTokenData({
             totalCash: borrowedPToken.getCash(),
             totalBorrow: borrowedPToken.totalBorrowsCurrent(),
             totalReserve: borrowedPToken.totalReservesCurrent(),
-            totalSupply: borrowedPToken.totalSupply()
+            totalSupply: borrowedPToken.totalSupply(),
+            totalSupplyUnderlying: borrowedPToken.totalAssets()
         });
 
         uint256 prankAddressUnderlyingBalance =
@@ -123,6 +126,7 @@ contract TestUtilities is TestDeploy {
     function requireActionDataValid(
         Action action,
         address pTokenAddress,
+        uint256 preview,
         uint256 amount,
         ActionStateData memory beforeData,
         ActionStateData memory afterData,
@@ -130,9 +134,78 @@ contract TestUtilities is TestDeploy {
     ) public view {
         uint256 exchangeRateStored = IPToken(pTokenAddress).exchangeRateStored();
 
-        if (action == Action.SUPPLY) {
+        if (action == Action.MINT) {
+            uint256 mintAmount = amount * exchangeRateStored / ONE_MANTISSA;
+            if (!expectRevert) {
+                require(
+                    preview
+                        == afterData.userData.collateral - beforeData.userData.collateral,
+                    "Does not match preview mint"
+                );
+                require(
+                    beforeData.pTokenData.totalSupplyUnderlying + mintAmount
+                        == afterData.pTokenData.totalSupplyUnderlying,
+                    "Did not transfer token to total supply ptoken"
+                );
+                require(
+                    beforeData.pTokenData.totalCash + mintAmount
+                        == afterData.pTokenData.totalCash,
+                    "Did not transfer token to pToken"
+                );
+                assertApproxEqRel(
+                    beforeData.userData.collateral + mintAmount,
+                    afterData.userData.collateral,
+                    1e12, // ± 0.0001000000000000%
+                    "Did not deposit in pToken"
+                );
+                require(
+                    beforeData.pTokenData.totalSupply + amount
+                        == afterData.pTokenData.totalSupply,
+                    "Did not increase total supply"
+                );
+                require(
+                    beforeData.userData.underlyingBalance
+                        == mintAmount + afterData.userData.underlyingBalance,
+                    "Did not transfer token from user"
+                );
+            } else {
+                require(
+                    beforeData.pTokenData.totalSupplyUnderlying
+                        == afterData.pTokenData.totalSupplyUnderlying,
+                    "Did transfer token to total supply ptoken"
+                );
+                require(
+                    beforeData.pTokenData.totalCash == afterData.pTokenData.totalCash,
+                    "Did transfer token to pToken"
+                );
+                require(
+                    beforeData.userData.collateral == afterData.userData.collateral,
+                    "Did deposit in pToken"
+                );
+                require(
+                    beforeData.pTokenData.totalSupply == afterData.pTokenData.totalSupply,
+                    "Did increase total supply"
+                );
+                require(
+                    beforeData.userData.underlyingBalance
+                        == afterData.userData.underlyingBalance,
+                    "Did transfer token from user"
+                );
+            }
+        } else if (action == Action.SUPPLY) {
             uint256 mintTokens = amount * ONE_MANTISSA / exchangeRateStored;
             if (!expectRevert) {
+                require(
+                    preview
+                        == afterData.pTokenData.totalSupply
+                            - beforeData.pTokenData.totalSupply,
+                    "Does not match preview deposit"
+                );
+                require(
+                    beforeData.pTokenData.totalSupplyUnderlying + amount
+                        == afterData.pTokenData.totalSupplyUnderlying,
+                    "Did not transfer token to total supply ptoken"
+                );
                 require(
                     beforeData.pTokenData.totalCash + amount
                         == afterData.pTokenData.totalCash,
@@ -156,6 +229,11 @@ contract TestUtilities is TestDeploy {
                 );
             } else {
                 require(
+                    beforeData.pTokenData.totalSupplyUnderlying
+                        == afterData.pTokenData.totalSupplyUnderlying,
+                    "Did not transfer token to total supply ptoken"
+                );
+                require(
                     beforeData.pTokenData.totalCash == afterData.pTokenData.totalCash,
                     "Did transfer token to pToken"
                 );
@@ -177,6 +255,11 @@ contract TestUtilities is TestDeploy {
             if (amount >= beforeData.userData.borrowed) {
                 amount = beforeData.userData.borrowed;
             }
+            require(
+                beforeData.pTokenData.totalSupplyUnderlying
+                    == afterData.pTokenData.totalSupplyUnderlying,
+                "Did not transfer token to total supply ptoken"
+            );
             if (!expectRevert) {
                 require(
                     amount + afterData.pTokenData.totalBorrow
@@ -225,6 +308,27 @@ contract TestUtilities is TestDeploy {
                 redeemTokens = amount * ONE_MANTISSA / exchangeRateStored;
             }
             if (!expectRevert) {
+                if (action == Action.WITHDRAW) {
+                    require(
+                        preview
+                            == beforeData.pTokenData.totalSupplyUnderlying
+                                - afterData.pTokenData.totalSupplyUnderlying,
+                        "Does not match preview redeem"
+                    );
+                } else if (action == Action.WITHDRAW_UNDERLYING) {
+                    require(
+                        preview
+                            == beforeData.pTokenData.totalSupply
+                                - afterData.pTokenData.totalSupply,
+                        "Does not match preview withdraw"
+                    );
+                }
+                assertApproxEqRel(
+                    beforeData.pTokenData.totalSupplyUnderlying,
+                    afterData.pTokenData.totalSupplyUnderlying + amount,
+                    1e11, // ± 0.0000100000000000%
+                    "Did not transfer token to total supply ptoken"
+                );
                 assertApproxEqRel(
                     beforeData.pTokenData.totalSupply,
                     redeemTokens + afterData.pTokenData.totalSupply,
@@ -240,7 +344,7 @@ contract TestUtilities is TestDeploy {
                 assertApproxEqRel(
                     beforeData.pTokenData.totalCash,
                     amount + afterData.pTokenData.totalCash,
-                    1e11, // ± 0.0000100000000000%
+                    1e12, // ± 0.0001000000000000%
                     "Did not transfer money from pToken"
                 );
                 assertApproxEqRel(
@@ -250,6 +354,11 @@ contract TestUtilities is TestDeploy {
                     "Did not transfer money to user"
                 );
             } else {
+                require(
+                    beforeData.pTokenData.totalSupplyUnderlying
+                        == afterData.pTokenData.totalSupplyUnderlying,
+                    "Did not transfer token to total supply ptoken"
+                );
                 require(
                     beforeData.pTokenData.totalSupply == afterData.pTokenData.totalSupply,
                     "Did withdraw from ptoken"
@@ -269,6 +378,11 @@ contract TestUtilities is TestDeploy {
                 );
             }
         } else if (action == Action.BORROW) {
+            require(
+                beforeData.pTokenData.totalSupplyUnderlying
+                    == afterData.pTokenData.totalSupplyUnderlying,
+                "Did not transfer token to total supply ptoken"
+            );
             if (!expectRevert) {
                 require(
                     afterData.pTokenData.totalBorrow

@@ -59,7 +59,7 @@ contract FuzzDeposit is TestFuzz {
 
         setPTokenTotalSupply(address(pUSDC), pTokenTotalSupply);
         setTotalBorrows(address(pUSDC), totalBorrows);
-        deal(address(pUSDC.underlying()), address(pUSDC), cash);
+        deal(address(pUSDC.asset()), address(pUSDC), cash);
 
         doDepositAndEnter(depositor, onBehalfOf, address(pUSDC), underlyingToDeposit);
 
