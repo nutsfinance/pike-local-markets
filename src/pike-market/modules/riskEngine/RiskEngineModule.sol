@@ -57,7 +57,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         RiskEngineData storage $ = _getRiskEngineStorage();
         uint256 oldCloseFactorMantissa = $.closeFactorMantissa[pTokenAddress];
         $.closeFactorMantissa[pTokenAddress] = newCloseFactorMantissa;
-        emit NewCloseFactor(oldCloseFactorMantissa, newCloseFactorMantissa);
+        emit NewCloseFactor(pTokenAddress, oldCloseFactorMantissa, newCloseFactorMantissa);
     }
 
     /**
