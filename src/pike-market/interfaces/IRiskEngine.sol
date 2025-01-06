@@ -57,13 +57,17 @@ interface IRiskEngine {
     event MarketExited(IPToken pToken, address account);
 
     /// @notice Emitted when close factor is changed by admin
-    event NewCloseFactor(uint256 oldCloseFactorMantissa, uint256 newCloseFactorMantissa);
+    event NewCloseFactor(
+        address indexed pToken,
+        uint256 oldCloseFactorMantissa,
+        uint256 newCloseFactorMantissa
+    );
 
     /// @notice Emitted when an action is paused globally
     event ActionPaused(string action, bool pauseState);
 
     /// @notice Emitted when an action is paused on a market
-    event ActionPaused(IPToken pToken, string action, bool pauseState);
+    event ActionPaused(IPToken indexed pToken, string action, bool pauseState);
 
     /// @notice Emitted when borrow cap for a pToken is changed
     event NewBorrowCap(IPToken indexed pToken, uint256 newBorrowCap);
