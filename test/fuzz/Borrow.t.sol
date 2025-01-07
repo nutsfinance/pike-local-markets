@@ -97,7 +97,9 @@ contract FuzzBorrow is TestFuzz {
         vm.assume((wethCash + wethTotalBorrows) / wethTotalSupply < 8);
 
         vm.prank(getAdmin());
-        re.setCollateralFactor(pUSDC, usdcCF, usdcCF);
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(usdcCF, usdcCF, 108e16);
+        re.configureMarket(pUSDC, config);
         mockOracle.setPrice(address(pWETH), wethPrice, 18);
         mockOracle.setPrice(address(pUSDC), usdcPrice, 6);
 

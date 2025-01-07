@@ -1,0 +1,97 @@
+[contract.InitialModuleBundle]
+artifact = "src/local-market/modules/InitialModuleBundle.sol:InitialModuleBundle"
+
+[contract.DoubleJumpRateModel]
+artifact = "DoubleJumpRateModel"
+
+[contract.RBACModule]
+artifact = "RBACModule"
+
+[contract.PTokenModule]
+artifact = "PTokenModule"
+
+[contract.RiskEngineModule]
+artifact = "RiskEngineModule"
+
+[contract.OracleEngine]
+artifact = "OracleEngine"
+
+#PToken
+[router.PTokenRouter]
+contracts = [
+    "InitialModuleBundle",
+    "DoubleJumpRateModel",
+    "RBACModule",
+    "PTokenModule",
+]
+
+#Core
+[router.CoreRouter]
+contracts = [
+    "InitialModuleBundle",
+    "RBACModule",
+    "RiskEngineModule",
+]
+
+[clone.core]
+source = "pike-upgradeable-proxy:0.1.0@main"
+options.implementation = "<%= contracts.CoreRouter.address %>"
+options.owner = "<%= settings.protocol_owner %>"
+options.abi = "<%= JSON.stringify(contracts.CoreRouter.abi) %>"
+
+[invoke.set_oracle]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RiskEngineModule.abi) %>"
+from = "<%= settings.protocol_owner %>"
+func = "setOracle"
+args = ["<%= oracleEngine.Proxy.address %>"]
+depends = ["invoke.set_core_configurator"]
+
+[invoke.set_core_configurator]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.protocol_owner %>"
+func = "grantPermission"
+args = ["<%= settings.roles_confRole %>", "<%= settings.core_configurator %>"]
+
+[invoke.set_core_pause_guard]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.protocol_owner %>"
+func = "grantPermission"
+args = ["<%= settings.roles_pauseGuardRole %>", "<%= settings.core_pauseGuard %>"]
+
+[invoke.set_core_protocol_owner]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.protocol_owner %>"
+func = "grantPermission"
+args = ["<%= settings.roles_protocol_owner %>", "<%= settings.protocol_owner %>"]
+
+[invoke.set_core_reserve_manager]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.protocol_owner %>"
+func = "grantPermission"
+args = ["<%= settings.roles_reserveManagerRole %>", "<%= settings.core_reserveManager %>"]
+
+[invoke.set_core_reserve_withdrawer]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.protocol_owner %>"
+func = "grantPermission"
+args = ["<%= settings.roles_reserveWithdrawerRole %>", "<%= settings.core_reserveWithdrawer %>"]
+
+[invoke.set_core_supply_guard]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.protocol_owner %>"
+func = "grantPermission"
+args = ["<%= settings.roles_supGuardRole %>", "<%= settings.core_supplyGuard %>"]
+
+[invoke.set_core_borrow_guard]
+target = [ "core.Proxy" ]
+abi = "<%= JSON.stringify(contracts.RBACModule.abi) %>"
+from = "<%= settings.protocol_owner %>"
+func = "grantPermission"
+args = ["<%= settings.roles_borGuardRole %>", "<%= settings.core_borrowGuard %>"]

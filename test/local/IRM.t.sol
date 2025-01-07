@@ -10,7 +10,6 @@ import {
     IDoubleJumpRateModel
 } from "@modules/interestRateModel/DoubleJumpRateModel.sol";
 import {TestLocal} from "@helpers/TestLocal.sol";
-
 import {MockOracle} from "@mocks/MockOracle.sol";
 
 contract LocalIRM is TestLocal {

@@ -434,7 +434,7 @@ contract TestUtilities is TestDeploy {
 
         // we assume repay amount is equal to what is transferred
         (, uint256 seizeTokens) = riskEngine.liquidateCalculateSeizeTokens(
-            lp.borrowedPToken, lp.collateralPToken, lp.repayAmount
+            lp.userToLiquidate, lp.borrowedPToken, lp.collateralPToken, lp.repayAmount
         );
 
         uint256 protocolSeizeToken = seizeTokens

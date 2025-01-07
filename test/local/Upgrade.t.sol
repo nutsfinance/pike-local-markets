@@ -11,7 +11,6 @@ import {PTokenModule} from "@modules/pToken/PTokenModule.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {TestLocal} from "@helpers/TestLocal.sol";
-
 import {MockOracle} from "@mocks/MockOracle.sol";
 
 contract LocalRBAC is TestLocal {
