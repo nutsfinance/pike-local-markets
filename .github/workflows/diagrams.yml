@@ -28,7 +28,7 @@ jobs:
       - name: Remove existing diagrams
         run: |
           mkdir -p public/uml
-          rm -rf public/uml/*.png
+          rm -rf public/uml/*.svg
 
       - name: Flatten contracts and generate UML
         run: |
