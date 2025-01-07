@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+import "forge-std/Test.sol";
 import {TestSetters} from "@helpers/TestSetters.sol";
 import {DiamondCutFacet} from "@mocks/Diamond/facets/DiamondCutFacet.sol";
 import {Diamond} from "@mocks/Diamond/Diamond.sol";
@@ -20,6 +21,9 @@ contract TestDeploy is TestSetters {
 
     bytes32 constant configurator_permission =
         0x434f4e464947555241544f520000000000000000000000000000000000000000;
+
+    bytes32 constant protocol_owner =
+        0x50524f544f434f4c5f4f574e4552000000000000000000000000000000000000;
 
     bytes32 constant supply_guard_permission =
         0x535550504c595f4341505f475541524449414e00000000000000000000000000;
@@ -56,7 +60,7 @@ contract TestDeploy is TestSetters {
         address oracle = address(new MockOracle());
         setOracle(oracle);
 
-        deployRiskEngine(closeFactor, liquidationIncentive);
+        deployRiskEngine();
     }
 
     function deployPToken(
@@ -119,17 +123,8 @@ contract TestDeploy is TestSetters {
             initData.pTokenDecimals
         );
 
-        IRBAC(_pToken).grantPermission(reserve_manager_permission, getAdmin());
-        IRBAC(_pToken).grantPermission(reserve_withdrawer_permission, getAdmin());
-        IRBAC(_pToken).grantPermission(configurator_permission, getAdmin());
         IRBAC(address(re)).grantNestedPermission(
             configurator_permission, _pToken, getAdmin()
-        );
-        IRBAC(address(re)).grantNestedPermission(
-            supply_guard_permission, _pToken, getAdmin()
-        );
-        IRBAC(address(re)).grantNestedPermission(
-            borrow_guard_permission, _pToken, getAdmin()
         );
 
         DoubleJumpRateModel interestRateModule = DoubleJumpRateModel(_pToken);
@@ -143,10 +138,12 @@ contract TestDeploy is TestSetters {
         );
 
         re.supportMarket(IPToken(_pToken));
-        re.setCollateralFactor(IPToken(_pToken), colFactor, liqThreshold);
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(colFactor, liqThreshold, liquidationIncentive);
+        re.configureMarket(IPToken(_pToken), config);
 
-        assertEq(re.collateralFactor(IPToken(_pToken)), colFactor);
-        assertEq(re.liquidationThreshold(IPToken(_pToken)), liqThreshold);
+        assertEq(re.collateralFactor(0, IPToken(_pToken)), colFactor);
+        assertEq(re.liquidationThreshold(0, IPToken(_pToken)), liqThreshold);
 
         IPToken[] memory markets = new IPToken[](1);
         markets[0] = IPToken(_pToken);
@@ -160,6 +157,11 @@ contract TestDeploy is TestSetters {
         assertEq(re.supplyCap(address(markets[0])), caps[0]);
         assertEq(re.borrowCap(address(markets[0])), caps[0]);
 
+        re.setCloseFactor(_pToken, closeFactor);
+
+        assertEq(re.liquidationIncentive(0, _pToken), liquidationIncentive);
+        assertEq(re.closeFactor(_pToken), closeFactor);
+
         vm.stopPrank();
 
         assertEq(IPToken(_pToken).decimals(), pTokenDecimals);
@@ -172,11 +174,7 @@ contract TestDeploy is TestSetters {
         return _pToken;
     }
 
-    function deployRiskEngine(uint256 _closeFactor, uint256 _liquidationIncentive)
-        internal
-        virtual
-        returns (address)
-    {
+    function deployRiskEngine() internal virtual returns (address) {
         string[] memory riskEngineModulesFacets = new string[](3);
         riskEngineModulesFacets[0] = "InitialModuleBundle";
         riskEngineModulesFacets[1] = "RBACModule";
@@ -198,13 +196,14 @@ contract TestDeploy is TestSetters {
 
         IRBAC(riskEngine).grantPermission(configurator_permission, getAdmin());
         IRBAC(riskEngine).grantPermission(pause_guard_permission, getAdmin());
+        IRBAC(riskEngine).grantPermission(protocol_owner, getAdmin());
+        IRBAC(riskEngine).grantPermission(supply_guard_permission, getAdmin());
+        IRBAC(riskEngine).grantPermission(borrow_guard_permission, getAdmin());
+
+        IRBAC(riskEngine).grantPermission(reserve_manager_permission, getAdmin());
+        IRBAC(riskEngine).grantPermission(reserve_withdrawer_permission, getAdmin());
 
         IRiskEngine(riskEngine).setOracle(getOracle());
-        IRiskEngine(riskEngine).setCloseFactor(_closeFactor);
-        IRiskEngine(riskEngine).setLiquidationIncentive(_liquidationIncentive);
-
-        assertEq(IRiskEngine(riskEngine).liquidationIncentive(), _liquidationIncentive);
-        assertEq(IRiskEngine(riskEngine).closeFactor(), _closeFactor);
 
         vm.stopPrank();
 

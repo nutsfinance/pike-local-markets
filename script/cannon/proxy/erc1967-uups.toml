@@ -1,13 +1,10 @@
-name = "universal-upgradeable-proxy"
+name = "pike-upgradeable-proxy"
 version = "0.1.0"
-preset = "erc1967-upgrade"
+preset = "oz"
 description = "Universal Proxy using OpenZeppelin UUPS contracts"
 
 [var.implementation]
 implementation = "<%= contracts.UUPSUpgradeableMock.address %>"
-
-[var.salt]
-salt = "main"
 
 [var.owner]
 owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
@@ -15,19 +12,20 @@ owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
 [var.abi]
 abi = "<%= JSON.stringify(contracts.UUPSUpgradeableMock.abi) %>"
 
+[var.salt]
+salt = "oz"
+
 [var.initialCallData]
 initialCallData = "0x"
 
 [deploy.UUPSUpgradeableMock]
 artifact = "UUPSUpgradeableMock"
-salt = "<%= settings.salt %>"
-create2 = true
 
 [deploy.InitialProxy]
 artifact = "ERC1967Proxy"
 args = [
   "<%= contracts.UUPSUpgradeableMock.address %>",
-  "<%= settings.initialCallData %>"
+  "0x"
 ]
 salt = "<%= settings.salt %>"
 create2 = true

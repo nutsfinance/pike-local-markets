@@ -8,7 +8,8 @@ import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
 import {PTokenStorage} from "@storage/PTokenStorage.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
-import {RBACMixin} from "@utils/RBACMixin.sol";
+import {IRBAC} from "@interfaces/IRBAC.sol";
+import {RBACStorage} from "@storage/RBACStorage.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {PTokenError} from "@errors/PTokenError.sol";
@@ -19,7 +20,7 @@ import {IPToken} from "@interfaces/IPToken.sol";
  * @notice ERC20 Compatible PTokens
  * @author NUTS Finance (hello@pike.finance)
  */
-contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
+contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     using ExponentialNoError for ExponentialNoError.Exp;
     using ExponentialNoError for uint256;
     using SafeERC20 for IERC20;
@@ -111,7 +112,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
      * @inheritdoc IPToken
      */
     function setReserveFactor(uint256 newReserveFactorMantissa) external {
-        checkPermission(_RESERVE_MANAGER_PERMISSION, msg.sender);
+        _checkPermission(_RESERVE_MANAGER_PERMISSION, msg.sender);
         accrueInterest();
         // _setReserveFactorFresh emits reserve-factor-specific logs on errors, so we don't need to.
         _setReserveFactorFresh(newReserveFactorMantissa);
@@ -121,7 +122,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
      * @inheritdoc IPToken
      */
     function setProtocolSeizeShare(uint256 newProtocolSeizeShareMantissa) external {
-        checkPermission(_RESERVE_MANAGER_PERMISSION, msg.sender);
+        _checkPermission(_RESERVE_MANAGER_PERMISSION, msg.sender);
 
         _setProtocolSeizeShareMantissa(newProtocolSeizeShareMantissa);
     }
@@ -140,7 +141,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
      * @inheritdoc IPToken
      */
     function reduceReserves(uint256 reduceAmount) external nonReentrant {
-        checkPermission(_RESERVE_WITHDRAWER_PERMISSION, msg.sender);
+        _checkPermission(_RESERVE_WITHDRAWER_PERMISSION, msg.sender);
         accrueInterest();
         // _reduceReservesFresh emits reserve-reduction-specific logs on errors, so we don't need to.
         _reduceReservesFresh(reduceAmount);
@@ -687,8 +688,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
     /**
      * @inheritdoc IPToken
      */
-    function maxDeposit(address) public view returns (uint256) {
-        uint256 allowed = _getPTokenStorage().riskEngine.mintAllowed(address(this), 1);
+    function maxDeposit(address account) public view returns (uint256) {
+        uint256 allowed =
+            _getPTokenStorage().riskEngine.mintAllowed(account, address(this), 1);
         if (allowed != 0) {
             return 0;
         }
@@ -748,8 +750,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         }
 
         /* Fail if mint not allowed */
-        uint256 allowed =
-            _getPTokenStorage().riskEngine.mintAllowed(address(this), mintAmountIn);
+        uint256 allowed = _getPTokenStorage().riskEngine.mintAllowed(
+            minter, address(this), mintAmountIn
+        );
         if (allowed != 0) {
             revert PTokenError.MintRiskEngineRejection(allowed);
         }
@@ -1005,6 +1008,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
             _getPTokenStorage().borrowIndex;
         _getPTokenStorage().totalBorrows = totalBorrowsNew;
 
+        _getPTokenStorage().riskEngine.repayBorrowVerify(
+            IPToken(address(this)), onBehalfOf
+        );
+
         /* We emit a RepayBorrow event */
         emit RepayBorrow(
             payer, onBehalfOf, actualRepayAmount, accountBorrowsNew, totalBorrowsNew
@@ -1071,7 +1078,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
         (uint256 amountSeizeError, uint256 seizeTokens) = _getPTokenStorage()
             .riskEngine
             .liquidateCalculateSeizeTokens(
-            address(this), address(pTokenCollateral), actualRepayAmount
+            borrower, address(this), address(pTokenCollateral), actualRepayAmount
         );
         if (amountSeizeError != CommonError.NO_ERROR) {
             revert PTokenError.LiquidateCalculateAmountSeizeFailed(amountSeizeError);
@@ -1486,6 +1493,23 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACMixin {
     function _reentrancyGuardEntered() internal view returns (bool result) {
         assembly ("memory-safe") {
             result := tload(_SLOT_PTOKEN_STORAGE)
+        }
+    }
+
+    /**
+     * @dev Checks permission of given role from assigned risk engine
+     */
+    function _checkPermission(bytes32 permission, address target)
+        internal
+        view
+        override
+    {
+        if (
+            !IRBAC(address(_getPTokenStorage().riskEngine)).hasPermission(
+                permission, target
+            )
+        ) {
+            revert PermissionDenied(permission, target);
         }
     }
 }

@@ -10,7 +10,6 @@ import {PTokenModule} from "@modules/pToken/PTokenModule.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {TestLocal} from "@helpers/TestLocal.sol";
-
 import {MockOracle} from "@mocks/MockOracle.sol";
 
 contract LocalRBAC is TestLocal {
@@ -87,14 +86,15 @@ contract LocalRBAC is TestLocal {
         );
         re.setMintPaused(pWETH, true);
 
-        // "NestedPermissionDenied(bytes32,address,address)" selector
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(0, 0, 108e16);
+        // "PermissionDenied(bytes32,address)" selector
         vm.expectRevert(
             abi.encodePacked(
-                bytes4(0x386bcd36),
-                abi.encode(configurator_permission, address(pWETH), address(1))
+                bytes4(0xc768858b), abi.encode(configurator_permission, address(1))
             )
         );
-        re.setCollateralFactor(pWETH, 0, 0);
+        re.configureMarket(pWETH, config);
 
         vm.stopPrank();
     }
