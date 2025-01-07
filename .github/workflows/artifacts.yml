@@ -53,7 +53,7 @@ jobs:
           {
             "name": "pike-local-market-abi",
             "version": "$new_version",
-            "description": "ABI package for Pike Local Markets",
+            "description": "ABI package for Pike Markets",
             "main": "index.js",
             "files": ["consolidated"],
             "author": "NUTS Finance",

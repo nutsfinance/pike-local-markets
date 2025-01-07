@@ -8,4 +8,9 @@ contract TestLocal is TestHelpers {
         setLocalState(true);
         deployProtocol();
     }
+
+    function initFactory() public {
+        setLocalState(true);
+        deployProtocolFactory();
+    }
 }

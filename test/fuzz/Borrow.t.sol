@@ -115,6 +115,12 @@ contract FuzzBorrow is TestFuzz {
             re.updateDelegate(borrower, true);
         }
 
+        uint256 actualShares = pUSDC.previewWithdraw(usdcToDeposit);
+        uint256 idealShares = pUSDC.convertToShares(usdcToDeposit);
+        uint256 actualAssets = pWETH.previewRedeem(wethToBorrow);
+        uint256 idealAssets = pWETH.convertToAssets(wethToBorrow);
+        require(idealAssets >= actualAssets && idealShares <= actualShares);
+
         doDepositAndEnter(borrower, onBehalfOf, address(pUSDC), usdcToDeposit);
         doBorrow(borrower, onBehalfOf, address(pWETH), wethToBorrow);
         doRepay(borrower, onBehalfOf, address(pWETH), wethToRepay);

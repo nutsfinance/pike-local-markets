@@ -1,7 +1,7 @@
-name = "pike-local-market"
+name = "pike-market"
 version = "0.1.0"
 preset = "main"
-description = "Local markets for Pike mainnet deployment"
+description = "Pike markets for Pike mainnet deployment"
 
 include = [
     # global params 

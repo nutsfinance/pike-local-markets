@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {IOracleProvider} from "@oracles/interfaces/IOracleProvider.sol";
+import {IPythOracleProvider} from "@oracles/interfaces/IPythOracleProvider.sol";
 import {IPyth, PythStructs} from "@pythnetwork/IPyth.sol";
 import {OwnableUpgradeable} from
     "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -10,7 +10,19 @@ import {IERC20Metadata} from
 import {UUPSUpgradeable} from
     "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradeable {
+contract PythOracleProvider is
+    IPythOracleProvider,
+    UUPSUpgradeable,
+    OwnableUpgradeable
+{
+    /// @custom:storage-location erc7201:pike.OE.provider
+    struct OracleProviderStorage {
+        /**
+         * @notice Mapping of asset address to its configuration
+         */
+        mapping(address => AssetConfig) configs;
+    }
+
     struct AssetConfig {
         /**
          * @notice Pyth feed for the asset
@@ -26,37 +38,14 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
         uint256 maxStalePeriod;
     }
 
+    /// keccak256(abi.encode(uint256(keccak256("pike.OE.provider")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 internal constant _ORACLE_PROVIDER_STORAGE =
+        0x5fa1a95efabc4eee5395b3503834a3e8dddcd4f606102ddd245db9714a38bb00;
+
     /**
      * @notice Pyth oracle
      */
     IPyth public immutable pyth;
-
-    /**
-     * @notice Mapping of asset address to its configuration
-     */
-    mapping(address => AssetConfig) public configs;
-
-    /**
-     * @notice Event emitted when asset configuration is set
-     */
-    event AssetConfigSet(
-        address asset, bytes32 feed, uint256 confidenceRatioMin, uint256 maxStalePeriod
-    );
-
-    /**
-     * @notice Error emitted when asset is invalid
-     */
-    error InvalidAsset();
-
-    /**
-     * @notice Error emitted when min confidence ratio is invalid
-     */
-    error InvalidMinConfRatio();
-
-    /**
-     * @notice Error emitted when max stale period is invalid
-     */
-    error InvalidMaxStalePeriod();
 
     /**
      * @notice Contract constructor
@@ -76,11 +65,7 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
     }
 
     /**
-     * @notice Set the asset configuration
-     * @param asset Address of the asset
-     * @param feed Pyth feed for the asset
-     * @param confidenceRatioMin Minimum confidence ratio for the price feed
-     * @param maxStalePeriod Maximum stale period for the price feed
+     * @inheritdoc IPythOracleProvider
      */
     function setAssetConfig(
         address asset,
@@ -96,7 +81,8 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
             revert InvalidMaxStalePeriod();
         }
 
-        configs[asset] = AssetConfig(feed, confidenceRatioMin, maxStalePeriod);
+        _getProviderStorage().configs[asset] =
+            AssetConfig(feed, confidenceRatioMin, maxStalePeriod);
         emit AssetConfigSet(asset, feed, confidenceRatioMin, maxStalePeriod);
     }
 
@@ -106,7 +92,7 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
      * @return Price of the asset scaled to (36 - assetDecimals) decimals
      */
     function getPrice(address asset) external view override returns (uint256) {
-        AssetConfig memory config = configs[asset];
+        AssetConfig memory config = _getProviderStorage().configs[asset];
 
         PythStructs.Price memory priceInfo =
             pyth.getPriceNoOlderThan(config.feed, config.maxStalePeriod);
@@ -132,4 +118,15 @@ contract PythOracleProvider is IOracleProvider, UUPSUpgradeable, OwnableUpgradea
      * @param newImplementation Address of the new implementation
      */
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    function _getProviderStorage()
+        internal
+        pure
+        returns (OracleProviderStorage storage data)
+    {
+        bytes32 s = _ORACLE_PROVIDER_STORAGE;
+        assembly {
+            data.slot := s
+        }
+    }
 }

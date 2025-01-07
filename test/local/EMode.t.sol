@@ -64,10 +64,49 @@ contract LocalEMode is TestLocal {
 
         vm.stopPrank();
 
+        assertEq(re.liquidationIncentive(categoryId, pToken[0]), 102e16);
+        assertEq(re.liquidationIncentive(categoryId, pToken[1]), 102e16);
+
         address depositor = makeAddr("depositor");
         doDeposit(depositor, depositor, address(pWETH), 10e18);
         doDeposit(depositor, depositor, address(pSTETH), 10e18);
-        doDeposit(depositor, depositor, address(pWETH), 10e18);
+    }
+
+    function testSupportEMode_Fail() public {
+        bool[] memory newArray = new bool[](1);
+        vm.startPrank(getAdmin());
+
+        // "InvalidCategory()" selector
+        vm.expectRevert(0xd67592f6);
+        re.supportEMode(0, true, pToken, collateralPermissions, borrowPermissions);
+
+        // "NoArrayParity()" selector
+        vm.expectRevert(0x266c51bb);
+        re.supportEMode(2, true, pToken, newArray, borrowPermissions);
+
+        pToken[1] = address(1);
+
+        // "NotListed()" selector
+        vm.expectRevert(0x665c1c57);
+        re.supportEMode(2, true, pToken, collateralPermissions, borrowPermissions);
+
+        IRiskEngine.BaseConfiguration memory baseConfig =
+            IRiskEngine.BaseConfiguration(90e16, 93e17, 102e16);
+
+        // "InvalidCategory()" selector
+        vm.expectRevert(0xd67592f6);
+        re.configureEMode(0, baseConfig);
+
+        // "InvalidLiquidationThreshold()" selector
+        vm.expectRevert(0x3e51d2c0);
+        re.configureEMode(1, baseConfig);
+
+        baseConfig = IRiskEngine.BaseConfiguration(94e16, 93e16, 102e16);
+        // "InvalidLiquidationThreshold()" selector
+        vm.expectRevert(0x3e51d2c0);
+        re.configureEMode(1, baseConfig);
+
+        vm.stopPrank();
     }
 
     function testSwitchEMode_Success() public {
@@ -144,16 +183,52 @@ contract LocalEMode is TestLocal {
     function testSwitchEMode_FailIfNotAllowed() public {
         address user1 = makeAddr("user1");
 
+        vm.prank(user1);
+        re.switchEMode(1);
+
+        doDepositAndEnter(user1, user1, address(pSTETH), 1e18);
+        doBorrow(user1, user1, address(pWETH), 5e17);
+        doBorrow(user1, user1, address(pWETH), 4e17);
+
+        assertEq(re.checkBorrowMembership(user1, pWETH), true);
+
+        vm.startPrank(user1);
+        // fail if e-mode is make shortfall
+        // "SwitchEMode(uint256)" selector
+        vm.expectRevert(abi.encodePacked(bytes4(0x19085eda), abi.encode(3)));
+        re.switchEMode(0);
+
         // fail if e-mode is not supported
         // "InvalidCategory()" selector
-        vm.startPrank(user1);
         vm.expectRevert(abi.encodePacked(bytes4(0xd67592f6)));
         re.switchEMode(2);
 
         // fail if e-mode is already activated
         // "AlreadyInEMode()" selector
-        vm.startPrank(user1);
         vm.expectRevert(abi.encodePacked(bytes4(0x99f962a0)));
-        re.switchEMode(0);
+        re.switchEMode(1);
+
+        vm.stopPrank();
+
+        vm.prank(getAdmin());
+        re.supportEMode(1, false, pToken, collateralPermissions, borrowPermissions);
+
+        // "MintRiskEngineRejection(uint256)" selector
+        doDepositRevert(
+            user1,
+            user1,
+            address(pSTETH),
+            1,
+            abi.encodePacked(bytes4(0x1d3413fb), uint256(11))
+        );
+
+        // "RedeemRiskEngineRejection(uint256)" selector
+        doWithdrawRevert(
+            user1,
+            user1,
+            address(pSTETH),
+            1,
+            abi.encodePacked(bytes4(0x9759ead5), uint256(11))
+        );
     }
 }

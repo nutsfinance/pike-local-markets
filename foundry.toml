@@ -16,12 +16,14 @@ remappings = [
   "cannon-std/=node_modules/cannon-std/src/",
   "@helpers/=test/helpers/",
   "@mocks/=test/mocks/",
-  "@interfaces/=src/local-market/interfaces/",
-  "@storage/=src/local-market/storage/",
-  "@modules/=src/local-market/modules/",
-  "@errors/=src/local-market/errors/",
-  "@utils/=src/local-market/utils/",
-  "@oracles/=src/oracles/"
+  "@interfaces/=src/pike-market/interfaces/",
+  "@storage/=src/pike-market/storage/",
+  "@modules/=src/pike-market/modules/",
+  "@errors/=src/pike-market/errors/",
+  "@utils/=src/pike-market/utils/",
+  "@oracles/=src/oracles/",
+  "@governance/=src/governance/",
+  "@factory/=src/"
 ]
 ffi = true
 
