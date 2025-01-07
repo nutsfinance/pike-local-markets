@@ -12,5 +12,5 @@ options.salt = "oracleEngine"
 [invoke.initialize_oe]
 target = ["oracleEngine.Proxy"]
 func = "initialize"
-args = ["<%= settings.oracleEngine_owner %>"]
+args = ["<%= settings.oracleEngine_owner %>", "<%= settings.oracleEngine_owner %>"]
 depends = [ "clone.oracleEngine"]

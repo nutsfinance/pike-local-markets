@@ -2,6 +2,13 @@
 pragma solidity 0.8.28;
 
 import "forge-std/Test.sol";
+import {Timelock} from "@governance/Timelock.sol";
+import {Factory} from "@factory/Factory.sol";
+import {UpgradeableBeacon} from
+    "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import {console} from "forge-std/console.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {CannonDeploy} from "@helpers/TestDeployFactory.sol";
 import {TestSetters} from "@helpers/TestSetters.sol";
 import {DiamondCutFacet} from "@mocks/Diamond/facets/DiamondCutFacet.sol";
 import {Diamond} from "@mocks/Diamond/Diamond.sol";
@@ -9,6 +16,7 @@ import {DiamondLoupeFacet} from "@mocks/Diamond/facets/DiamondLoupeFacet.sol";
 import {strings} from "@mocks/Diamond/libraries/Strings.sol";
 import {IDiamondCut} from "@mocks/Diamond/IDiamondCut.sol";
 import {InitialModuleBundle} from "@modules/InitialModuleBundle.sol";
+import {InitialModuleBeacon} from "@modules/InitialModuleBeacon.sol";
 import {RBACModule, IRBAC} from "@modules/common/RBACModule.sol";
 import {RiskEngineModule, IRiskEngine} from "@modules/riskEngine/RiskEngineModule.sol";
 import {DoubleJumpRateModel} from "@modules/interestRateModel/DoubleJumpRateModel.sol";
@@ -16,11 +24,17 @@ import {PTokenModule, IPToken} from "@modules/pToken/PTokenModule.sol";
 import {MockToken, MockReentrantToken} from "@mocks/MockToken.sol";
 import {MockOracle} from "@mocks/MockOracle.sol";
 
-contract TestDeploy is TestSetters {
+contract TestDeploy is TestSetters, CannonDeploy {
     using strings for *;
 
     bytes32 constant configurator_permission =
         0x434f4e464947555241544f520000000000000000000000000000000000000000;
+
+    bytes32 constant owner_withdrawer =
+        0x4f574e45525f5749544844524157455200000000000000000000000000000000;
+
+    bytes32 constant emergency_withdrawer =
+        0x454d455247454e43595f57495448445241574552000000000000000000000000;
 
     bytes32 constant protocol_owner =
         0x50524f544f434f4c5f4f574e4552000000000000000000000000000000000000;
@@ -39,6 +53,9 @@ contract TestDeploy is TestSetters {
 
     bytes32 constant reserve_withdrawer_permission =
         0x524553455256455f574954484452415745520000000000000000000000000000;
+
+    uint256 ownerShare = 30e16; //30%
+    uint256 configuratorShare = 20e16; //20%
 
     uint256 initialExchangeRate = 1e18;
     uint256 reserveFactor = 10e16;
@@ -61,6 +78,32 @@ contract TestDeploy is TestSetters {
         setOracle(oracle);
 
         deployRiskEngine();
+    }
+
+    function deployProtocolFactory() public virtual {
+        runFactory();
+        address oracleImpl = getAddress[keccak256("OracleEngine")];
+        address oracle = address(new UpgradeableBeacon(oracleImpl, getAdmin()));
+        setOracle(oracle);
+        address riskEngine = getAddress[keccak256("reBeacon")];
+        setRiskEngine(riskEngine);
+        address timelock = deployTimelock();
+        setTimelock(timelock);
+        address pToken = getAddress[keccak256("pTokenBeacon")];
+        setPToken("beacon", pToken);
+
+        bytes memory factoryInit = abi.encodeCall(
+            Factory.initialize, (getAdmin(), riskEngine, oracle, pToken, timelock)
+        );
+
+        Factory factory = new Factory();
+        address factoryProxy = address(new ERC1967Proxy(address(factory), factoryInit));
+        setFactory(factoryProxy);
+    }
+
+    function deployTimelock() internal returns (address) {
+        address timelockImpl = address(new Timelock());
+        return address(new UpgradeableBeacon(timelockImpl, getAdmin()));
     }
 
     function deployPToken(
@@ -202,8 +245,11 @@ contract TestDeploy is TestSetters {
 
         IRBAC(riskEngine).grantPermission(reserve_manager_permission, getAdmin());
         IRBAC(riskEngine).grantPermission(reserve_withdrawer_permission, getAdmin());
+        IRBAC(riskEngine).grantPermission(emergency_withdrawer, getAdmin());
+        IRBAC(riskEngine).grantPermission(owner_withdrawer, getAdmin());
 
         IRiskEngine(riskEngine).setOracle(getOracle());
+        IRiskEngine(riskEngine).setReserveShares(30e16, 20e16);
 
         vm.stopPrank();
 

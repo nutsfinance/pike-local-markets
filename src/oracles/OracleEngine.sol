@@ -4,78 +4,23 @@ pragma solidity 0.8.28;
 import {IPToken} from "@interfaces/IPToken.sol";
 import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
 import {IOracleProvider} from "@oracles/interfaces/IOracleProvider.sol";
-import {OwnableUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {UUPSUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {AccessControlUpgradeable} from
+    "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
-contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
-    struct AssetConfig {
+contract OracleEngine is IOracleEngine, AccessControlUpgradeable {
+    /// @custom:storage-location erc7201:pike.OE.core
+    struct OracleEngineStorage {
         /**
-         * @notice Main oracle address for the asset
+         * @notice Mapping of asset address to its configuration
          */
-        address mainOracle;
-        /**
-         * @notice Fallback oracle address for the asset
-         */
-        address fallbackOracle;
-        /**
-         * @notice Lower bound ratio for the main oracle price to be considered valid
-         * @dev Scaled by 1e18 i.e., 1e18 = 1
-         */
-        uint256 lowerBoundRatio;
-        /**
-         * @notice Upper bound ratio for the main oracle price to be considered valid
-         * @dev Scaled by 1e18 i.e., 1e18 = 1
-         */
-        uint256 upperBoundRatio;
+        mapping(address => AssetConfig) configs;
     }
 
-    /**
-     * @notice Mapping of asset address to its configuration
-     */
-    mapping(address => AssetConfig) public configs;
+    bytes32 internal constant _CONFIGURATOR_PERMISSION = "CONFIGURATOR";
 
-    /**
-     * @notice Event emitted when asset configuration is set
-     */
-    event AssetConfigSet(
-        address indexed asset,
-        address mainOracle,
-        address fallbackOracle,
-        uint256 lowerBoundRatio,
-        uint256 upperBoundRatio
-    );
-
-    /**
-     * @notice Error emitted when bounds are invalid
-     */
-    error InvalidBounds();
-
-    /**
-     * @notice Error emitted when main oracle is invalid
-     */
-    error InvalidMainOracle();
-
-    /**
-     * @notice Error emitted when asset is invalid
-     */
-    error InvalidAsset();
-
-    /**
-     * @notice Error emitted when bounds validation fails
-     */
-    error BoundValidationFailed();
-
-    /**
-     * @notice Error emitted when fallback oracle is invalid
-     */
-    error InvalidFallbackOraclePrice();
-
-    /**
-     * @notice Error emitted when main oracle price is invalid
-     */
-    error InvalidMainOraclePrice();
+    /// keccak256(abi.encode(uint256(keccak256("pike.OE.core")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 internal constant _ORACLE_ENGINE_STORAGE =
+        0x79c5c3edc3173a93bc1571f1b7494470f1d3221dd503efa3fe2d1a0869f4a100;
 
     constructor() {
         _disableInitializers();
@@ -85,17 +30,13 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
      * @notice Initialize the contract
      * @param owner Address of the owner
      */
-    function initialize(address owner) public initializer {
-        __Ownable_init(owner);
+    function initialize(address owner, address configurator) public initializer {
+        _grantRole(DEFAULT_ADMIN_ROLE, owner);
+        _grantRole(_CONFIGURATOR_PERMISSION, configurator);
     }
 
     /**
-     * @notice Set asset configuration
-     * @param asset Address of the asset
-     * @param mainOracle Address of the main oracle
-     * @param fallbackOracle Address of the fallback oracle
-     * @param lowerBoundRatio Lower bound ratio for the main oracle price to be considered valid
-     * @param upperBoundRatio Upper bound ratio for the main oracle price to be considered valid
+     * @inheritdoc IOracleEngine
      */
     function setAssetConfig(
         address asset,
@@ -103,7 +44,7 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
         address fallbackOracle,
         uint256 lowerBoundRatio,
         uint256 upperBoundRatio
-    ) external onlyOwner {
+    ) external onlyRole(_CONFIGURATOR_PERMISSION) {
         if (
             (lowerBoundRatio != 0 && upperBoundRatio != 0)
                 && lowerBoundRatio > upperBoundRatio
@@ -119,7 +60,7 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
             revert InvalidAsset();
         }
 
-        configs[asset] = AssetConfig({
+        _getOracleEngineStorage().configs[asset] = AssetConfig({
             mainOracle: mainOracle,
             fallbackOracle: fallbackOracle,
             lowerBoundRatio: lowerBoundRatio,
@@ -132,9 +73,7 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @notice Get the price of the market
-     * @param pToken Address of the market
-     * @return price Price of the market scaled by (36 - assetDecimals)
+     * @inheritdoc IOracleEngine
      */
     function getUnderlyingPrice(IPToken pToken)
         external
@@ -146,12 +85,17 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @notice Get the price of the asset
-     * @param asset Address of the asset
-     * @return price Price of the asset scaled by (36 - assetDecimals)
+     * @inheritdoc IOracleEngine
+     */
+    function configs(address pToken) external view returns (AssetConfig memory) {
+        return _getOracleEngineStorage().configs[pToken];
+    }
+
+    /**
+     * @inheritdoc IOracleEngine
      */
     function getPrice(address asset) public view override returns (uint256 price) {
-        AssetConfig storage config = configs[asset];
+        AssetConfig storage config = _getOracleEngineStorage().configs[asset];
 
         try IOracleProvider(config.mainOracle).getPrice(asset) returns (
             uint256 mainOraclePrice
@@ -193,9 +137,14 @@ contract OracleEngine is IOracleEngine, UUPSUpgradeable, OwnableUpgradeable {
         }
     }
 
-    /**
-     * @notice Authorize upgrade
-     * @param newImplementation Address of the new implementation
-     */
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+    function _getOracleEngineStorage()
+        internal
+        pure
+        returns (OracleEngineStorage storage data)
+    {
+        bytes32 s = _ORACLE_ENGINE_STORAGE;
+        assembly {
+            data.slot := s
+        }
+    }
 }

@@ -1,8 +1,8 @@
 {
-  "name": "pike-local-markets",
+  "name": "pike-markets",
   "version": "0.1.0",
   "private": true,
-  "description": "Pike Local Lending Markets",
+  "description": "Pike Lending Markets",
   "homepage": "https://nuts.finance",
   "repository": "https://github.com/nutsfinance/pike-local-markets.git",
   "license": "MIT",
