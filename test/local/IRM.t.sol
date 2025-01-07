@@ -77,6 +77,25 @@ contract LocalIRM is TestLocal {
         );
     }
 
+    function testConfig_FailIfNotConfig() public {
+        vm.prank(address(1));
+
+        // "PermissionDenied(bytes32,address)" selector
+        vm.expectRevert(
+            abi.encodePacked(
+                bytes4(0xc768858b), abi.encode(configurator_permission, address(1))
+            )
+        );
+        pUSDCIRM.configureInterestRateModel(
+            1,
+            multiplierPerYear,
+            jumpMultiplierPerYear1,
+            jumpMultiplierPerYear2,
+            kink1,
+            kink2
+        );
+    }
+
     function testConfig_FailIfNotInOrder() public {
         vm.startPrank(getAdmin());
 

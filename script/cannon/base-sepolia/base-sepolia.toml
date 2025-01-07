@@ -1,25 +1,25 @@
-name = "pike-local-market-beta"
+name = "pike-market-factory"
 version = "0.1.0"
 preset = "main"
-description = "Local markets for Pike testnet deployment"
+description = "Pike markets with factory"
 
 include = [
     # global params 
     "../global.toml",
 
-    # core risk engine
+    # core factory deployment
     "../core.toml",
 
     # pTokens
-    "./pTokens/usdc.toml",
-    "./pTokens/weth.toml",
-    "./pTokens/steth.toml",
+    # "./pTokens/usdc.toml",
+    # "./pTokens/weth.toml",
+    # "./pTokens/steth.toml",
 
     #oracles
-    "./oracles/oracleEngine.toml",
-    "./oracles/chainlink.toml",
-    "./oracles/pyth.toml",
-    "./oracles/mockProvider.toml",
+    # "./oracles/oracleEngine.toml",
+    # "./oracles/chainlink.toml",
+    # "./oracles/pyth.toml",
+    # "./oracles/mockProvider.toml",
 ]
 
 [var.owner]

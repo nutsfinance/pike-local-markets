@@ -35,7 +35,7 @@ jobs:
           mkdir -p public/flatten
           commit_hash="${{ github.sha }}"
           short_commit_hash=$(echo $commit_hash | cut -c1-8)
-          find src/local-market/modules -name "*.sol" | while read contract; do
+          find src/pike-market/modules -name "*.sol" | while read contract; do
             contract_name=$(basename "$contract" .sol)
             forge flatten "$contract" --output "public/flatten/$contract_name.flatten.sol"
             sol2uml class "public/flatten/$contract_name.flatten.sol" -f svg -o "public/uml/${contract_name}_${short_commit_hash}.svg"

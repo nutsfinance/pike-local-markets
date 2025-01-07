@@ -9,6 +9,8 @@ contract TestState {
         bool debug;
         bool localState;
         address riskEngine;
+        address factory;
+        address timelock;
         address oracle;
         mapping(bytes32 => address) pTokens;
         address admin;
