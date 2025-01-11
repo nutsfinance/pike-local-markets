@@ -179,6 +179,7 @@ contract Factory is
             protocolInfo.protocolId,
             riskEngine,
             governorTimelock,
+            oracleEngine,
             protocolInfo.initialGovernor
         );
     }

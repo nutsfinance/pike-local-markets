@@ -36,6 +36,7 @@ interface IFactory {
         uint256 indexed protocolId,
         address indexed riskEngine,
         address indexed timelock,
+        address oracleEngine,
         address initialGovernor
     );
 
