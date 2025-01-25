@@ -1,5 +1,5 @@
 {
-  "address": "0x9955677a9eace1C82a2f156ED21c5D450D688549",
+  "address": "0x3D615b840E8A8C1e13E74946fb553Dff41771bb0",
   "abi": [
     {
       "type": "constructor",
@@ -181,12 +181,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0xfbbb0a2a1f07ed5ea55d9d32532bbdc0b37ca5d5ee7407cd2e4dd81c12cc9013",
-  "deployTxnBlockNumber": "117870450",
-  "deployTimestamp": "1737841376",
+  "deployTxnHash": "0x3f65e799db478d1e67b3ef45c493c27d5414deb499cec251ed5417936ad0a1a8",
+  "deployTxnBlockNumber": "21036651",
+  "deployTimestamp": "1737841590",
   "sourceName": "src/pike-market/modules/InitialModuleBeacon.sol",
   "contractName": "InitialModuleBeacon",
   "deployedOn": "contract.InitialModuleBeacon",
-  "gasUsed": 597540,
-  "gasCost": "100000000"
+  "gasUsed": 592037,
+  "gasCost": "16537458"
 }

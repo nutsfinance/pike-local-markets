@@ -1,535 +1,6 @@
 {
-  "address": "0x7b53ee8a154237c81e70affea1c2278ec7b65b5b",
+  "address": "0x3eBA0fC36EA2135BC60807183F0E0B03C6D960b0",
   "abi": [
-    {
-      "name": "facets",
-      "type": "function",
-      "stateMutability": "pure",
-      "inputs": [],
-      "outputs": [
-        {
-          "type": "tuple[]",
-          "components": [
-            {
-              "type": "address",
-              "name": "facetAddress"
-            },
-            {
-              "type": "bytes4[]",
-              "name": "functionSelectors"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "facetFunctionSelectors",
-      "type": "function",
-      "stateMutability": "pure",
-      "inputs": [
-        {
-          "type": "address",
-          "name": "facet"
-        }
-      ],
-      "outputs": [
-        {
-          "type": "bytes4[]",
-          "name": "functionSelectors"
-        }
-      ]
-    },
-    {
-      "name": "facetAddresses",
-      "type": "function",
-      "stateMutability": "pure",
-      "inputs": [],
-      "outputs": [
-        {
-          "type": "address[]",
-          "name": "addresses"
-        }
-      ]
-    },
-    {
-      "name": "facetAddress",
-      "type": "function",
-      "stateMutability": "pure",
-      "inputs": [
-        {
-          "type": "bytes4",
-          "name": "functionSelector"
-        }
-      ],
-      "outputs": [
-        {
-          "type": "address"
-        }
-      ]
-    },
-    {
-      "name": "emitDiamondCutEvent",
-      "type": "function",
-      "stateMutability": "nonpayable",
-      "inputs": [],
-      "outputs": [
-        {
-          "type": "bool"
-        }
-      ]
-    },
-    {
-      "type": "constructor",
-      "inputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "acceptOwnership",
-      "inputs": [],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "initialize",
-      "inputs": [
-        {
-          "name": "initialOwner",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "nominateNewOwner",
-      "inputs": [
-        {
-          "name": "newNominatedOwner",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "owner",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "pendingOwner",
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "renounceNomination",
-      "inputs": [],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "renounceOwnership",
-      "inputs": [],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "transferOwnership",
-      "inputs": [
-        {
-          "name": "newOwner",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "event",
-      "name": "Initialized",
-      "inputs": [
-        {
-          "name": "version",
-          "type": "uint64",
-          "indexed": false,
-          "internalType": "uint64"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
-      "name": "OwnerChanged",
-      "inputs": [
-        {
-          "name": "oldOwner",
-          "type": "address",
-          "indexed": false,
-          "internalType": "address"
-        },
-        {
-          "name": "newOwner",
-          "type": "address",
-          "indexed": false,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
-      "name": "OwnerNominated",
-      "inputs": [
-        {
-          "name": "newOwner",
-          "type": "address",
-          "indexed": false,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "error",
-      "name": "AlreadyNominated",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "InvalidInitialization",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "NotInitializing",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "NotNominated",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "NotPendingOwner",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "Unauthorized",
-      "inputs": [
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ZeroAddress",
-      "inputs": []
-    },
-    {
-      "type": "function",
-      "name": "grantNestedPermission",
-      "inputs": [
-        {
-          "name": "permission",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        },
-        {
-          "name": "nestedAddress",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "target",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "grantPermission",
-      "inputs": [
-        {
-          "name": "permission",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        },
-        {
-          "name": "target",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "hasNestedPermission",
-      "inputs": [
-        {
-          "name": "permission",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        },
-        {
-          "name": "nestedAddress",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "target",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bool",
-          "internalType": "bool"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "hasPermission",
-      "inputs": [
-        {
-          "name": "permission",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        },
-        {
-          "name": "target",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "bool",
-          "internalType": "bool"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "revokeNestedPermission",
-      "inputs": [
-        {
-          "name": "permission",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        },
-        {
-          "name": "nestedAddress",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "target",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "revokePermission",
-      "inputs": [
-        {
-          "name": "permission",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        },
-        {
-          "name": "target",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "event",
-      "name": "NestedPermissionGranted",
-      "inputs": [
-        {
-          "name": "permission",
-          "type": "bytes32",
-          "indexed": false,
-          "internalType": "bytes32"
-        },
-        {
-          "name": "nestedAddress",
-          "type": "address",
-          "indexed": false,
-          "internalType": "address"
-        },
-        {
-          "name": "target",
-          "type": "address",
-          "indexed": false,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
-      "name": "NestedPermissionRevoked",
-      "inputs": [
-        {
-          "name": "permission",
-          "type": "bytes32",
-          "indexed": false,
-          "internalType": "bytes32"
-        },
-        {
-          "name": "nestedAddress",
-          "type": "address",
-          "indexed": false,
-          "internalType": "address"
-        },
-        {
-          "name": "target",
-          "type": "address",
-          "indexed": false,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
-      "name": "PermissionGranted",
-      "inputs": [
-        {
-          "name": "permission",
-          "type": "bytes32",
-          "indexed": false,
-          "internalType": "bytes32"
-        },
-        {
-          "name": "target",
-          "type": "address",
-          "indexed": false,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "event",
-      "name": "PermissionRevoked",
-      "inputs": [
-        {
-          "name": "permission",
-          "type": "bytes32",
-          "indexed": false,
-          "internalType": "bytes32"
-        },
-        {
-          "name": "target",
-          "type": "address",
-          "indexed": false,
-          "internalType": "address"
-        }
-      ],
-      "anonymous": false
-    },
-    {
-      "type": "error",
-      "name": "AlreadyGranted",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "AlreadyRevoked",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "InvalidPermission",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "NestedPermissionDenied",
-      "inputs": [
-        {
-          "name": "",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        },
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "PermissionDenied",
-      "inputs": [
-        {
-          "name": "",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        },
-        {
-          "name": "",
-          "type": "address",
-          "internalType": "address"
-        }
-      ]
-    },
     {
       "type": "function",
       "name": "accountCategory",
@@ -2053,6 +1524,11 @@
     },
     {
       "type": "error",
+      "name": "InvalidPermission",
+      "inputs": []
+    },
+    {
+      "type": "error",
       "name": "InvalidReserveShare",
       "inputs": []
     },
@@ -2068,6 +1544,27 @@
     },
     {
       "type": "error",
+      "name": "NestedPermissionDenied",
+      "inputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
       "name": "NoArrayParity",
       "inputs": []
     },
@@ -2075,6 +1572,22 @@
       "type": "error",
       "name": "NotListed",
       "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "PermissionDenied",
+      "inputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
     },
     {
       "type": "error",
@@ -2106,14 +1619,32 @@
       "type": "error",
       "name": "TransferPaused",
       "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "Unauthorized",
+      "inputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ZeroAddress",
+      "inputs": []
     }
   ],
-  "deployedOn": "router.RiskEngineRouter",
-  "deployTxnHash": "0x10b49b7177224b41bb08450dd38d8260b7c1fa80b87b7227ffa402897462db3f",
-  "deployTxnBlockNumber": "117870538",
-  "deployTimestamp": "1737841398",
-  "contractName": "RiskEngineRouter",
-  "sourceName": "RiskEngineRouter.sol",
-  "gasUsed": 2535443,
-  "gasCost": "100000000"
+  "constructorArgs": [],
+  "linkedLibraries": {},
+  "deployTxnHash": "0x72b7a49441874e9486a55a12093ee2c91711ee03bd193141350fbaf3889b7e97",
+  "deployTxnBlockNumber": "21036656",
+  "deployTimestamp": "1737841600",
+  "sourceName": "src/pike-market/modules/riskEngine/RiskEngineModule.sol",
+  "contractName": "RiskEngineModule",
+  "deployedOn": "contract.RiskEngineModule",
+  "gasUsed": 5188129,
+  "gasCost": "16478036"
 }

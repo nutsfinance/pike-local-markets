@@ -1,5 +1,5 @@
 {
-  "address": "0xfb7424e98cf333019b2e98d03d809165c7f5959f",
+  "address": "0xac419e6519611aa7a30d093e936c925bf38b16e4",
   "abi": [
     {
       "name": "facets",
@@ -778,6 +778,30 @@
           "name": "",
           "type": "bool",
           "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "emodeMarkets",
+      "inputs": [
+        {
+          "name": "categoryId",
+          "type": "uint8",
+          "internalType": "uint8"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "collateralTokens",
+          "type": "address[]",
+          "internalType": "address[]"
+        },
+        {
+          "name": "borrowTokens",
+          "type": "address[]",
+          "internalType": "address[]"
         }
       ],
       "stateMutability": "view"
@@ -1584,7 +1608,7 @@
         {
           "name": "pToken",
           "type": "address",
-          "indexed": false,
+          "indexed": true,
           "internalType": "contract IPToken"
         },
         {
@@ -1763,6 +1787,12 @@
       "type": "event",
       "name": "NewCloseFactor",
       "inputs": [
+        {
+          "name": "pToken",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
         {
           "name": "oldCloseFactorMantissa",
           "type": "uint256",
@@ -2079,11 +2109,11 @@
     }
   ],
   "deployedOn": "router.RiskEngineRouter",
-  "deployTxnHash": "0xbee000a1c380ac24d6141af6540792540af921ced10bfe4d527c519cc0adefbf",
-  "deployTxnBlockNumber": "22061846",
-  "deployTimestamp": "1735926232",
+  "deployTxnHash": "0x50b562b09a59ca07471d4651e0150a4879794a6bfe6554a4fc723e58cadfd728",
+  "deployTxnBlockNumber": "23019285",
+  "deployTimestamp": "1737841110",
   "contractName": "RiskEngineRouter",
   "sourceName": "RiskEngineRouter.sol",
-  "gasUsed": 2499356,
-  "gasCost": "1000258"
+  "gasUsed": 2510892,
+  "gasCost": "1000261"
 }

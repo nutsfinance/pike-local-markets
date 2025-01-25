@@ -1,5 +1,5 @@
 {
-  "address": "0x0c6AF82Ff735004a0cbb3a41ED61497b038f31A2",
+  "address": "0x8Eefaf4b4d2d8847852E6EE94c7136f51185435F",
   "abi": [
     {
       "type": "function",
@@ -249,6 +249,30 @@
           "name": "",
           "type": "bool",
           "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "emodeMarkets",
+      "inputs": [
+        {
+          "name": "categoryId",
+          "type": "uint8",
+          "internalType": "uint8"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "collateralTokens",
+          "type": "address[]",
+          "internalType": "address[]"
+        },
+        {
+          "name": "borrowTokens",
+          "type": "address[]",
+          "internalType": "address[]"
         }
       ],
       "stateMutability": "view"
@@ -1055,7 +1079,7 @@
         {
           "name": "pToken",
           "type": "address",
-          "indexed": false,
+          "indexed": true,
           "internalType": "contract IPToken"
         },
         {
@@ -1234,6 +1258,12 @@
       "type": "event",
       "name": "NewCloseFactor",
       "inputs": [
+        {
+          "name": "pToken",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
         {
           "name": "oldCloseFactorMantissa",
           "type": "uint256",
@@ -1609,12 +1639,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x6999338d3017c1368d40d809facd5718ef2bcd17f54797c2a5248e6e7a02441c",
-  "deployTxnBlockNumber": "22061832",
-  "deployTimestamp": "1735926204",
+  "deployTxnHash": "0x78c7a963d526f4db44b8806a9782395402eec9c8253ab61d6132fc5dd6818772",
+  "deployTxnBlockNumber": "23019280",
+  "deployTimestamp": "1737841100",
   "sourceName": "src/pike-market/modules/riskEngine/RiskEngineModule.sol",
   "contractName": "RiskEngineModule",
   "deployedOn": "contract.RiskEngineModule",
-  "gasUsed": 4953545,
-  "gasCost": "1000257"
+  "gasUsed": 5188129,
+  "gasCost": "1000260"
 }
