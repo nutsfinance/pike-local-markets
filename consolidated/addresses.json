@@ -1,9 +1,9 @@
 {
   "op-sepolia": {
     "MockProvider": "0x8737137431c31AD3533CBC14a399DD67E9f27d5d",
-    "RiskEngineRouter": "0xfb7424e98cf333019b2e98d03d809165c7f5959f",
+    "RiskEngineRouter": "0xac419e6519611aa7a30d093e936c925bf38b16e4",
     "factory.Proxy": "0x82072C90aacbb62dbD7A0EbAAe3b3e5D7d8cEEEA",
-    "InitialModuleBeacon": "0xb72A3C3aAb547B455DC4755b8207431Fce118483",
+    "InitialModuleBeacon": "0xA3B9b51D43275233E8FdF313efaAd1d4814fAC3b",
     "reBeacon": "0xfdc91BdDc40D71aC91db9B9ea3beaA939b85f4fc",
     "timelockBeacon": "0x68c81Ac75689e20a18Ff00Ab9f4AAAb2d99912f7",
     "PTokenRouter": "0x0c21f33ae4f619a4a3fcf1a32210aed5243276bf",
@@ -26,9 +26,9 @@
   },
   "arb-sepolia": {
     "MockProvider": "0x8737137431c31AD3533CBC14a399DD67E9f27d5d",
-    "RiskEngineRouter": "0xfb7424e98cf333019b2e98d03d809165c7f5959f",
+    "RiskEngineRouter": "0x7b53ee8a154237c81e70affea1c2278ec7b65b5b",
     "factory.Proxy": "0x82072C90aacbb62dbD7A0EbAAe3b3e5D7d8cEEEA",
-    "InitialModuleBeacon": "0xb72A3C3aAb547B455DC4755b8207431Fce118483",
+    "InitialModuleBeacon": "0x9955677a9eace1C82a2f156ED21c5D450D688549",
     "reBeacon": "0xfdc91BdDc40D71aC91db9B9ea3beaA939b85f4fc",
     "timelockBeacon": "0x68c81Ac75689e20a18Ff00Ab9f4AAAb2d99912f7",
     "PTokenRouter": "0x0c21f33ae4f619a4a3fcf1a32210aed5243276bf",
@@ -42,8 +42,9 @@
     "oracleEngineBeacon": "0x5f45CBcDFD790e5f45D2b5B81E293aaC2EF2b622"
   },
   "base-sepolia": {
-    "RiskEngineRouter": "0x0cdf5f46edb9ae9655086c4e49fa7f3f9fddb298",
+    "RiskEngineRouter": "0x64ce5fa7927c77c2655374f8a391bf10d097e701",
     "factory.Proxy": "0xF5b46BCB51963B8A7e0390a48C1D6E152A78174D",
+    "InitialModuleBeacon": "0x3D615b840E8A8C1e13E74946fb553Dff41771bb0",
     "PTokenRouter": "0xad6cb85dcd029a81265f8ad9c215e74e45ef2d5b",
     "Timelock": "0x36Dc022712AB4e1927011A95ec2E426f996C59A2",
     "OracleEngine": "0x5E94367d34B8c61B09573A755a89Eff1ca2629AC"

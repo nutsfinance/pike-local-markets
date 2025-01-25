@@ -782,6 +782,30 @@
   },
   {
     "type": "function",
+    "name": "emodeMarkets",
+    "inputs": [
+      {
+        "name": "categoryId",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "collateralTokens",
+        "type": "address[]",
+        "internalType": "address[]"
+      },
+      {
+        "name": "borrowTokens",
+        "type": "address[]",
+        "internalType": "address[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "enterMarkets",
     "inputs": [
       {
@@ -1582,7 +1606,7 @@
       {
         "name": "pToken",
         "type": "address",
-        "indexed": false,
+        "indexed": true,
         "internalType": "contract IPToken"
       },
       {
@@ -1761,6 +1785,12 @@
     "type": "event",
     "name": "NewCloseFactor",
     "inputs": [
+      {
+        "name": "pToken",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
       {
         "name": "oldCloseFactorMantissa",
         "type": "uint256",
