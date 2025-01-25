@@ -30,8 +30,12 @@ contract Config is Script {
             /// based on network count
 
             rpcs[0] = "BASE_SEPOLIA_RPC";
+            rpcs[1] = "ARB_SEPOLIA_RPC";
+            rpcs[2] = "OP_SEPOLIA_RPC";
 
             chainIds[0] = 84_532; // Base
+            chainIds[1] = 421_614; // Arb
+            chainIds[2] = 11_155_420; // Op
         } else {
             /// rpcs and chainIds for mainnet should be added here
             /// based on network count
