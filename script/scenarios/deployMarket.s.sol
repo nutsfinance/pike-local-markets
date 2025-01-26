@@ -52,16 +52,6 @@ contract Market is Config {
         IRiskEngine.BaseConfiguration memory config =
             IRiskEngine.BaseConfiguration(72.5e16, 82.5e16, 102e16);
 
-        IPToken[] memory markets = new IPToken[](3);
-        markets[0] = pUSDC;
-        markets[1] = pWETH;
-        markets[2] = pSTETH;
-
-        uint256[] memory caps = new uint256[](3);
-        caps[0] = type(uint256).max;
-        caps[1] = type(uint256).max;
-        caps[2] = type(uint256).max;
-
         vm.startBroadcast(adminPrivateKey);
 
         // step 1 get protocol info
@@ -103,6 +93,16 @@ contract Market is Config {
         console.log("deployed: %s", address(pSTETH));
 
         // step 3 set oracle engine data providers
+        IPToken[] memory markets = new IPToken[](3);
+        markets[0] = pUSDC;
+        markets[1] = pWETH;
+        markets[2] = pSTETH;
+
+        uint256[] memory caps = new uint256[](3);
+        caps[0] = type(uint256).max;
+        caps[1] = type(uint256).max;
+        caps[2] = type(uint256).max;
+
         tm.emergencyExecute(
             address(oe),
             0,
