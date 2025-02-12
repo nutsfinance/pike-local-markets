@@ -21,39 +21,58 @@ contract EMode is Config {
     IRiskEngine re;
     Timelock tm;
 
-    constructor() Config(3, true) {
+    constructor() Config(6, true) {
         PATH = "";
     }
 
     function run() public payable {
         setUp();
-        vm.createSelectFork(vm.envString(rpcs[0]));
-        forks[0] = vm.activeFork();
+        uint256 selectedFork = 5;
+        vm.createSelectFork(vm.envString(rpcs[selectedFork]));
+        forks[selectedFork] = vm.activeFork();
 
-        factory = IFactory(0xF5b46BCB51963B8A7e0390a48C1D6E152A78174D);
-        re = IRiskEngine(factory.getProtocolInfo(1).riskEngine);
-        tm = Timelock(payable(factory.getProtocolInfo(1).timelock));
-        pUSDC = IPToken(factory.getMarket(1, 0));
-        pWETH = IPToken(factory.getMarket(1, 1));
-        pSTETH = IPToken(factory.getMarket(1, 2));
+        factory = IFactory(0xe9A6F322D8aB0722c9B2047612168BB85F184Ae4);
+
+        uint256 protocolId = factory.protocolCount();
+        re = IRiskEngine(factory.getProtocolInfo(protocolId).riskEngine);
+        tm = Timelock(payable(factory.getProtocolInfo(protocolId).timelock));
+        pUSDC = IPToken(factory.getMarket(protocolId, 0));
+        pWETH = IPToken(factory.getMarket(protocolId, 1));
+        pSTETH = IPToken(factory.getMarket(protocolId, 2));
 
         // configure ptokens and risk params
-        uint8 categoryId = 2;
+        uint8 categoryId = 1;
         address[] memory ptokens = new address[](2);
-        ptokens[0] = address(pUSDC);
-        ptokens[1] = address(pWETH);
+        ptokens[0] = address(pWETH);
+        ptokens[1] = address(pSTETH);
 
         bool[] memory collateralPermissions = new bool[](ptokens.length);
         collateralPermissions[0] = true;
-        collateralPermissions[1] = false;
+        collateralPermissions[1] = true;
         bool[] memory borrowPermissions = new bool[](ptokens.length);
-        borrowPermissions[0] = false;
+        borrowPermissions[0] = true;
         borrowPermissions[1] = true;
 
         IRiskEngine.BaseConfiguration memory config =
-            IRiskEngine.BaseConfiguration(90e16, 93e16, 102e16);
+            IRiskEngine.BaseConfiguration(95e16, 975e15, 102e16);
 
         vm.startBroadcast(adminPrivateKey);
+        configureEMode(
+            categoryId, ptokens, collateralPermissions, borrowPermissions, config
+        );
+
+        categoryId = 2;
+        ptokens[0] = address(pUSDC);
+        ptokens[1] = address(pWETH);
+
+        collateralPermissions[0] = true;
+        collateralPermissions[1] = false;
+
+        borrowPermissions[0] = false;
+        borrowPermissions[1] = true;
+
+        config = IRiskEngine.BaseConfiguration(90e16, 93e16, 102e16);
+
         configureEMode(
             categoryId, ptokens, collateralPermissions, borrowPermissions, config
         );

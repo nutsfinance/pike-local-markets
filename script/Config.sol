@@ -32,12 +32,16 @@ contract Config is Script {
             rpcs[0] = "BASE_SEPOLIA_RPC";
             rpcs[1] = "ARB_SEPOLIA_RPC";
             rpcs[2] = "OP_SEPOLIA_RPC";
-            rpcs[3] = "BERA_SEPOLIA_RPC";
+            rpcs[3] = "BERA_BARTIO_RPC";
+            rpcs[4] = "MONAD_TESTNET_RPC";
+            rpcs[5] = "HYPER_TESTNET";
 
             chainIds[0] = 84_532; // Base
             chainIds[1] = 421_614; // Arb
             chainIds[2] = 11_155_420; // Op
             chainIds[3] = 80_084; // BERA
+            chainIds[4] = 10_143; // MONAD
+            chainIds[5] = 998; // HYPERLIQUID
         } else {
             /// rpcs and chainIds for mainnet should be added here
             /// based on network count

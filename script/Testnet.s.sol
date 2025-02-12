@@ -7,7 +7,7 @@ import {console} from "forge-std/console.sol";
 import {Deploy} from "script/Deploy.sol";
 
 contract Testnet is Deploy {
-    constructor() Deploy(1, true) {}
+    constructor() Deploy(6, true) {}
 
     function run() public payable {
         setUp();
