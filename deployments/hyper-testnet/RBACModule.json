@@ -1,0 +1,306 @@
+{
+  "address": "0x19701D2672E3F320A7c58a6b17937E5f1ca73E3A",
+  "abi": [
+    {
+      "type": "function",
+      "name": "grantNestedPermission",
+      "inputs": [
+        {
+          "name": "permission",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "nestedAddress",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "grantPermission",
+      "inputs": [
+        {
+          "name": "permission",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "hasNestedPermission",
+      "inputs": [
+        {
+          "name": "permission",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "nestedAddress",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "hasPermission",
+      "inputs": [
+        {
+          "name": "permission",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "revokeNestedPermission",
+      "inputs": [
+        {
+          "name": "permission",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "nestedAddress",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "revokePermission",
+      "inputs": [
+        {
+          "name": "permission",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "NestedPermissionGranted",
+      "inputs": [
+        {
+          "name": "permission",
+          "type": "bytes32",
+          "indexed": false,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "nestedAddress",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "NestedPermissionRevoked",
+      "inputs": [
+        {
+          "name": "permission",
+          "type": "bytes32",
+          "indexed": false,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "nestedAddress",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "PermissionGranted",
+      "inputs": [
+        {
+          "name": "permission",
+          "type": "bytes32",
+          "indexed": false,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "PermissionRevoked",
+      "inputs": [
+        {
+          "name": "permission",
+          "type": "bytes32",
+          "indexed": false,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "AlreadyGranted",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "AlreadyRevoked",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidPermission",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NestedPermissionDenied",
+      "inputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "PermissionDenied",
+      "inputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "Unauthorized",
+      "inputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ZeroAddress",
+      "inputs": []
+    }
+  ],
+  "constructorArgs": [],
+  "linkedLibraries": {},
+  "deployTxnHash": "0xa0e5487d51997cda938489f823ff6f65ec9918735527937d263687672a31c992",
+  "deployTxnBlockNumber": "18215880",
+  "deployTimestamp": "1739300884",
+  "sourceName": "src/pike-market/modules/common/RBACModule.sol",
+  "contractName": "RBACModule",
+  "deployedOn": "contract.RBACModule",
+  "gasUsed": 582432,
+  "gasCost": "102218212"
+}

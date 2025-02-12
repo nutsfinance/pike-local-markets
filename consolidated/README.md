@@ -4,6 +4,24 @@ This document summarizes the smart contract deployment information consolidated 
 
 ## Contract Addresses by Network
 
+### Hyper-testnet
+
+| Contract Name | Address |
+| --- | --- |
+| `MockProvider` | `0xeB25de08215e107ec96de7d58b20A932089E0E5e` |
+| `RiskEngineRouter` | `0x5f45cbcdfd790e5f45d2b5b81e293aac2ef2b622` |
+| `factory.Proxy` | `0xe9A6F322D8aB0722c9B2047612168BB85F184Ae4` |
+| `InitialModuleBeacon` | `0x55953352477c57843549E087c3f9F3BAFE99d9D1` |
+| `reBeacon` | `0x0c21F33AE4f619a4a3fCF1a32210aeD5243276bF` |
+| `timelockBeacon` | `0x4297CF8FDBeC4250D63E20C2abE63AED95022650` |
+| `PTokenRouter` | `0x5b7a284d05076b1ec46c0f55424676be7d554b63` |
+| `Factory` | `0xa8801C51d02268b05cf1562e8c20FD1D3D6F24c3` |
+| `pTokenBeacon` | `0x68c81Ac75689e20a18Ff00Ab9f4AAAb2d99912f7` |
+| `Timelock` | `0x0c6AF82Ff735004a0cbb3a41ED61497b038f31A2` |
+| `DoubleJumpRateModel` | `0xd368263978a16f053e4CA933c4410aba7654EfA2` |
+| `OracleEngine` | `0x09E49f1F2536ABe40A327155f5168eAD82df7F37` |
+| `oracleEngineBeacon` | `0x0F7fF00Ea98a13DB7E8a77599745fF056C58CBeB` |
+
 ### Op-sepolia
 
 | Contract Name | Address |
@@ -24,16 +42,23 @@ This document summarizes the smart contract deployment information consolidated 
 | `chainlinkOracleProvider.Proxy` | `0x41d832f2bD3490f26098D9000BFa6fcC8BACb0D6` |
 | `oracleEngineBeacon` | `0x5f45CBcDFD790e5f45D2b5B81E293aaC2EF2b622` |
 
-### Base-sepolia-bleu
+### Bera-bartio
 
 | Contract Name | Address |
 | --- | --- |
-| `RiskEngineRouter` | `0x0cdf5f46edb9ae9655086c4e49fa7f3f9fddb298` |
-| `InitialModuleBeacon` | `0x09Ece7F4E8694f1cBB5bBfA259c741773252fcA5` |
-| `PTokenRouter` | `0xad6cb85dcd029a81265f8ad9c215e74e45ef2d5b` |
-| `Timelock` | `0x36Dc022712AB4e1927011A95ec2E426f996C59A2` |
-| `DoubleJumpRateModel` | `0xdd23Fe731e53Cc8e24c6577035F365f4eC8f2ae2` |
-| `OracleEngine` | `0x5E94367d34B8c61B09573A755a89Eff1ca2629AC` |
+| `MockProvider` | `0x09E49f1F2536ABe40A327155f5168eAD82df7F37` |
+| `RiskEngineRouter` | `0x4297cf8fdbec4250d63e20c2abe63aed95022650` |
+| `factory.Proxy` | `0x0e2ef7AEEef695F9c8D463ce31561B43EC14e453` |
+| `InitialModuleBeacon` | `0xeB25de08215e107ec96de7d58b20A932089E0E5e` |
+| `reBeacon` | `0x5f45CBcDFD790e5f45D2b5B81E293aaC2EF2b622` |
+| `timelockBeacon` | `0x52fdA3547389C0141523a98bE00D6437dFD22Ad6` |
+| `PTokenRouter` | `0x0c6af82ff735004a0cbb3a41ed61497b038f31a2` |
+| `Factory` | `0x55953352477c57843549E087c3f9F3BAFE99d9D1` |
+| `pTokenBeacon` | `0x5b7A284D05076B1Ec46c0f55424676Be7d554B63` |
+| `Timelock` | `0xa8801C51d02268b05cf1562e8c20FD1D3D6F24c3` |
+| `DoubleJumpRateModel` | `0xd368263978a16f053e4CA933c4410aba7654EfA2` |
+| `OracleEngine` | `0x19701D2672E3F320A7c58a6b17937E5f1ca73E3A` |
+| `oracleEngineBeacon` | `0x1AfE460cDeF8FF250F846F7eAAafdA7cB648C68E` |
 
 ### Arb-sepolia
 
@@ -65,6 +90,24 @@ This document summarizes the smart contract deployment information consolidated 
 | `PTokenRouter` | `0xad6cb85dcd029a81265f8ad9c215e74e45ef2d5b` |
 | `Timelock` | `0x36Dc022712AB4e1927011A95ec2E426f996C59A2` |
 | `OracleEngine` | `0x5E94367d34B8c61B09573A755a89Eff1ca2629AC` |
+
+### Monad-testnet
+
+| Contract Name | Address |
+| --- | --- |
+| `MockProvider` | `0x09E49f1F2536ABe40A327155f5168eAD82df7F37` |
+| `RiskEngineRouter` | `0x4297cf8fdbec4250d63e20c2abe63aed95022650` |
+| `factory.Proxy` | `0x0e2ef7AEEef695F9c8D463ce31561B43EC14e453` |
+| `InitialModuleBeacon` | `0xeB25de08215e107ec96de7d58b20A932089E0E5e` |
+| `reBeacon` | `0x5f45CBcDFD790e5f45D2b5B81E293aaC2EF2b622` |
+| `timelockBeacon` | `0x52fdA3547389C0141523a98bE00D6437dFD22Ad6` |
+| `PTokenRouter` | `0x0c6af82ff735004a0cbb3a41ed61497b038f31a2` |
+| `Factory` | `0x55953352477c57843549E087c3f9F3BAFE99d9D1` |
+| `pTokenBeacon` | `0x5b7A284D05076B1Ec46c0f55424676Be7d554B63` |
+| `Timelock` | `0xa8801C51d02268b05cf1562e8c20FD1D3D6F24c3` |
+| `DoubleJumpRateModel` | `0xd368263978a16f053e4CA933c4410aba7654EfA2` |
+| `OracleEngine` | `0x19701D2672E3F320A7c58a6b17937E5f1ca73E3A` |
+| `oracleEngineBeacon` | `0x1AfE460cDeF8FF250F846F7eAAafdA7cB648C68E` |
 
 ## Contract ABIs
 
