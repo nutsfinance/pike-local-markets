@@ -1,0 +1,6 @@
+[invoke.chainlink_set_stETH]
+target = ["chainlinkOracleProvider.Proxy"]
+func = "setAssetConfig"
+fromCall.func = "owner"
+args = ["<%= settings.stETH_address %>", "<%= settings.stETH_chainlinkFeed %>", "<%= MaxUint256 %>"]
+depends = [ "invoke.initialize_chainlink"]

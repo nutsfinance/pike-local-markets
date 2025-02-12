@@ -1,0 +1,6 @@
+[invoke.chainlink_set_weth]
+target = ["chainlinkOracleProvider.Proxy"]
+func = "setAssetConfig"
+fromCall.func = "owner"
+args = ["<%= settings.weth_address %>", "<%= settings.weth_chainlinkFeed %>", "<%= MaxUint256 %>"]
+depends = [ "invoke.initialize_chainlink"]
