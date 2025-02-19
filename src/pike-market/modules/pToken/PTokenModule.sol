@@ -102,13 +102,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     /**
      * @inheritdoc IPToken
      */
-    function setRiskEngine(IRiskEngine newRiskEngine) external onlyOwner {
-        _setRiskEngine(newRiskEngine);
-    }
-
-    /**
-     * @inheritdoc IPToken
-     */
     function setBorrowRateMax(uint256 newBorrowRateMaxMantissa) external {
         _checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
 

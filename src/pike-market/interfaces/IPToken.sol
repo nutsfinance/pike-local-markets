@@ -194,12 +194,6 @@ interface IPToken is IERC4626 {
     /// ***Admin Functions***
 
     /**
-     * @notice Sets a new risk engine for the market
-     * @dev Admin function to set a new risk engine
-     */
-    function setRiskEngine(IRiskEngine newRiskEngine) external;
-
-    /**
      * @notice accrues interest and sets a new reserve factor for the protocol
      * @dev Admin function to accrue interest and set a new reserve factor
      */
