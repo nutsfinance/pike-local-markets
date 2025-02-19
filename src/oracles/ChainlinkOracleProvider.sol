@@ -102,6 +102,9 @@ contract ChainlinkOracleProvider is
         AssetConfig storage config = _getProviderStorage().configs[asset];
         uint256 priceDecimals = config.feed.decimals();
         (, int256 price,, uint256 updatedAt,) = config.feed.latestRoundData();
+        if (price <= 0) {
+            revert InvalidPrice();
+        }
 
         if (block.timestamp - updatedAt > config.maxStalePeriod) {
             revert StalePrice();
