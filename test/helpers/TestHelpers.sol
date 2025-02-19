@@ -158,6 +158,36 @@ contract TestHelpers is TestUtilities {
         }
     }
 
+    function doInitialMint(IPToken pToken) public {
+        address user = address(0xdead);
+        address asset = IPToken(pToken).asset();
+
+        vm.deal(user, 1 ether);
+
+        deal(asset, user, 1e18);
+        vm.startPrank(user);
+        IERC20(asset).approve(address(pToken), 1001);
+
+        pToken.deposit(1001, user);
+        vm.stopPrank();
+    }
+
+    function doInitialMintRevert(IPToken pToken) public {
+        address user = address(0xdead);
+        address asset = IPToken(pToken).asset();
+
+        vm.deal(user, 1 ether);
+
+        deal(asset, user, 1e18);
+        vm.startPrank(user);
+        IERC20(asset).approve(address(pToken), 1000);
+
+        // "ZeroTokensMinted()" selector
+        vm.expectRevert(0x4ba25a38);
+        pToken.deposit(1000, user);
+        vm.stopPrank();
+    }
+
     function _doTransfer(TransferParameters memory params) public {
         address user = params.prankAddress;
         bool onBehalfOf = params.onBehalfOf != params.prankAddress;

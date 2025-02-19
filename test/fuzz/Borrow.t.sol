@@ -50,6 +50,10 @@ contract FuzzBorrow is TestFuzz {
 
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     function testFuzz_borrow(address[2] memory addresses, uint256[9] memory amounts)

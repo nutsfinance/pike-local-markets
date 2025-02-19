@@ -35,6 +35,12 @@ contract LocalPToken is TestLocal {
         pWETH = getPToken("pWETH");
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //initail mint exceptioin case
+        doInitialMintRevert(pUSDC);
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     function testInitialize_FailIfAlreadyInitializedOrZeroAddress() public {
@@ -158,7 +164,6 @@ contract LocalPToken is TestLocal {
 
         vm.prank(user1);
         pUSDC.withdraw(maxWithdraw, user1, user1);
-
         vm.prank(user1);
         // "RedeemRiskEngineRejection(uint256)" selector
         vm.expectRevert(abi.encodePacked(bytes4(0x9759ead5), uint256(3)));
@@ -167,7 +172,7 @@ contract LocalPToken is TestLocal {
         vm.prank(depositor);
         // "RedeemTransferOutNotPossible()" selector
         vm.expectRevert(0x91240a1b);
-        pWETH.withdraw(1e18, depositor, depositor);
+        pWETH.withdraw(2e18, depositor, depositor);
 
         mockOracle.setPrice(address(pWETH), 2500e6, 18);
         // no withdraw with shortfall

@@ -842,13 +842,24 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
 
         uint256 mintTokens = actualMintAmount.div_(exchangeRate);
 
+        /// mint dead shares if it's initial mint
+        if ($.totalSupply == 0) {
+            $.totalSupply = mintTokens;
+            mintTokens = mintTokens - MINIMUM_DEAD_SHARES;
+        } else {
+            $.totalSupply = $.totalSupply + mintTokens;
+        }
+
+        if (mintTokens == 0) {
+            revert PTokenError.ZeroTokensMinted();
+        }
+
         /*
          * We calculate the new total supply of pTokens and onBehalfOf token balance, checking for overflow:
          *  totalSupplyNew = totalSupply + mintTokens
          *  accountTokensNew = accountTokens[onBehalfOf] + mintTokens
          * And write them into storage
          */
-        $.totalSupply = $.totalSupply + mintTokens;
         $.accountTokens[onBehalfOf] = $.accountTokens[onBehalfOf] + mintTokens;
 
         /* We emit a Mint event, and a Transfer event */
