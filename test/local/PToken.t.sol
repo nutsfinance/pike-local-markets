@@ -90,6 +90,15 @@ contract LocalPToken is TestLocal {
         assertEq(address(newRE), address(pUSDC.riskEngine()));
     }
 
+    function testSetBorrowRateMax_Success() public {
+        vm.prank(getAdmin());
+
+        uint256 newBorrowRateMax = 2e6;
+        pUSDC.setBorrowRateMax(newBorrowRateMax);
+
+        assertEq(newBorrowRateMax, pUSDC.borrowRateMaxMantissa());
+    }
+
     function testSweep_FailIfUnderlying() public {
         IERC20 underlying = IERC20(pUSDC.asset());
         vm.prank(getAdmin());
@@ -137,6 +146,26 @@ contract LocalPToken is TestLocal {
         uint256 prevIndex = pUSDC.borrowIndex();
         pUSDC.accrueInterest();
         assertEq(prevIndex, pUSDC.borrowIndex());
+
+        // "MintFreshnessCheck()" selector
+        doDepositRevert(
+            user1, user1, address(pUSDC), 1000e6, abi.encodePacked(bytes4(0x38d88597))
+        );
+
+        // "RedeemFreshnessCheck()" selector
+        doWithdrawRevert(
+            user1, user1, address(pUSDC), 100, abi.encodePacked(bytes4(0x97b5cfcd))
+        );
+
+        // "BorrowFreshnessCheck()" selector
+        doBorrowRevert(
+            user1, user1, address(pUSDC), 100, abi.encodePacked(bytes4(0x3a363184))
+        );
+
+        // "RepayBorrowFreshnessCheck()" selector
+        doRepayRevert(
+            user1, user1, address(pUSDC), 100, abi.encodePacked(bytes4(0xc9021e2f))
+        );
     }
 
     function testRedeem_FailIfNotAllowed() public {

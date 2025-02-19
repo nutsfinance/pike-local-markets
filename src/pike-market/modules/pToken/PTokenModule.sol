@@ -109,6 +109,20 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     /**
      * @inheritdoc IPToken
      */
+    function setBorrowRateMax(uint256 newBorrowRateMaxMantissa) external {
+        _checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
+
+        PTokenData storage $ = _getPTokenStorage();
+
+        uint256 oldBorrowRateMaxMantissa = $.borrowRateMaxMantissa;
+        $.borrowRateMaxMantissa = newBorrowRateMaxMantissa;
+
+        emit NewBorrowRateMax(oldBorrowRateMaxMantissa, newBorrowRateMaxMantissa);
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function setReserveFactor(uint256 newReserveFactorMantissa) external {
         _checkPermission(_RESERVE_MANAGER_PERMISSION, msg.sender);
         accrueInterest();
@@ -509,6 +523,13 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     /**
      * @inheritdoc IPToken
      */
+    function borrowRateMaxMantissa() external view returns (uint256) {
+        return _getPTokenStorage().borrowRateMaxMantissa;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function borrowIndex() external view returns (uint256) {
         return _getPTokenStorage().borrowIndex;
     }
@@ -707,12 +728,12 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         /// Get accrued snapshot
         PendingSnapshot memory snapshot = _pendingAccruedSnapshot();
 
+        /// return without updating accrual timestamp to revert with freshnesscheck
         if (
             IInterestRateModel(address(this)).getBorrowRate(
                 getCash(), snapshot.totalBorrow, snapshot.totalReserve
             ) > $.borrowRateMaxMantissa
         ) {
-            $.accrualBlockTimestamp = currentBlockTimestamp;
             return;
         }
 
