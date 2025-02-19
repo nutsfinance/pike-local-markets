@@ -264,6 +264,14 @@ contract LocalRiskEngine is TestLocal {
         re.configureMarket(pUSDC, config);
     }
 
+    function testSetOracle_FailIfAddressIsZero() public {
+        vm.prank(getAdmin());
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        re.setOracle(address(0));
+    }
+
     function testSupportMarket_FailIfAlreadyListedOrUnsupported() public {
         vm.startPrank(getAdmin());
 
