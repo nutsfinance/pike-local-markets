@@ -97,6 +97,10 @@ contract PythOracleProvider is
         PythStructs.Price memory priceInfo =
             pyth.getPriceNoOlderThan(config.feed, config.maxStalePeriod);
 
+        if (priceInfo.price <= 0) {
+            revert InvalidPrice();
+        }
+
         if (
             priceInfo.conf > 0
                 && (uint64(priceInfo.price) / priceInfo.conf < config.confidenceRatioMin)

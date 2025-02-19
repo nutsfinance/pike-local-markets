@@ -18,6 +18,11 @@ interface IChainlinkOracleProvider is IOracleProvider {
     error InvalidAsset();
 
     /**
+     * @notice Error emitted when returned price is not positive
+     */
+    error InvalidPrice();
+
+    /**
      * @notice Error emitted when feed is invalid
      */
     error InvalidFeed();
