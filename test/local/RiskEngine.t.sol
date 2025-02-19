@@ -32,6 +32,10 @@ contract LocalRiskEngine is TestLocal {
         pWETH = getPToken("pWETH");
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     function testPauseMint_Success() public {
@@ -167,41 +171,43 @@ contract LocalRiskEngine is TestLocal {
 
     function testMint_FailIfCapReached() public {
         address user1 = makeAddr("user1");
-        uint256 mintAmount = 2000e6;
+        uint256 mintAmount = 2000e18;
 
         IPToken[] memory markets = new IPToken[](1);
-        markets[0] = pUSDC;
+        markets[0] = pWETH;
 
         uint256[] memory caps = new uint256[](1);
         caps[0] = mintAmount - 1;
 
-        changeList(address(pWETH), false);
+        changeList(address(pUSDC), false);
 
         // max deposit 0 for unlisted
-        assertEq(0, pWETH.maxDeposit(address(0)), "maxDeposit does not match unlisted");
+        assertEq(0, pUSDC.maxDeposit(address(0)), "maxDeposit does not match unlisted");
 
         // max deposit uint256 max by default
         assertEq(
             type(uint256).max,
-            pUSDC.maxDeposit(address(0)),
+            pWETH.maxDeposit(address(0)),
             "maxDeposit does not uint256 max"
         );
 
         vm.prank(getAdmin());
         re.setMarketSupplyCaps(markets, caps);
-        // applied cap
-        assertEq(caps[0], pUSDC.maxDeposit(address(0)), "maxDeposit does not match cap");
+        // applied cap - initial mint amount
         assertEq(
-            caps[0],
-            pUSDC.maxMint(address(0)) * pUSDC.exchangeRateCurrent() / ONE_MANTISSA,
-            "maxDeposit does not match cap"
+            caps[0] - 1001, pWETH.maxDeposit(address(0)), "maxDeposit does not match cap"
+        );
+        assertEq(
+            caps[0] - 1001,
+            pWETH.maxMint(address(0)) * pWETH.exchangeRateCurrent() / ONE_MANTISSA,
+            "maxMint does not match cap"
         );
 
         // "BorrowRiskEngineRejection(7)" selector
         doDepositRevert(
             user1,
             user1,
-            address(pUSDC),
+            address(pWETH),
             mintAmount,
             abi.encodePacked(bytes4(0x1d3413fb), uint256(7))
         );

@@ -11,6 +11,7 @@ library PTokenError {
 
     error MintRiskEngineRejection(uint256 errorCode);
     error MintFreshnessCheck();
+    error ZeroTokensMinted();
 
     error RedeemRiskEngineRejection(uint256 errorCode);
     error RedeemFreshnessCheck();

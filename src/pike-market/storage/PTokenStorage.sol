@@ -121,6 +121,9 @@ contract PTokenStorage {
     // Maximum fraction of interest that can be set aside for reserves
     uint256 internal constant _RESERVE_FACTOR_MAX_MANTISSA = 1e18;
 
+    // Dead share for initial mint
+    uint256 internal constant MINIMUM_DEAD_SHARES = 1000;
+
     function _getPTokenStorage() internal pure returns (PTokenData storage data) {
         bytes32 s = _SLOT_PTOKEN_STORAGE;
         assembly {

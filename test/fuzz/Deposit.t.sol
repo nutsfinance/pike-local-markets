@@ -37,6 +37,10 @@ contract FuzzDeposit is TestFuzz {
         pWETH = getPToken("pWETH");
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     function testFuzz_deposit(address[2] memory addresses, uint256[4] memory amounts)
