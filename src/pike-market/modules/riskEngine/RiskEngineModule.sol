@@ -1354,19 +1354,17 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         view
         returns (ExponentialNoError.Exp memory)
     {
-        if (emodeCategory == 0) {
-            return ExponentialNoError.Exp({
-                mantissa: _getRiskEngineStorage().markets[address(asset)]
-                    .baseConfiguration
-                    .collateralFactorMantissa
-            });
-        } else {
-            return ExponentialNoError.Exp({
-                mantissa: _getRiskEngineStorage().emodes[emodeCategory]
-                    .baseConfiguration
-                    .collateralFactorMantissa
-            });
-        }
+        RiskEngineData storage $ = _getRiskEngineStorage();
+
+        // Check if asset is in emode category and category is not 0
+        bool useEmode =
+            emodeCategory != 0 && $.collateralCategory[emodeCategory][address(asset)];
+
+        return ExponentialNoError.Exp({
+            mantissa: useEmode
+                ? $.emodes[emodeCategory].baseConfiguration.collateralFactorMantissa
+                : $.markets[address(asset)].baseConfiguration.collateralFactorMantissa
+        });
     }
 
     /**
@@ -1379,18 +1377,16 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         view
         returns (ExponentialNoError.Exp memory)
     {
-        if (emodeCategory == 0) {
-            return ExponentialNoError.Exp({
-                mantissa: _getRiskEngineStorage().markets[address(asset)]
-                    .baseConfiguration
-                    .liquidationThresholdMantissa
-            });
-        } else {
-            return ExponentialNoError.Exp({
-                mantissa: _getRiskEngineStorage().emodes[emodeCategory]
-                    .baseConfiguration
-                    .liquidationThresholdMantissa
-            });
-        }
+        RiskEngineData storage $ = _getRiskEngineStorage();
+
+        // Check if asset is in emode category and category is not 0
+        bool useEmode =
+            emodeCategory != 0 && $.collateralCategory[emodeCategory][address(asset)];
+
+        return ExponentialNoError.Exp({
+            mantissa: useEmode
+                ? $.emodes[emodeCategory].baseConfiguration.liquidationThresholdMantissa
+                : $.markets[address(asset)].baseConfiguration.liquidationThresholdMantissa
+        });
     }
 }
