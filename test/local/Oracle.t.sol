@@ -64,10 +64,11 @@ contract LocalOracle is TestLocal {
 
         // deploy chainlink oracle provider
         address chainlinkOracleProviderImplementation = address(
-            new ChainlinkOracleProvider(AggregatorV3Interface(sequencerUptimeFeed))
+            new ChainlinkOracleProvider(
+                AggregatorV3Interface(sequencerUptimeFeed), getAdmin()
+            )
         );
-        bytes memory data =
-            abi.encodeCall(ChainlinkOracleProvider.initialize, (_testState.admin));
+        bytes memory data = abi.encodeCall(ChainlinkOracleProvider.initialize, ());
         ERC1967Proxy chainlinkOracleProviderProxy =
             new ERC1967Proxy(chainlinkOracleProviderImplementation, data);
 
@@ -77,8 +78,8 @@ contract LocalOracle is TestLocal {
         // deploy pyth oracle provider
         pyth = new MockPyth();
         address pythOracleProviderImplementation =
-            address(new PythOracleProvider(address(pyth)));
-        data = abi.encodeCall(PythOracleProvider.initialize, (_testState.admin));
+            address(new PythOracleProvider(address(pyth), getAdmin()));
+        data = abi.encodeCall(PythOracleProvider.initialize, ());
         ERC1967Proxy pythOracleProviderProxy =
             new ERC1967Proxy(pythOracleProviderImplementation, data);
         pythOracleProvider = PythOracleProvider(address(pythOracleProviderProxy));
