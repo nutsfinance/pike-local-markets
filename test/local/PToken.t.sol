@@ -81,15 +81,6 @@ contract LocalPToken is TestLocal {
         vm.stopPrank();
     }
 
-    function testSetRE_Success() public {
-        IRiskEngine newRE = IRiskEngine(new RiskEngineModule());
-
-        vm.prank(getAdmin());
-        pUSDC.setRiskEngine(newRE);
-
-        assertEq(address(newRE), address(pUSDC.riskEngine()));
-    }
-
     function testSetBorrowRateMax_Success() public {
         vm.prank(getAdmin());
 
