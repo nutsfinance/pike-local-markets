@@ -24,6 +24,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      */
     function setOracle(address newOracle) external {
         checkPermissionOrAdmin(_PROTOCOL_OWNER_PERMISSION, msg.sender);
+        if (newOracle == address(0)) {
+            revert CommonError.ZeroAddress();
+        }
+
         RiskEngineData storage $ = _getRiskEngineStorage();
         emit NewOracleEngine($.oracle, newOracle);
         $.oracle = newOracle;

@@ -897,6 +897,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         uint256 redeemTokensIn,
         uint256 redeemAmountIn
     ) internal returns (uint256, uint256) {
+        if (receiver == address(0)) {
+            revert CommonError.ZeroAddress();
+        }
+
         if (redeemTokensIn != 0 && redeemAmountIn != 0) {
             revert CommonError.ZeroValue();
         }
@@ -1286,6 +1290,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     function _transferTokens(address spender, address src, address dst, uint256 tokens)
         internal
     {
+        if (dst == address(0)) {
+            revert CommonError.ZeroAddress();
+        }
+
         PTokenData storage $ = _getPTokenStorage();
 
         /* Fail if transfer not allowed */

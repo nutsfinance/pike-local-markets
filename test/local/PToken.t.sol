@@ -98,6 +98,26 @@ contract LocalPToken is TestLocal {
         pUSDC.sweepToken(underlying);
     }
 
+    function testTransfer_FailIfReceiverIsZero() public {
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        pUSDC.transfer(address(0), 0);
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        pUSDC.transferFrom(address(0), address(0), 0);
+    }
+
+    function testRedeem_FailIfReceiverIsZero() public {
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        pUSDC.redeem(0, address(0), address(0));
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        pUSDC.withdraw(0, address(0), address(0));
+    }
+
     function testMintBehalfOf_FailIfAddressIsZero() public {
         // "ZeroAddress()" selector
         vm.expectRevert(0xd92e233d);
