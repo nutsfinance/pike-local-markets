@@ -28,7 +28,7 @@
     "sort-package-json": "sort-package-json",
     "test": "forge test --match-contract Local -vv",
     "test:coverage": "forge coverage --match-contract Local -vv --no-match-coverage \"(script|test|node_modules)\"",
-    "test:coverage:output": "forge coverage --match-contract Local -vv --no-match-coverage \"(script|test|node_modules)\" --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage --ignore-errors inconsistent",
+    "test:coverage:output": "forge coverage --match-contract Local -vv --no-match-coverage \"(script|test|node_modules)\" --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage --ignore-errors inconsistent,category",
     "test:fork": "forge build --ast && npx cannon test script/cannon/base-mainnet/base-mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io --forge.match-contract Fork --forge.vv",
     "test:fuzz": "forge test --match-contract Fuzz -vv"
   },
