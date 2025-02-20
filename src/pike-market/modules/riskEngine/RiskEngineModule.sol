@@ -413,7 +413,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
 
         Market storage marketToExit = _getRiskEngineStorage().markets[pTokenAddress];
 
-        /* Return true if the sender is not already ‘in’ the market as collateral */
+        /* Return early if the sender is not already ‘in’ the market as collateral */
         if (!marketToExit.collateralMembership[msg.sender]) {
             return;
         }
