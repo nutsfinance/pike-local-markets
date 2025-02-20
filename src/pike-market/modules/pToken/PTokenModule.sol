@@ -1593,8 +1593,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     }
 
     /**
-     * @dev Function to simply retrieve block number
-     *  This exists mainly for inheriting test contracts to stub this result.
+     * @dev Function to retrieve the splitted reserve share for owner
+     * and configurator based on accumulated reserves
      */
     function _getReserveShares(uint256 accumulatedReserve)
         internal
@@ -1612,8 +1612,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     }
 
     /**
-     * @dev Function to simply retrieve block number
-     *  This exists mainly for inheriting test contracts to stub this result.
+     * @dev Function to retrieve current block timestamp
      */
     function _getBlockTimestamp() internal view returns (uint256) {
         return block.timestamp;
