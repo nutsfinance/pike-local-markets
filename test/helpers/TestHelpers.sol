@@ -632,19 +632,19 @@ contract TestHelpers is TestUtilities {
 
     function setTotalReserves(address pToken, uint256 totalReserves) public {
         // totalReserves slot
-        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0c;
+        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0b;
         vm.store(pToken, slot, bytes32(totalReserves));
     }
 
     function setTotalBorrows(address pToken, uint256 totalBorrows) public {
         // totalBorrows slot
-        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0b;
+        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0a;
         vm.store(pToken, slot, bytes32(totalBorrows));
     }
 
     function setPTokenTotalSupply(address pToken, uint256 totalSupply) public {
         // totalSupply slot
-        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0d;
+        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0c;
         vm.store(pToken, slot, bytes32(totalSupply));
     }
 }

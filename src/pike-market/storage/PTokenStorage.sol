@@ -7,10 +7,6 @@ contract PTokenStorage {
     /// @custom:storage-location erc7201:pike.LM.PToken
     struct PTokenData {
         /**
-         * @dev Guard variable for re-entrancy checks
-         */
-        bytes32 _entered;
-        /**
          * @notice Underlying asset for this PToken
          */
         address underlying;
@@ -88,6 +84,14 @@ contract PTokenStorage {
         mapping(address => BorrowSnapshot) accountBorrows;
     }
 
+    /// @custom:storage-location erc7201:pike.LM.PToken.Transient
+    struct PTokenTransientData {
+        /**
+         * @dev Guard variable for re-entrancy checks
+         */
+        bytes32 _entered;
+    }
+
     /**
      * @notice Container for borrow balance information
      * @member principal Total balance (with accrued interest), after applying the most recent balance-changing action
@@ -115,6 +119,10 @@ contract PTokenStorage {
     /// keccak256(abi.encode(uint256(keccak256("pike.LM.PToken")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 internal constant _SLOT_PTOKEN_STORAGE =
         0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d00;
+
+    /// keccak256(abi.encode(uint256(keccak256("pike.LM.PToken.Transient")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 internal constant _SLOT_PTOKEN_TRANSIENT_STORAGE =
+        0x4859f9ae8b7704f1d2bda454afdf52ff1d57def69d8277385db7d84008a1d900;
 
     uint256 internal constant _MANTISSA_ONE = 1e18;
 
