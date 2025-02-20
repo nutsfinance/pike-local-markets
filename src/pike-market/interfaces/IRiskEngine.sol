@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IPToken} from "@interfaces/IPToken.sol";
+import {RiskEngineError} from "@errors/RiskEngineError.sol";
 
 interface IRiskEngine {
     struct BaseConfiguration {
@@ -147,7 +148,7 @@ interface IRiskEngine {
      */
     function borrowAllowed(address pToken, address borrower, uint256 borrowAmount)
         external
-        returns (uint256);
+        returns (RiskEngineError.Error);
 
     /// *** Admin Functions ***
 
@@ -316,7 +317,7 @@ interface IRiskEngine {
     function getAccountLiquidity(address account)
         external
         view
-        returns (uint256, uint256, uint256);
+        returns (RiskEngineError.Error, uint256, uint256);
 
     /**
      * @notice Determine the current account liquidity with respect to collateral factor
@@ -327,7 +328,7 @@ interface IRiskEngine {
     function getAccountBorrowLiquidity(address account)
         external
         view
-        returns (uint256, uint256, uint256);
+        returns (RiskEngineError.Error, uint256, uint256);
 
     /**
      * @notice Determine what the account liquidity would be if the given amounts were redeemed/borrowed
@@ -345,7 +346,7 @@ interface IRiskEngine {
         address pTokenModify,
         uint256 redeemTokens,
         uint256 borrowAmount
-    ) external view returns (uint256, uint256, uint256);
+    ) external view returns (RiskEngineError.Error, uint256, uint256);
 
     /**
      * @notice Calculate number of tokens of collateral asset to seize given an underlying amount
@@ -361,7 +362,7 @@ interface IRiskEngine {
         address pTokenBorrowed,
         address pTokenCollateral,
         uint256 actualRepayAmount
-    ) external view returns (uint256, uint256);
+    ) external view returns (RiskEngineError.Error, uint256);
 
     /**
      * @notice Checks if a delegate has been approved by a user for all markets.
@@ -412,7 +413,7 @@ interface IRiskEngine {
     function mintAllowed(address account, address pToken, uint256 mintAmount)
         external
         view
-        returns (uint256);
+        returns (RiskEngineError.Error);
 
     /**
      * @notice Checks if the account should be allowed to redeem tokens in the given market
@@ -424,14 +425,17 @@ interface IRiskEngine {
     function redeemAllowed(address pToken, address redeemer, uint256 redeemTokens)
         external
         view
-        returns (uint256);
+        returns (RiskEngineError.Error);
 
     /**
      * @notice Checks if the account should be allowed to repay a borrow in the given market
      * @param pToken The market to verify the repay against
      * @return 0 if the repay is allowed, otherwise an error code (See Errors)
      */
-    function repayBorrowAllowed(address pToken) external view returns (uint256);
+    function repayBorrowAllowed(address pToken)
+        external
+        view
+        returns (RiskEngineError.Error);
 
     /**
      * @notice Checks if the liquidation should be allowed to occur
@@ -445,7 +449,7 @@ interface IRiskEngine {
         address pTokenCollateral,
         address borrower,
         uint256 repayAmount
-    ) external view returns (uint256);
+    ) external view returns (RiskEngineError.Error);
 
     /**
      * @notice Checks if the seizing of assets should be allowed to occur
@@ -456,7 +460,7 @@ interface IRiskEngine {
     function seizeAllowed(address pTokenCollateral, address pTokenBorrowed)
         external
         view
-        returns (uint256);
+        returns (RiskEngineError.Error);
 
     /**
      * @notice Checks if the account should be allowed to transfer tokens in the given market
@@ -468,7 +472,7 @@ interface IRiskEngine {
     function transferAllowed(address pToken, address src, uint256 transferTokens)
         external
         view
-        returns (uint256);
+        returns (RiskEngineError.Error);
 
     /**
      * @return the oracle engine address

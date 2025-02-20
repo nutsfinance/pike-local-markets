@@ -5,8 +5,6 @@ pragma solidity 0.8.28;
  * @title Library for common errors.
  */
 library CommonError {
-    uint256 internal constant NO_ERROR = 0;
-
     /**
      * @dev Thrown when an operation is attempted on an already initialized contract.
      */
