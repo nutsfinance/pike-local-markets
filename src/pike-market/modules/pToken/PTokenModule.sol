@@ -29,9 +29,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @dev Prevents a contract from calling itself, directly or indirectly.
      */
     modifier nonReentrant() {
-        if (_reentrancyGuardEntered()) {
-            revert CommonError.ReentrancyGuardReentrantCall();
-        }
+        require(!_reentrancyGuardEntered(), CommonError.ReentrancyGuardReentrantCall());
 
         assembly ("memory-safe") {
             tstore(_SLOT_PTOKEN_STORAGE, 1)
@@ -64,15 +62,18 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         uint8 decimals_
     ) external onlyOwner {
         PTokenData storage $ = _getPTokenStorage();
-        if ($.accrualBlockTimestamp != 0 || $.borrowIndex != 0) {
-            revert CommonError.AlreadyInitialized();
-        }
-        if (initialExchangeRateMantissa_ == 0 || borrowRateMaxMantissa_ == 0) {
-            revert CommonError.ZeroValue();
-        }
-        if (underlying_ == address(0) || address(riskEngine_) == address(0)) {
-            revert CommonError.ZeroAddress();
-        }
+        require(
+            $.accrualBlockTimestamp == 0 && $.borrowIndex == 0,
+            CommonError.AlreadyInitialized()
+        );
+        require(
+            initialExchangeRateMantissa_ != 0 && borrowRateMaxMantissa_ != 0,
+            CommonError.ZeroValue()
+        );
+        require(
+            underlying_ != address(0) && address(riskEngine_) != address(0),
+            CommonError.ZeroAddress()
+        );
 
         // Set initial exchange rate
         $.initialExchangeRateMantissa = initialExchangeRateMantissa_;
@@ -185,9 +186,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      */
     function sweepToken(IERC20 token) external {
         _checkPermission(_RESERVE_WITHDRAWER_PERMISSION, msg.sender);
-        if (address(token) == _getPTokenStorage().underlying) {
-            revert PTokenError.SweepNotAllowed();
-        }
+        require(
+            address(token) != _getPTokenStorage().underlying,
+            PTokenError.SweepNotAllowed()
+        );
         uint256 balance = token.balanceOf(address(this));
         token.safeTransfer(msg.sender, balance);
     }
@@ -233,9 +235,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         nonReentrant
         returns (uint256)
     {
-        if (receiver == address(0)) {
-            revert CommonError.ZeroAddress();
-        }
+        require(receiver != address(0), CommonError.ZeroAddress());
         accrueInterest();
         (, uint256 assets) = mintFresh(msg.sender, receiver, tokenAmount, 0);
         return assets;
@@ -249,9 +249,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         nonReentrant
         returns (uint256)
     {
-        if (receiver == address(0)) {
-            revert CommonError.ZeroAddress();
-        }
+        require(receiver != address(0), CommonError.ZeroAddress());
 
         accrueInterest();
         (uint256 shares,) = mintFresh(msg.sender, receiver, 0, mintAmount);
@@ -340,10 +338,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
 
         (bool success,) =
             address(pTokenCollateral).call(abi.encodeWithSignature("accrueInterest()"));
-        if (!success) {
-            // accrueInterest emits logs on errors, but we want to log the fact that an attempted liquidation failed
-            revert PTokenError.LiquidateAccrueCollateralInterestFailed();
-        }
+
+        // accrueInterest emits logs on errors, but we want to log the fact that an attempted liquidation failed
+        require(success, PTokenError.LiquidateAccrueCollateralInterestFailed());
 
         // liquidateBorrowFresh emits borrow-specific logs on errors, so we don't need to
         liquidateBorrowFresh(msg.sender, borrower, repayAmount, pTokenCollateral);
@@ -368,9 +365,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @return success Whether or not the approval succeeded
      */
     function approve(address spender, uint256 amount) external override returns (bool) {
-        if (spender == address(0)) {
-            revert CommonError.ZeroAddress();
-        }
+        require(spender != address(0), CommonError.ZeroAddress());
+
         address src = msg.sender;
         _getPTokenStorage().transferAllowances[src][spender] = amount;
         emit Approval(src, spender, amount);
@@ -811,9 +807,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         uint256 mintTokensIn,
         uint256 mintAmountIn
     ) internal returns (uint256, uint256) {
-        if (mintTokensIn != 0 && mintAmountIn != 0) {
-            revert CommonError.ZeroValue();
-        }
+        require(mintTokensIn == 0 || mintAmountIn == 0, CommonError.ZeroValue());
 
         ExponentialNoError.Exp memory exchangeRate =
             ExponentialNoError.Exp({mantissa: exchangeRateStoredInternal()});
@@ -828,14 +822,16 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         /* Fail if mint not allowed */
         RiskEngineError.Error allowed =
             $.riskEngine.mintAllowed(minter, address(this), mintAmountIn);
-        if (allowed != RiskEngineError.Error.NO_ERROR) {
-            revert PTokenError.MintRiskEngineRejection(uint256(allowed));
-        }
+        require(
+            allowed == RiskEngineError.Error.NO_ERROR,
+            PTokenError.MintRiskEngineRejection(uint256(allowed))
+        );
 
         /* Verify market's block timestamp equals current block timestamp */
-        if ($.accrualBlockTimestamp != _getBlockTimestamp()) {
-            revert PTokenError.MintFreshnessCheck();
-        }
+        require(
+            $.accrualBlockTimestamp == _getBlockTimestamp(),
+            PTokenError.MintFreshnessCheck()
+        );
 
         /////////////////////////
         // EFFECTS & INTERACTIONS
@@ -865,9 +861,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
             $.totalSupply = $.totalSupply + mintTokens;
         }
 
-        if (mintTokens == 0) {
-            revert PTokenError.ZeroTokensMinted();
-        }
+        require(mintTokens != 0, PTokenError.ZeroTokensMinted());
 
         /*
          * We calculate the new total supply of pTokens and onBehalfOf token balance, checking for overflow:
@@ -898,13 +892,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         uint256 redeemTokensIn,
         uint256 redeemAmountIn
     ) internal returns (uint256, uint256) {
-        if (receiver == address(0)) {
-            revert CommonError.ZeroAddress();
-        }
+        require(receiver != address(0), CommonError.ZeroAddress());
 
-        if (redeemTokensIn != 0 && redeemAmountIn != 0) {
-            revert CommonError.ZeroValue();
-        }
+        require(redeemTokensIn == 0 || redeemAmountIn == 0, CommonError.ZeroValue());
 
         /* exchangeRate = invoke Exchange Rate Stored() */
         ExponentialNoError.Exp memory exchangeRate =
@@ -935,19 +925,19 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         /* Fail if redeem not allowed */
         RiskEngineError.Error allowed =
             $.riskEngine.redeemAllowed(address(this), onBehalfOf, redeemTokens);
-        if (allowed != RiskEngineError.Error.NO_ERROR) {
-            revert PTokenError.RedeemRiskEngineRejection(uint256(allowed));
-        }
+        require(
+            allowed == RiskEngineError.Error.NO_ERROR,
+            PTokenError.RedeemRiskEngineRejection(uint256(allowed))
+        );
 
         /* Verify market's block timestamp equals current block timestamp */
-        if ($.accrualBlockTimestamp != _getBlockTimestamp()) {
-            revert PTokenError.RedeemFreshnessCheck();
-        }
+        require(
+            $.accrualBlockTimestamp == _getBlockTimestamp(),
+            PTokenError.RedeemFreshnessCheck()
+        );
 
         /* Fail gracefully if protocol has insufficient cash */
-        if (getCash() < redeemAmount) {
-            revert PTokenError.RedeemTransferOutNotPossible();
-        }
+        require(getCash() >= redeemAmount, PTokenError.RedeemTransferOutNotPossible());
 
         if (msg.sender != onBehalfOf) {
             _spendAllowance(onBehalfOf, msg.sender, redeemTokens);
@@ -969,9 +959,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
          *  doTransferOut reverts if anything goes wrong, since we can't be sure if side effects occurred.
          */
         doTransferOut(receiver, redeemAmount);
-        if (redeemTokens == 0 && redeemAmount > 0) {
-            revert PTokenError.InvalidRedeemTokens();
-        }
+        require(redeemTokens != 0 || redeemAmount == 0, PTokenError.InvalidRedeemTokens());
         /* We emit a Transfer event, and a Redeem event */
         emit Transfer(onBehalfOf, address(0), redeemTokens);
         emit Withdraw(msg.sender, receiver, onBehalfOf, redeemAmount, redeemTokens);
@@ -991,19 +979,19 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         /* Fail if borrow not allowed */
         RiskEngineError.Error allowed =
             $.riskEngine.borrowAllowed(address(this), onBehalfOf, borrowAmount);
-        if (allowed != RiskEngineError.Error.NO_ERROR) {
-            revert PTokenError.BorrowRiskEngineRejection(uint256(allowed));
-        }
+        require(
+            allowed == RiskEngineError.Error.NO_ERROR,
+            PTokenError.BorrowRiskEngineRejection(uint256(allowed))
+        );
 
         /* Verify market's block timestamp equals current block timestamp */
-        if ($.accrualBlockTimestamp != _getBlockTimestamp()) {
-            revert PTokenError.BorrowFreshnessCheck();
-        }
+        require(
+            $.accrualBlockTimestamp == _getBlockTimestamp(),
+            PTokenError.BorrowFreshnessCheck()
+        );
 
         /* Fail gracefully if protocol has insufficient underlying cash */
-        if (getCash() < borrowAmount) {
-            revert PTokenError.BorrowCashNotAvailable();
-        }
+        require(getCash() >= borrowAmount, PTokenError.BorrowCashNotAvailable());
 
         /*
          * We calculate the new borrower and total borrow balances, failing on overflow:
@@ -1054,14 +1042,16 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         PTokenData storage $ = _getPTokenStorage();
         /* Fail if repayBorrow not allowed */
         RiskEngineError.Error allowed = $.riskEngine.repayBorrowAllowed(address(this));
-        if (allowed != RiskEngineError.Error.NO_ERROR) {
-            revert PTokenError.RepayBorrowRiskEngineRejection(uint256(allowed));
-        }
+        require(
+            allowed == RiskEngineError.Error.NO_ERROR,
+            PTokenError.RepayBorrowRiskEngineRejection(uint256(allowed))
+        );
 
         /* Verify market's block timestamp equals current block timestamp */
-        if ($.accrualBlockTimestamp != _getBlockTimestamp()) {
-            revert PTokenError.RepayBorrowFreshnessCheck();
-        }
+        require(
+            $.accrualBlockTimestamp == _getBlockTimestamp(),
+            PTokenError.RepayBorrowFreshnessCheck()
+        );
 
         /* We fetch the amount the borrower owes, with accumulated interest */
         uint256 accountBorrowsPrev = borrowBalanceStoredInternal(onBehalfOf);
@@ -1125,34 +1115,33 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
             .liquidateBorrowAllowed(
             address(this), address(pTokenCollateral), borrower, repayAmount
         );
-        if (allowed != RiskEngineError.Error.NO_ERROR) {
-            revert PTokenError.LiquidateRiskEngineRejection(uint256(allowed));
-        }
+        require(
+            allowed == RiskEngineError.Error.NO_ERROR,
+            PTokenError.LiquidateRiskEngineRejection(uint256(allowed))
+        );
 
         /* Verify market's block timestamp equals current block timestamp */
-        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
-            revert PTokenError.LiquidateFreshnessCheck();
-        }
+        require(
+            _getPTokenStorage().accrualBlockTimestamp == _getBlockTimestamp(),
+            PTokenError.LiquidateFreshnessCheck()
+        );
 
         /* Verify pTokenCollateral market's block timestamp equals current block timestamp */
-        if (pTokenCollateral.accrualBlockTimestamp() != _getBlockTimestamp()) {
-            revert PTokenError.LiquidateCollateralFreshnessCheck();
-        }
+        require(
+            pTokenCollateral.accrualBlockTimestamp() == _getBlockTimestamp(),
+            PTokenError.LiquidateCollateralFreshnessCheck()
+        );
 
         /* Fail if borrower = liquidator */
-        if (borrower == liquidator) {
-            revert PTokenError.LiquidateLiquidatorIsBorrower();
-        }
+        require(borrower != liquidator, PTokenError.LiquidateLiquidatorIsBorrower());
 
         /* Fail if repayAmount = 0 */
-        if (repayAmount == 0) {
-            revert PTokenError.LiquidateCloseAmountIsZero();
-        }
+        require(repayAmount != 0, PTokenError.LiquidateCloseAmountIsZero());
 
         /* Fail if repayAmount = type(uint256).max */
-        if (repayAmount == type(uint256).max) {
-            revert PTokenError.LiquidateCloseAmountIsUintMax();
-        }
+        require(
+            repayAmount != type(uint256).max, PTokenError.LiquidateCloseAmountIsUintMax()
+        );
 
         /* Fail if repayBorrow fails */
         uint256 actualRepayAmount = repayBorrowFresh(liquidator, borrower, repayAmount);
@@ -1166,16 +1155,16 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         ).riskEngine.liquidateCalculateSeizeTokens(
             borrower, address(this), address(pTokenCollateral), actualRepayAmount
         );
-        if (amountSeizeError != RiskEngineError.Error.NO_ERROR) {
-            revert PTokenError.LiquidateCalculateAmountSeizeFailed(
-                uint256(amountSeizeError)
-            );
-        }
+        require(
+            amountSeizeError == RiskEngineError.Error.NO_ERROR,
+            PTokenError.LiquidateCalculateAmountSeizeFailed(uint256(amountSeizeError))
+        );
 
         /* Revert if borrower collateral token balance < seizeTokens */
-        if (pTokenCollateral.balanceOf(borrower) < seizeTokens) {
-            revert PTokenError.LiquidateSeizeTooMuch();
-        }
+        require(
+            pTokenCollateral.balanceOf(borrower) >= seizeTokens,
+            PTokenError.LiquidateSeizeTooMuch()
+        );
 
         // If this is also the collateral, run seizeInternal to avoid re-entrancy, otherwise make an external call
         if (address(pTokenCollateral) == address(this)) {
@@ -1213,9 +1202,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         /* Fail if seize not allowed */
         RiskEngineError.Error allowed =
             $.riskEngine.seizeAllowed(address(this), seizerToken);
-        if (allowed != RiskEngineError.Error.NO_ERROR) {
-            revert PTokenError.LiquidateSeizeRiskEngineRejection(uint256(allowed));
-        }
+        require(
+            allowed == RiskEngineError.Error.NO_ERROR,
+            PTokenError.LiquidateSeizeRiskEngineRejection(uint256(allowed))
+        );
 
         /*
          * We calculate the new borrower and liquidator token balances, failing on underflow/overflow:
@@ -1295,23 +1285,20 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     function _transferTokens(address spender, address src, address dst, uint256 tokens)
         internal
     {
-        if (dst == address(0)) {
-            revert CommonError.ZeroAddress();
-        }
+        require(dst != address(0), CommonError.ZeroAddress());
 
         PTokenData storage $ = _getPTokenStorage();
 
         /* Fail if transfer not allowed */
         RiskEngineError.Error allowed =
             $.riskEngine.transferAllowed(address(this), src, tokens);
-        if (allowed != RiskEngineError.Error.NO_ERROR) {
-            revert PTokenError.TransferRiskEngineRejection(uint256(allowed));
-        }
+        require(
+            allowed == RiskEngineError.Error.NO_ERROR,
+            PTokenError.TransferRiskEngineRejection(uint256(allowed))
+        );
 
         /* Do not allow self-transfers */
-        if (src == dst) {
-            revert PTokenError.TransferNotAllowed();
-        }
+        require(src != dst, PTokenError.TransferNotAllowed());
 
         if (spender != src) {
             _spendAllowance(src, spender, tokens);
@@ -1338,9 +1325,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     function _spendAllowance(address owner, address spender, uint256 value) internal {
         uint256 currentAllowance = _getPTokenStorage().transferAllowances[owner][spender];
         if (currentAllowance != type(uint256).max) {
-            if (currentAllowance < value) {
-                revert PTokenError.InsufficientAllowance(spender, currentAllowance, value);
-            }
+            require(
+                currentAllowance >= value,
+                PTokenError.InsufficientAllowance(spender, currentAllowance, value)
+            );
             unchecked {
                 _getPTokenStorage().transferAllowances[owner][spender] =
                     currentAllowance - value;
@@ -1356,9 +1344,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     {
         PTokenData storage $ = _getPTokenStorage();
 
-        if (newProtocolSeizeShareMantissa + $.reserveFactorMantissa > _MANTISSA_ONE) {
-            revert PTokenError.SetProtocolSeizeShareBoundsCheck();
-        }
+        require(
+            newProtocolSeizeShareMantissa + $.reserveFactorMantissa <= _MANTISSA_ONE,
+            PTokenError.SetProtocolSeizeShareBoundsCheck()
+        );
 
         uint256 oldProtocolSeizeShareMantissa = $.protocolSeizeShareMantissa;
         $.protocolSeizeShareMantissa = newProtocolSeizeShareMantissa;
@@ -1374,14 +1363,16 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      */
     function _setReserveFactorFresh(uint256 newReserveFactorMantissa) internal {
         // Verify market's block timestamp equals current block timestamp
-        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
-            revert PTokenError.SetReserveFactorFreshCheck();
-        }
+        require(
+            _getPTokenStorage().accrualBlockTimestamp == _getBlockTimestamp(),
+            PTokenError.SetReserveFactorFreshCheck()
+        );
 
         // Check newReserveFactor ≤ maxReserveFactor
-        if (newReserveFactorMantissa > _RESERVE_FACTOR_MAX_MANTISSA) {
-            revert PTokenError.SetReserveFactorBoundsCheck();
-        }
+        require(
+            newReserveFactorMantissa <= _RESERVE_FACTOR_MAX_MANTISSA,
+            PTokenError.SetReserveFactorBoundsCheck()
+        );
 
         uint256 oldReserveFactorMantissa = _getPTokenStorage().reserveFactorMantissa;
         _getPTokenStorage().reserveFactorMantissa = newReserveFactorMantissa;
@@ -1401,9 +1392,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         PTokenData storage $ = _getPTokenStorage();
 
         // Verify market's block timestamp equals current block timestamp
-        if ($.accrualBlockTimestamp != _getBlockTimestamp()) {
-            revert PTokenError.AddReservesFactorFreshCheck();
-        }
+        require(
+            $.accrualBlockTimestamp == _getBlockTimestamp(),
+            PTokenError.AddReservesFactorFreshCheck()
+        );
 
         /////////////////////////
         // EFFECTS & INTERACTIONS
@@ -1440,19 +1432,16 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         // newReserve = totalReserves - reduceAmount
 
         // Verify market's block timestamp equals current block timestamp
-        if (_getPTokenStorage().accrualBlockTimestamp != _getBlockTimestamp()) {
-            revert PTokenError.ReduceReservesFreshCheck();
-        }
+        require(
+            _getPTokenStorage().accrualBlockTimestamp == _getBlockTimestamp(),
+            PTokenError.ReduceReservesFreshCheck()
+        );
 
         // Fail gracefully if protocol has insufficient underlying cash
-        if (getCash() < reduceAmount) {
-            revert PTokenError.ReduceReservesCashNotAvailable();
-        }
+        require(getCash() >= reduceAmount, PTokenError.ReduceReservesCashNotAvailable());
 
         // Check reduceAmount ≤ reserves[n] (totalReserves)
-        if (reduceAmount > totalReserve) {
-            revert PTokenError.ReduceReservesCashValidation();
-        }
+        require(reduceAmount <= totalReserve, PTokenError.ReduceReservesCashValidation());
 
         /////////////////////////
         // EFFECTS & INTERACTIONS
@@ -1587,9 +1576,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @dev Function to check if msg.sender is delegatee
      */
     function _isDelegateeOf(address onBehalfOf) internal view {
-        if (!_getPTokenStorage().riskEngine.delegateAllowed(onBehalfOf, msg.sender)) {
-            revert PTokenError.DelegateNotAllowed();
-        }
+        require(
+            _getPTokenStorage().riskEngine.delegateAllowed(onBehalfOf, msg.sender),
+            PTokenError.DelegateNotAllowed()
+        );
     }
 
     /**
@@ -1636,12 +1626,11 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         view
         override
     {
-        if (
-            !IRBAC(address(_getPTokenStorage().riskEngine)).hasPermission(
+        require(
+            IRBAC(address(_getPTokenStorage().riskEngine)).hasPermission(
                 permission, target
-            )
-        ) {
-            revert PermissionDenied(permission, target);
-        }
+            ),
+            PermissionDenied(permission, target)
+        );
     }
 }
