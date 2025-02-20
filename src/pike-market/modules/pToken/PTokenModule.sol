@@ -1348,9 +1348,14 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     function _setProtocolSeizeShareMantissa(uint256 newProtocolSeizeShareMantissa)
         internal
     {
-        uint256 oldProtocolSeizeShareMantissa =
-            _getPTokenStorage().protocolSeizeShareMantissa;
-        _getPTokenStorage().protocolSeizeShareMantissa = newProtocolSeizeShareMantissa;
+        PTokenData storage $ = _getPTokenStorage();
+
+        if (newProtocolSeizeShareMantissa + $.reserveFactorMantissa > _MANTISSA_ONE) {
+            revert PTokenError.SetProtocolSeizeShareBoundsCheck();
+        }
+
+        uint256 oldProtocolSeizeShareMantissa = $.protocolSeizeShareMantissa;
+        $.protocolSeizeShareMantissa = newProtocolSeizeShareMantissa;
 
         emit NewProtocolSeizeShare(
             oldProtocolSeizeShareMantissa, newProtocolSeizeShareMantissa
