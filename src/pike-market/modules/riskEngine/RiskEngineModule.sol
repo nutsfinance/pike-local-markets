@@ -58,6 +58,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         external
     {
         checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
+        if (newCloseFactorMantissa > _MANTISSA_ONE) {
+            revert RiskEngineError.InvalidCloseFactor();
+        }
+
         RiskEngineData storage $ = _getRiskEngineStorage();
         uint256 oldCloseFactorMantissa = $.closeFactorMantissa[pTokenAddress];
         $.closeFactorMantissa[pTokenAddress] = newCloseFactorMantissa;
@@ -85,6 +89,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             ExponentialNoError.Exp({mantissa: _COLLATERAL_FACTOR_MAX_MANTISSA});
         if (highLimit.lessThanExp(newCollateralFactorExp)) {
             revert RiskEngineError.InvalidCollateralFactor();
+        }
+
+        if (baseConfig.liquidationIncentiveMantissa < _MANTISSA_ONE) {
+            revert RiskEngineError.InvalidIncentiveThreshold();
         }
 
         // Ensure that liquidation threshold <= 1
@@ -193,6 +201,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         // can not be default category or not allowed category
         if (categoryId == 0 || !$.emodes[categoryId].allowed) {
             revert RiskEngineError.InvalidCategory();
+        }
+
+        if (baseConfig.liquidationIncentiveMantissa < _MANTISSA_ONE) {
+            revert RiskEngineError.InvalidIncentiveThreshold();
         }
 
         // Ensure that liquidation threshold <= 1

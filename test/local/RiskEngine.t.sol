@@ -244,6 +244,14 @@ contract LocalRiskEngine is TestLocal {
         re.configureMarket(IPToken(pUSDC), config);
     }
 
+    function testSetCF_FailIfNotInRange() public {
+        vm.startPrank(getAdmin());
+
+        // "InvalidCloseFactor()" selector
+        vm.expectRevert(0xee0bdbdf);
+        re.setCloseFactor(address(pUSDC), 2e18);
+    }
+
     function testSetCF_FailIfInvalidCF() public {
         vm.startPrank(getAdmin());
 
@@ -261,6 +269,11 @@ contract LocalRiskEngine is TestLocal {
         config = IRiskEngine.BaseConfiguration(0.8e18, 0.7e18, 108e16);
         // "InvalidLiquidationThreshold()" selector
         vm.expectRevert(0x3e51d2c0);
+        re.configureMarket(pUSDC, config);
+
+        config = IRiskEngine.BaseConfiguration(0.7e18, 0.8e18, 10e16);
+        // "InvalidIncentiveThreshold()" selector
+        vm.expectRevert(0x37fbf6a6);
         re.configureMarket(pUSDC, config);
     }
 

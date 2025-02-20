@@ -106,6 +106,11 @@ contract LocalEMode is TestLocal {
         vm.expectRevert(0x3e51d2c0);
         re.configureEMode(1, baseConfig);
 
+        baseConfig = IRiskEngine.BaseConfiguration(90e16, 93e16, 10e16);
+        // "InvalidIncentiveThreshold()" selector
+        vm.expectRevert(0x37fbf6a6);
+        re.configureEMode(1, baseConfig);
+
         vm.stopPrank();
     }
 

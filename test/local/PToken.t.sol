@@ -98,6 +98,14 @@ contract LocalPToken is TestLocal {
         pUSDC.sweepToken(underlying);
     }
 
+    function testSetProtocolShare_FailIfNotInRange() public {
+        vm.startPrank(getAdmin());
+
+        // "SetProtocolSeizeShareBoundsCheck()" selector
+        vm.expectRevert(0x5dc64e16);
+        pUSDC.setProtocolSeizeShare(1e18);
+    }
+
     function testTransfer_FailIfReceiverIsZero() public {
         // "ZeroAddress()" selector
         vm.expectRevert(0xd92e233d);

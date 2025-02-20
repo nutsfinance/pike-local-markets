@@ -8,6 +8,7 @@ library PTokenError {
     error SetReserveFactorFreshCheck();
 
     error SetReserveFactorBoundsCheck();
+    error SetProtocolSeizeShareBoundsCheck();
 
     error MintRiskEngineRejection(uint256 errorCode);
     error MintFreshnessCheck();
