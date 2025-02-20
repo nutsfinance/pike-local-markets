@@ -7,7 +7,7 @@ import {
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
 import {PTokenStorage} from "@storage/PTokenStorage.sol";
-import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
+import {IRiskEngine, RiskEngineError} from "@interfaces/IRiskEngine.sol";
 import {IRBAC} from "@interfaces/IRBAC.sol";
 import {RBACStorage} from "@storage/RBACStorage.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
@@ -763,9 +763,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @inheritdoc IPToken
      */
     function maxDeposit(address account) public view returns (uint256) {
-        uint256 allowed =
+        RiskEngineError.Error allowed =
             _getPTokenStorage().riskEngine.mintAllowed(account, address(this), 1);
-        if (allowed != 0) {
+        if (allowed != RiskEngineError.Error.NO_ERROR) {
             return 0;
         }
         uint256 cap = _getPTokenStorage().riskEngine.supplyCap(address(this));
@@ -826,9 +826,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         PTokenData storage $ = _getPTokenStorage();
 
         /* Fail if mint not allowed */
-        uint256 allowed = $.riskEngine.mintAllowed(minter, address(this), mintAmountIn);
-        if (allowed != 0) {
-            revert PTokenError.MintRiskEngineRejection(allowed);
+        RiskEngineError.Error allowed =
+            $.riskEngine.mintAllowed(minter, address(this), mintAmountIn);
+        if (allowed != RiskEngineError.Error.NO_ERROR) {
+            revert PTokenError.MintRiskEngineRejection(uint256(allowed));
         }
 
         /* Verify market's block timestamp equals current block timestamp */
@@ -932,10 +933,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
 
         PTokenData storage $ = _getPTokenStorage();
         /* Fail if redeem not allowed */
-        uint256 allowed =
+        RiskEngineError.Error allowed =
             $.riskEngine.redeemAllowed(address(this), onBehalfOf, redeemTokens);
-        if (allowed != 0) {
-            revert PTokenError.RedeemRiskEngineRejection(allowed);
+        if (allowed != RiskEngineError.Error.NO_ERROR) {
+            revert PTokenError.RedeemRiskEngineRejection(uint256(allowed));
         }
 
         /* Verify market's block timestamp equals current block timestamp */
@@ -988,10 +989,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     {
         PTokenData storage $ = _getPTokenStorage();
         /* Fail if borrow not allowed */
-        uint256 allowed =
+        RiskEngineError.Error allowed =
             $.riskEngine.borrowAllowed(address(this), onBehalfOf, borrowAmount);
-        if (allowed != 0) {
-            revert PTokenError.BorrowRiskEngineRejection(allowed);
+        if (allowed != RiskEngineError.Error.NO_ERROR) {
+            revert PTokenError.BorrowRiskEngineRejection(uint256(allowed));
         }
 
         /* Verify market's block timestamp equals current block timestamp */
@@ -1052,9 +1053,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     {
         PTokenData storage $ = _getPTokenStorage();
         /* Fail if repayBorrow not allowed */
-        uint256 allowed = $.riskEngine.repayBorrowAllowed(address(this));
-        if (allowed != 0) {
-            revert PTokenError.RepayBorrowRiskEngineRejection(allowed);
+        RiskEngineError.Error allowed = $.riskEngine.repayBorrowAllowed(address(this));
+        if (allowed != RiskEngineError.Error.NO_ERROR) {
+            revert PTokenError.RepayBorrowRiskEngineRejection(uint256(allowed));
         }
 
         /* Verify market's block timestamp equals current block timestamp */
@@ -1119,11 +1120,13 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         IPToken pTokenCollateral
     ) internal {
         /* Fail if liquidate not allowed */
-        uint256 allowed = _getPTokenStorage().riskEngine.liquidateBorrowAllowed(
+        RiskEngineError.Error allowed = _getPTokenStorage()
+            .riskEngine
+            .liquidateBorrowAllowed(
             address(this), address(pTokenCollateral), borrower, repayAmount
         );
-        if (allowed != 0) {
-            revert PTokenError.LiquidateRiskEngineRejection(allowed);
+        if (allowed != RiskEngineError.Error.NO_ERROR) {
+            revert PTokenError.LiquidateRiskEngineRejection(uint256(allowed));
         }
 
         /* Verify market's block timestamp equals current block timestamp */
@@ -1159,13 +1162,14 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         // (No safe failures beyond this point)
 
         /* We calculate the number of collateral tokens that will be seized */
-        (uint256 amountSeizeError, uint256 seizeTokens) = _getPTokenStorage()
-            .riskEngine
-            .liquidateCalculateSeizeTokens(
+        (RiskEngineError.Error amountSeizeError, uint256 seizeTokens) = _getPTokenStorage(
+        ).riskEngine.liquidateCalculateSeizeTokens(
             borrower, address(this), address(pTokenCollateral), actualRepayAmount
         );
-        if (amountSeizeError != CommonError.NO_ERROR) {
-            revert PTokenError.LiquidateCalculateAmountSeizeFailed(amountSeizeError);
+        if (amountSeizeError != RiskEngineError.Error.NO_ERROR) {
+            revert PTokenError.LiquidateCalculateAmountSeizeFailed(
+                uint256(amountSeizeError)
+            );
         }
 
         /* Revert if borrower collateral token balance < seizeTokens */
@@ -1207,9 +1211,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     ) internal {
         PTokenData storage $ = _getPTokenStorage();
         /* Fail if seize not allowed */
-        uint256 allowed = $.riskEngine.seizeAllowed(address(this), seizerToken);
-        if (allowed != 0) {
-            revert PTokenError.LiquidateSeizeRiskEngineRejection(allowed);
+        RiskEngineError.Error allowed =
+            $.riskEngine.seizeAllowed(address(this), seizerToken);
+        if (allowed != RiskEngineError.Error.NO_ERROR) {
+            revert PTokenError.LiquidateSeizeRiskEngineRejection(uint256(allowed));
         }
 
         /*
@@ -1297,9 +1302,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         PTokenData storage $ = _getPTokenStorage();
 
         /* Fail if transfer not allowed */
-        uint256 allowed = $.riskEngine.transferAllowed(address(this), src, tokens);
-        if (allowed != 0) {
-            revert PTokenError.TransferRiskEngineRejection(allowed);
+        RiskEngineError.Error allowed =
+            $.riskEngine.transferAllowed(address(this), src, tokens);
+        if (allowed != RiskEngineError.Error.NO_ERROR) {
+            revert PTokenError.TransferRiskEngineRejection(uint256(allowed));
         }
 
         /* Do not allow self-transfers */
