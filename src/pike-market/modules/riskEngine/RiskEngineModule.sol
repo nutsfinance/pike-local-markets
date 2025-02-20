@@ -23,9 +23,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      */
     function setOracle(address newOracle) external {
         checkPermissionOrAdmin(_PROTOCOL_OWNER_PERMISSION, msg.sender);
-        if (newOracle == address(0)) {
-            revert CommonError.ZeroAddress();
-        }
+        require(newOracle != address(0), CommonError.ZeroAddress());
 
         RiskEngineData storage $ = _getRiskEngineStorage();
         emit NewOracleEngine($.oracle, newOracle);
@@ -41,9 +39,11 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     ) external {
         checkPermissionOrAdmin(_PROTOCOL_OWNER_PERMISSION, msg.sender);
         // both can not exceed 100% of totalReserve
-        if (newOwnerShareMantissa + newConfiguratorShareMantissa > _MANTISSA_ONE) {
-            revert RiskEngineError.InvalidReserveShare();
-        }
+        require(
+            newOwnerShareMantissa + newConfiguratorShareMantissa <= _MANTISSA_ONE,
+            RiskEngineError.InvalidReserveShare()
+        );
+
         RiskEngineData storage $ = _getRiskEngineStorage();
         $.ownerShareMantissa = newOwnerShareMantissa;
         $.configuratorShareMantissa = newConfiguratorShareMantissa;
@@ -57,9 +57,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         external
     {
         checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
-        if (newCloseFactorMantissa > _MANTISSA_ONE) {
-            revert RiskEngineError.InvalidCloseFactor();
-        }
+        require(
+            newCloseFactorMantissa <= _MANTISSA_ONE, RiskEngineError.InvalidCloseFactor()
+        );
 
         RiskEngineData storage $ = _getRiskEngineStorage();
         uint256 oldCloseFactorMantissa = $.closeFactorMantissa[pTokenAddress];
@@ -76,9 +76,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
         RiskEngineData storage $ = _getRiskEngineStorage();
         // Verify market is listed
-        if (!$.markets[address(pToken)].isListed) {
-            revert RiskEngineError.MarketNotListed();
-        }
+        require($.markets[address(pToken)].isListed, RiskEngineError.MarketNotListed());
 
         ExponentialNoError.Exp memory newCollateralFactorExp =
             ExponentialNoError.Exp({mantissa: baseConfig.collateralFactorMantissa});
@@ -86,24 +84,27 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         // Check collateral factor <= 0.9
         ExponentialNoError.Exp memory highLimit =
             ExponentialNoError.Exp({mantissa: _COLLATERAL_FACTOR_MAX_MANTISSA});
-        if (highLimit.lessThanExp(newCollateralFactorExp)) {
-            revert RiskEngineError.InvalidCollateralFactor();
-        }
+        require(
+            newCollateralFactorExp.lessThanOrEqualExp(highLimit),
+            RiskEngineError.InvalidCollateralFactor()
+        );
 
-        if (baseConfig.liquidationIncentiveMantissa < _MANTISSA_ONE) {
-            revert RiskEngineError.InvalidIncentiveThreshold();
-        }
+        require(
+            baseConfig.liquidationIncentiveMantissa >= _MANTISSA_ONE,
+            RiskEngineError.InvalidIncentiveThreshold()
+        );
 
         // Ensure that liquidation threshold <= 1
-        if (baseConfig.liquidationThresholdMantissa > _MANTISSA_ONE) {
-            revert RiskEngineError.InvalidLiquidationThreshold();
-        }
+        require(
+            baseConfig.liquidationThresholdMantissa <= _MANTISSA_ONE,
+            RiskEngineError.InvalidLiquidationThreshold()
+        );
 
         // Ensure that liquidation threshold >= CF
-        if (baseConfig.liquidationThresholdMantissa < baseConfig.collateralFactorMantissa)
-        {
-            revert RiskEngineError.InvalidLiquidationThreshold();
-        }
+        require(
+            baseConfig.liquidationThresholdMantissa >= baseConfig.collateralFactorMantissa,
+            RiskEngineError.InvalidLiquidationThreshold()
+        );
 
         BaseConfiguration memory oldConfiguration =
             $.markets[address(pToken)].baseConfiguration;
@@ -126,13 +127,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      */
     function supportMarket(IPToken pToken) external {
         checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
-        if (address(pToken) == address(0)) {
-            revert CommonError.ZeroAddress();
-        }
+        require(address(pToken) != address(0), CommonError.ZeroAddress());
+
         RiskEngineData storage $ = _getRiskEngineStorage();
-        if ($.markets[address(pToken)].isListed) {
-            revert RiskEngineError.AlreadyListed();
-        }
+        require(!$.markets[address(pToken)].isListed, RiskEngineError.AlreadyListed());
 
         Market storage newMarket = $.markets[address(pToken)];
         newMarket.isListed = true;
@@ -158,18 +156,15 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
 
         uint256 length = pTokens.length;
         // not allowed to configure default category
-        if (categoryId == 0) {
-            revert RiskEngineError.InvalidCategory();
-        }
+        require(categoryId != 0, RiskEngineError.InvalidCategory());
 
-        if (length != collateralPermissions.length || length != borrowPermissions.length)
-        {
-            revert CommonError.NoArrayParity();
-        }
+        require(
+            length == collateralPermissions.length && length == borrowPermissions.length,
+            CommonError.NoArrayParity()
+        );
+
         for (uint256 i = 0; i < length; i++) {
-            if (!$.markets[pTokens[i]].isListed) {
-                revert RiskEngineError.NotListed();
-            }
+            require($.markets[pTokens[i]].isListed, RiskEngineError.NotListed());
 
             EModeConfiguration storage newEMode = $.emodes[categoryId];
             newEMode.allowed = isAllowed;
@@ -198,24 +193,27 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         RiskEngineData storage $ = _getRiskEngineStorage();
 
         // can not be default category or not allowed category
-        if (categoryId == 0 || !$.emodes[categoryId].allowed) {
-            revert RiskEngineError.InvalidCategory();
-        }
+        require(
+            categoryId != 0 && $.emodes[categoryId].allowed,
+            RiskEngineError.InvalidCategory()
+        );
 
-        if (baseConfig.liquidationIncentiveMantissa < _MANTISSA_ONE) {
-            revert RiskEngineError.InvalidIncentiveThreshold();
-        }
+        require(
+            baseConfig.liquidationIncentiveMantissa >= _MANTISSA_ONE,
+            RiskEngineError.InvalidIncentiveThreshold()
+        );
 
         // Ensure that liquidation threshold <= 1
-        if (baseConfig.liquidationThresholdMantissa > _MANTISSA_ONE) {
-            revert RiskEngineError.InvalidLiquidationThreshold();
-        }
+        require(
+            baseConfig.liquidationThresholdMantissa <= _MANTISSA_ONE,
+            RiskEngineError.InvalidLiquidationThreshold()
+        );
 
         // Ensure that liquidation threshold >= CF
-        if (baseConfig.liquidationThresholdMantissa < baseConfig.collateralFactorMantissa)
-        {
-            revert RiskEngineError.InvalidLiquidationThreshold();
-        }
+        require(
+            baseConfig.liquidationThresholdMantissa >= baseConfig.collateralFactorMantissa,
+            RiskEngineError.InvalidLiquidationThreshold()
+        );
 
         BaseConfiguration memory oldConfiguration = $.emodes[categoryId].baseConfiguration;
         BaseConfiguration storage baseConfiguration =
@@ -242,9 +240,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint256 numMarkets = pTokens.length;
         uint256 numBorrowCap = newBorrowCaps.length;
 
-        if (numMarkets != numBorrowCap || numMarkets == 0) {
-            revert CommonError.NoArrayParity();
-        }
+        require(
+            numMarkets == numBorrowCap && numMarkets != 0, CommonError.NoArrayParity()
+        );
 
         for (uint256 i = 0; i < numMarkets; ++i) {
             _getRiskEngineStorage().borrowCaps[address(pTokens[i])] = newBorrowCaps[i];
@@ -263,9 +261,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint256 numMarkets = pTokens.length;
         uint256 newSupplyCap = newSupplyCaps.length;
 
-        if (numMarkets != newSupplyCap || numMarkets == 0) {
-            revert CommonError.NoArrayParity();
-        }
+        require(
+            numMarkets == newSupplyCap && numMarkets != 0, CommonError.NoArrayParity()
+        );
 
         for (uint256 i; i < numMarkets; ++i) {
             _getRiskEngineStorage().supplyCaps[address(pTokens[i])] = newSupplyCaps[i];
@@ -280,9 +278,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         checkPermission(_PAUSE_GUARDIAN_PERMISSION, msg.sender);
         RiskEngineData storage $ = _getRiskEngineStorage();
 
-        if (!$.markets[address(pToken)].isListed) {
-            revert RiskEngineError.MarketNotListed();
-        }
+        require($.markets[address(pToken)].isListed, RiskEngineError.MarketNotListed());
 
         $.mintGuardianPaused[address(pToken)] = state;
         emit ActionPaused(pToken, "Mint", state);
@@ -295,9 +291,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function setBorrowPaused(IPToken pToken, bool state) external returns (bool) {
         checkPermission(_PAUSE_GUARDIAN_PERMISSION, msg.sender);
         RiskEngineData storage $ = _getRiskEngineStorage();
-        if (!$.markets[address(pToken)].isListed) {
-            revert RiskEngineError.MarketNotListed();
-        }
+        require($.markets[address(pToken)].isListed, RiskEngineError.MarketNotListed());
 
         $.borrowGuardianPaused[address(pToken)] = state;
         emit ActionPaused(pToken, "Borrow", state);
@@ -333,31 +327,25 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint8 category = $.accountCategory[msg.sender];
 
         // can not swtich if already in e-mode
-        if (category == newCategoryId) {
-            revert RiskEngineError.AlreadyInEMode();
-        }
+        require(category != newCategoryId, RiskEngineError.AlreadyInEMode());
         // checks if collateral and borrow category of e-mdoe match the user assets
         // for default category all assets are allowed for collateral and borrow
         if (newCategoryId != 0) {
             // can not swtich if not allowed
-            if (!$.emodes[newCategoryId].allowed) {
-                revert RiskEngineError.InvalidCategory();
-            }
+            require($.emodes[newCategoryId].allowed, RiskEngineError.InvalidCategory());
             // For each asset the account is in
             IPToken[] memory assets = $.accountAssets[msg.sender];
             for (uint256 i = 0; i < assets.length; i++) {
-                if (
-                    $.markets[address(assets[i])].collateralMembership[msg.sender]
-                        && !$.collateralCategory[newCategoryId][address(assets[i])]
-                ) {
-                    revert RiskEngineError.InvalidCollateralStatus(address(assets[i]));
-                }
-                if (
-                    $.markets[address(assets[i])].borrowMembership[msg.sender]
-                        && !$.borrowCategory[newCategoryId][address(assets[i])]
-                ) {
-                    revert RiskEngineError.InvalidBorrowStatus(address(assets[i]));
-                }
+                require(
+                    !$.markets[address(assets[i])].collateralMembership[msg.sender]
+                        || $.collateralCategory[newCategoryId][address(assets[i])],
+                    RiskEngineError.InvalidCollateralStatus(address(assets[i]))
+                );
+                require(
+                    !$.markets[address(assets[i])].borrowMembership[msg.sender]
+                        || $.borrowCategory[newCategoryId][address(assets[i])],
+                    RiskEngineError.InvalidBorrowStatus(address(assets[i]))
+                );
             }
         }
         // to switch e-mode we check if new category risk params create shortfall
@@ -365,14 +353,16 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         getHypotheticalAccountLiquidityInternal(
             msg.sender, IPToken(address(0)), newCategoryId, 0, 0, _getCollateralFactor
         );
-        if (err != RiskEngineError.Error.NO_ERROR) {
-            revert RiskEngineError.SwitchEMode(uint256(err));
-        }
-        if (shortfall > 0) {
-            revert RiskEngineError.SwitchEMode(
+        require(
+            err == RiskEngineError.Error.NO_ERROR,
+            RiskEngineError.SwitchEMode(uint256(err))
+        );
+        require(
+            shortfall == 0,
+            RiskEngineError.SwitchEMode(
                 uint256(RiskEngineError.Error.INSUFFICIENT_LIQUIDITY)
-            );
-        }
+            )
+        );
 
         //update user category
         $.accountCategory[msg.sender] = newCategoryId;
@@ -407,9 +397,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         /* Fail if the sender is not permitted to redeem all of their tokens */
         RiskEngineError.Error allowed =
             redeemAllowedInternal(pTokenAddress, msg.sender, tokensHeld);
-        if (allowed != RiskEngineError.Error.NO_ERROR) {
-            revert RiskEngineError.ExitMarketRedeemRejection(uint256(allowed));
-        }
+        require(
+            allowed == RiskEngineError.Error.NO_ERROR,
+            RiskEngineError.ExitMarketRedeemRejection(uint256(allowed))
+        );
 
         Market storage marketToExit = _getRiskEngineStorage().markets[pTokenAddress];
 
@@ -452,14 +443,13 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      * @inheritdoc IRiskEngine
      */
     function updateDelegate(address delegate, bool approved) external {
-        if (delegate == address(0)) {
-            revert CommonError.ZeroAddress();
-        }
+        require(delegate != address(0), CommonError.ZeroAddress());
         RiskEngineData storage $ = _getRiskEngineStorage();
 
-        if ($.approvedDelegates[msg.sender][delegate] == approved) {
-            revert RiskEngineError.DelegationStatusUnchanged();
-        }
+        require(
+            $.approvedDelegates[msg.sender][delegate] != approved,
+            RiskEngineError.DelegationStatusUnchanged()
+        );
 
         $.approvedDelegates[msg.sender][delegate] = approved;
         emit DelegateUpdated(msg.sender, delegate, approved);
@@ -510,9 +500,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     {
         RiskEngineData storage $ = _getRiskEngineStorage();
 
-        if ($.borrowGuardianPaused[pToken]) {
-            revert RiskEngineError.BorrowPaused();
-        }
+        require(!$.borrowGuardianPaused[pToken], RiskEngineError.BorrowPaused());
 
         if (!$.markets[pToken].isListed) {
             return RiskEngineError.Error.MARKET_NOT_LISTED;
@@ -528,9 +516,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
 
         if (!$.markets[pToken].borrowMembership[borrower]) {
             // only pTokens may call borrowAllowed if borrower not in market
-            if (msg.sender != pToken) {
-                revert RiskEngineError.SenderNotPToken();
-            }
+            require(msg.sender == pToken, RiskEngineError.SenderNotPToken());
 
             // attempt to add borrower to the market
             // already checked if market is listed
@@ -584,9 +570,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         RiskEngineData storage $ = _getRiskEngineStorage();
 
         // Pausing is a very serious situation - we revert to sound the alarms
-        if ($.mintGuardianPaused[pToken]) {
-            revert RiskEngineError.MintPaused();
-        }
+        require(!$.mintGuardianPaused[pToken], RiskEngineError.MintPaused());
 
         if (!$.markets[pToken].isListed) {
             return RiskEngineError.Error.MARKET_NOT_LISTED;
@@ -666,9 +650,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
 
         /* allow accounts to be liquidated if the market is deprecated */
         if (isDeprecated(IPToken(pTokenBorrowed))) {
-            if (borrowBalance < repayAmount) {
-                revert RiskEngineError.RepayMoreThanBorrowed();
-            }
+            require(borrowBalance >= repayAmount, RiskEngineError.RepayMoreThanBorrowed());
         } else {
             /* The borrower must have shortfall in order to be liquidatable */
             (RiskEngineError.Error err,, uint256 shortfall) =
@@ -703,9 +685,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         RiskEngineData storage $ = _getRiskEngineStorage();
 
         // Pausing is a very serious situation - we revert to sound the alarms
-        if ($.seizeGuardianPaused) {
-            revert RiskEngineError.SeizePaused();
-        }
+        require(!$.seizeGuardianPaused, RiskEngineError.SeizePaused());
 
         if (!$.markets[pTokenCollateral].isListed || !$.markets[pTokenBorrowed].isListed)
         {
@@ -730,9 +710,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         returns (RiskEngineError.Error)
     {
         // Pausing is a very serious situation - we revert to sound the alarms
-        if (_getRiskEngineStorage().transferGuardianPaused) {
-            revert RiskEngineError.TransferPaused();
-        }
+        require(
+            !_getRiskEngineStorage().transferGuardianPaused,
+            RiskEngineError.TransferPaused()
+        );
 
         // Currently the only consideration is whether or not
         //  the src is allowed to redeem this many tokens
@@ -1052,9 +1033,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         RiskEngineData storage $ = _getRiskEngineStorage();
 
         for (uint256 i = 0; i < $.allMarkets[0].length; i++) {
-            if ($.allMarkets[0][i] == IPToken(pToken)) {
-                revert RiskEngineError.AlreadyListed();
-            }
+            require(
+                $.allMarkets[0][i] != IPToken(pToken), RiskEngineError.AlreadyListed()
+            );
         }
         $.allMarkets[0].push(IPToken(pToken));
     }
