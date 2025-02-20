@@ -807,7 +807,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         uint256 mintTokensIn,
         uint256 mintAmountIn
     ) internal returns (uint256, uint256) {
-        require(mintTokensIn == 0 || mintAmountIn == 0, CommonError.ZeroValue());
+        require(mintTokensIn == 0 || mintAmountIn == 0, PTokenError.OnlyOneInputAllowed());
 
         ExponentialNoError.Exp memory exchangeRate =
             ExponentialNoError.Exp({mantissa: exchangeRateStoredInternal()});
@@ -894,7 +894,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     ) internal returns (uint256, uint256) {
         require(receiver != address(0), CommonError.ZeroAddress());
 
-        require(redeemTokensIn == 0 || redeemAmountIn == 0, CommonError.ZeroValue());
+        require(
+            redeemTokensIn == 0 || redeemAmountIn == 0, PTokenError.OnlyOneInputAllowed()
+        );
 
         /* exchangeRate = invoke Exchange Rate Stored() */
         ExponentialNoError.Exp memory exchangeRate =
