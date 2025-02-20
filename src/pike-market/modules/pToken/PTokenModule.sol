@@ -32,11 +32,11 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         require(!_reentrancyGuardEntered(), CommonError.ReentrancyGuardReentrantCall());
 
         assembly ("memory-safe") {
-            tstore(_SLOT_PTOKEN_STORAGE, 1)
+            tstore(_SLOT_PTOKEN_TRANSIENT_STORAGE, 1)
         }
         _;
         assembly ("memory-safe") {
-            tstore(_SLOT_PTOKEN_STORAGE, 0)
+            tstore(_SLOT_PTOKEN_TRANSIENT_STORAGE, 0)
         }
     }
 
@@ -1616,7 +1616,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      */
     function _reentrancyGuardEntered() internal view returns (bool result) {
         assembly ("memory-safe") {
-            result := tload(_SLOT_PTOKEN_STORAGE)
+            result := tload(_SLOT_PTOKEN_TRANSIENT_STORAGE)
         }
     }
 

@@ -156,7 +156,7 @@ contract LocalPToken is TestLocal {
         doBorrow(user1, user1, address(pUSDC), 1000e6);
 
         // borrowRateMaxMantissa slot
-        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d08;
+        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d07;
         vm.store(address(pUSDC), slot, bytes32(0));
 
         //skip time
