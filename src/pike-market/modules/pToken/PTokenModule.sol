@@ -416,9 +416,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @inheritdoc IPToken
      */
     function maxMint(address receiver) external view returns (uint256) {
-        ExponentialNoError.Exp memory exchangeRate =
-            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
-        return maxDeposit(receiver).div_(exchangeRate);
+        return maxDeposit(receiver).div_(exchangeRateCurrent().toExp());
     }
 
     /**
@@ -432,10 +430,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @inheritdoc IPToken
      */
     function maxRedeem(address owner) external view returns (uint256 maxShares) {
-        ExponentialNoError.Exp memory exchangeRate =
-            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
         return _getPTokenStorage().riskEngine.maxWithdraw(address(this), owner).div_(
-            exchangeRate
+            exchangeRateCurrent().toExp()
         );
     }
 
@@ -443,36 +439,28 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @inheritdoc IPToken
      */
     function previewDeposit(uint256 assets) external view returns (uint256 shares) {
-        ExponentialNoError.Exp memory exchangeRate =
-            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
-        shares = assets.div_(exchangeRate);
+        shares = assets.div_(exchangeRateCurrent().toExp());
     }
 
     /**
      * @inheritdoc IPToken
      */
     function previewMint(uint256 shares) external view returns (uint256 assets) {
-        ExponentialNoError.Exp memory exchangeRate =
-            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
-        assets = shares.mul_(exchangeRate);
+        assets = shares.mul_(exchangeRateCurrent().toExp());
     }
 
     /**
      * @inheritdoc IPToken
      */
     function previewRedeem(uint256 shares) external view returns (uint256 assets) {
-        ExponentialNoError.Exp memory exchangeRate =
-            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
-
-        assets = exchangeRate.mul_ScalarTruncate(shares);
+        assets = exchangeRateCurrent().toExp().mul_ScalarTruncate(shares);
     }
 
     /**
      * @inheritdoc IPToken
      */
     function previewWithdraw(uint256 assets) external view returns (uint256 shares) {
-        ExponentialNoError.Exp memory exchangeRate =
-            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
+        ExponentialNoError.Exp exchangeRate = exchangeRateCurrent().toExp();
 
         shares = assets.div_(exchangeRate);
         uint256 _redeemAmount = shares.mul_(exchangeRate);
@@ -583,9 +571,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @inheritdoc IPToken
      */
     function balanceOfUnderlying(address owner) external view returns (uint256) {
-        ExponentialNoError.Exp memory exchangeRate =
-            ExponentialNoError.Exp({mantissa: exchangeRateCurrent()});
-        return exchangeRate.mul_ScalarTruncate(_getPTokenStorage().accountTokens[owner]);
+        return exchangeRateCurrent().toExp().mul_ScalarTruncate(
+            _getPTokenStorage().accountTokens[owner]
+        );
     }
 
     /**
@@ -809,8 +797,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     ) internal returns (uint256, uint256) {
         require(mintTokensIn == 0 || mintAmountIn == 0, PTokenError.OnlyOneInputAllowed());
 
-        ExponentialNoError.Exp memory exchangeRate =
-            ExponentialNoError.Exp({mantissa: exchangeRateStoredInternal()});
+        ExponentialNoError.Exp exchangeRate = exchangeRateStoredInternal().toExp();
 
         if (mintTokensIn > 0) {
             /* mintAmount = mintTokensIn x exchangeRateStored */
@@ -899,8 +886,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         );
 
         /* exchangeRate = invoke Exchange Rate Stored() */
-        ExponentialNoError.Exp memory exchangeRate =
-            ExponentialNoError.Exp({mantissa: exchangeRateStoredInternal()});
+        ExponentialNoError.Exp exchangeRate = exchangeRateStoredInternal().toExp();
 
         uint256 redeemTokens;
         /* If redeemTokensIn > 0: */
@@ -1214,14 +1200,12 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
          *  borrowerTokensNew = accountTokens[borrower] - seizeTokens
          *  liquidatorTokensNew = accountTokens[liquidator] + seizeTokens
          */
-        uint256 protocolSeizeTokens = seizeTokens.mul_(
-            ExponentialNoError.Exp({mantissa: $.protocolSeizeShareMantissa})
-        );
+        uint256 protocolSeizeTokens =
+            seizeTokens.mul_($.protocolSeizeShareMantissa.toExp());
         uint256 liquidatorSeizeTokens = seizeTokens - protocolSeizeTokens;
-        ExponentialNoError.Exp memory exchangeRate =
-            ExponentialNoError.Exp({mantissa: exchangeRateStoredInternal()});
 
-        uint256 accumulatedReserve = exchangeRate.mul_ScalarTruncate(protocolSeizeTokens);
+        uint256 accumulatedReserve =
+            exchangeRateStoredInternal().toExp().mul_ScalarTruncate(protocolSeizeTokens);
 
         (uint256 ownerShare, uint256 configuratorShare) =
             _getReserveShares(accumulatedReserve);
@@ -1498,15 +1482,14 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
          *  borrowIndexNew = interestFactor * borrowIndex + borrowIndex
          */
 
-            ExponentialNoError.Exp memory interestFactor = ExponentialNoError.Exp({
-                mantissa: borrowRate
-            }).mul_(_getBlockTimestamp() - accruedBlockTimestamp);
+            ExponentialNoError.Exp interestFactor =
+                borrowRate.toExp().mul_(_getBlockTimestamp() - accruedBlockTimestamp);
+
             uint256 interestAccumulated =
                 interestFactor.mul_ScalarTruncate(snapshot.totalBorrow);
 
-            uint256 accumulatedReserve = ExponentialNoError.Exp({
-                mantissa: $.reserveFactorMantissa
-            }).mul_ScalarTruncate(interestAccumulated);
+            uint256 accumulatedReserve =
+                $.reserveFactorMantissa.toExp().mul_ScalarTruncate(interestAccumulated);
 
             (uint256 ownerShare, uint256 configuratorShare) =
                 _getReserveShares(accumulatedReserve);
@@ -1597,10 +1580,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
             _getPTokenStorage().riskEngine.getReserveShares();
 
         // Split reserves between owner and configurator
-        ownerShare = ExponentialNoError.Exp({mantissa: ownerShareMantissa})
-            .mul_ScalarTruncate(accumulatedReserve);
-        configuratorShare = ExponentialNoError.Exp({mantissa: configuratorShareMantissa})
-            .mul_ScalarTruncate(accumulatedReserve);
+        ownerShare = ownerShareMantissa.toExp().mul_ScalarTruncate(accumulatedReserve);
+        configuratorShare =
+            configuratorShareMantissa.toExp().mul_ScalarTruncate(accumulatedReserve);
     }
 
     /**

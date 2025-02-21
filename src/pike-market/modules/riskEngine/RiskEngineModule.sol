@@ -78,14 +78,11 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         // Verify market is listed
         require($.markets[address(pToken)].isListed, RiskEngineError.MarketNotListed());
 
-        ExponentialNoError.Exp memory newCollateralFactorExp =
-            ExponentialNoError.Exp({mantissa: baseConfig.collateralFactorMantissa});
-
         // Check collateral factor <= 0.9
-        ExponentialNoError.Exp memory highLimit =
-            ExponentialNoError.Exp({mantissa: _COLLATERAL_FACTOR_MAX_MANTISSA});
         require(
-            newCollateralFactorExp.lessThanOrEqualExp(highLimit),
+            baseConfig.collateralFactorMantissa.toExp().lessThanOrEqualExp(
+                _COLLATERAL_FACTOR_MAX_MANTISSA.toExp()
+            ),
             RiskEngineError.InvalidCollateralFactor()
         );
 
@@ -586,10 +583,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         // Skipping the cap check for uncapped coins to save some gas
         if (cap != type(uint256).max) {
             uint256 pTokenSupply = IPToken(pToken).totalSupply();
-            ExponentialNoError.Exp memory exchangeRate =
-                ExponentialNoError.Exp({mantissa: IPToken(pToken).exchangeRateStored()});
-            uint256 nextTotalSupply =
-                exchangeRate.mul_ScalarTruncateAddUInt(pTokenSupply, mintAmount);
+
+            uint256 nextTotalSupply = IPToken(pToken).exchangeRateStored().toExp()
+                .mul_ScalarTruncateAddUInt(pTokenSupply, mintAmount);
             if (nextTotalSupply > cap) {
                 return RiskEngineError.Error.SUPPLY_CAP_EXCEEDED;
             }
@@ -664,9 +660,8 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             }
 
             /* The liquidator may not repay more than what is allowed by the closeFactor */
-            uint256 maxClose = ExponentialNoError.Exp({
-                mantissa: $.closeFactorMantissa[pTokenBorrowed]
-            }).mul_ScalarTruncate(borrowBalance);
+            uint256 maxClose = $.closeFactorMantissa[pTokenBorrowed].toExp()
+                .mul_ScalarTruncate(borrowBalance);
             if (repayAmount > maxClose) {
                 return RiskEngineError.Error.TOO_MUCH_REPAY;
             }
@@ -745,8 +740,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint256 oraclePriceMantissa =
             IOracleEngine($.oracle).getUnderlyingPrice(IPToken(pToken));
 
-        ExponentialNoError.Exp memory oraclePrice =
-            ExponentialNoError.Exp({mantissa: oraclePriceMantissa});
+        ExponentialNoError.Exp oraclePrice = oraclePriceMantissa.toExp();
 
         (RiskEngineError.Error err, uint256 withdrawLiquidity) =
             getWithdrawLiquidityInternal(account, _getCollateralFactor);
@@ -889,9 +883,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint256 exchangeRateMantissa = IPToken(pTokenCollateral).exchangeRateStored(); // Note: reverts on error
         uint256 seizeTokens;
         uint256 liquidationIncentiveMantissa;
-        ExponentialNoError.Exp memory numerator;
-        ExponentialNoError.Exp memory denominator;
-        ExponentialNoError.Exp memory ratio;
+        ExponentialNoError.Exp numerator;
+        ExponentialNoError.Exp denominator;
+        ExponentialNoError.Exp ratio;
 
         if (emodeCategory == 0) {
             liquidationIncentiveMantissa = _getRiskEngineStorage().markets[pTokenCollateral]
@@ -902,12 +896,11 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
                 .baseConfiguration
                 .liquidationIncentiveMantissa;
         }
-        numerator = ExponentialNoError.Exp({mantissa: liquidationIncentiveMantissa}).mul_(
-            ExponentialNoError.Exp({mantissa: priceBorrowedMantissa})
-        );
-        denominator = ExponentialNoError.Exp({mantissa: priceCollateralMantissa}).mul_(
-            ExponentialNoError.Exp({mantissa: exchangeRateMantissa})
-        );
+        numerator =
+            liquidationIncentiveMantissa.toExp().mul_(priceBorrowedMantissa.toExp());
+
+        denominator = priceCollateralMantissa.toExp().mul_(exchangeRateMantissa.toExp());
+
         ratio = numerator.div_(denominator);
 
         seizeTokens = ratio.mul_ScalarTruncate(actualRepayAmount);
@@ -948,7 +941,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         view
         returns (uint256)
     {
-        return _getCollateralFactor(pToken, categoryId).mantissa;
+        return ExponentialNoError.Exp.unwrap(_getCollateralFactor(pToken, categoryId));
     }
 
     /**
@@ -971,7 +964,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         view
         returns (uint256)
     {
-        return _getLiquidationThreshold(pToken, categoryId).mantissa;
+        return ExponentialNoError.Exp.unwrap(_getLiquidationThreshold(pToken, categoryId));
     }
 
     /**
@@ -1196,8 +1189,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint8 categoryId,
         uint256 redeemTokens,
         uint256 borrowAmount,
-        function (IPToken,uint8) internal view returns (ExponentialNoError.Exp memory)
-            threshold
+        function (IPToken,uint8) internal view returns (ExponentialNoError.Exp) threshold
     ) internal view returns (RiskEngineError.Error, uint256, uint256) {
         AccountLiquidityLocalVars memory vars; // Holds all our calculation results
         vars.oracle = IOracleEngine(_getRiskEngineStorage().oracle);
@@ -1217,12 +1209,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
                 return (RiskEngineError.Error.PRICE_ERROR, 0, 0);
             }
 
-            vars.oraclePrice =
-                ExponentialNoError.Exp({mantissa: vars.oraclePriceMantissa});
+            vars.oraclePrice = vars.oraclePriceMantissa.toExp();
 
             vars.threshold = threshold(asset, categoryId);
-            vars.exchangeRate =
-                ExponentialNoError.Exp({mantissa: vars.exchangeRateMantissa});
+            vars.exchangeRate = vars.exchangeRateMantissa.toExp();
 
             // Pre-compute a conversion factor from tokens -> ether (normalized price value)
             vars.tokensToDenom =
@@ -1283,8 +1273,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      */
     function getWithdrawLiquidityInternal(
         address account,
-        function (IPToken,uint8) internal view returns (ExponentialNoError.Exp memory)
-            threshold
+        function (IPToken,uint8) internal view returns (ExponentialNoError.Exp) threshold
     ) internal view returns (RiskEngineError.Error, uint256) {
         AccountLiquidityLocalVars memory vars; // Holds all our calculation results
         vars.oracle = IOracleEngine(_getRiskEngineStorage().oracle);
@@ -1300,8 +1289,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
                 asset.getAccountSnapshot(account);
 
             vars.threshold = threshold(asset, vars.accountCategory);
-            vars.exchangeRate =
-                ExponentialNoError.Exp({mantissa: vars.exchangeRateMantissa});
+            vars.exchangeRate = vars.exchangeRateMantissa.toExp();
 
             // Get the normalized price of the asset
             vars.oraclePriceMantissa = vars.oracle.getUnderlyingPrice(asset);
@@ -1309,8 +1297,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
                 return (RiskEngineError.Error.PRICE_ERROR, 0);
             }
 
-            vars.oraclePrice =
-                ExponentialNoError.Exp({mantissa: vars.oraclePriceMantissa});
+            vars.oraclePrice = vars.oraclePriceMantissa.toExp();
 
             // Pre-compute a conversion factor from tokens -> ether (normalized price value) w/o threshold
             vars.tokensToDenom = vars.oraclePrice.mul_(vars.exchangeRate);
@@ -1354,7 +1341,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function _getCollateralFactor(IPToken asset, uint8 emodeCategory)
         internal
         view
-        returns (ExponentialNoError.Exp memory)
+        returns (ExponentialNoError.Exp)
     {
         RiskEngineData storage $ = _getRiskEngineStorage();
 
@@ -1362,11 +1349,11 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         bool useEmode =
             emodeCategory != 0 && $.collateralCategory[emodeCategory][address(asset)];
 
-        return ExponentialNoError.Exp({
-            mantissa: useEmode
+        return (
+            useEmode
                 ? $.emodes[emodeCategory].baseConfiguration.collateralFactorMantissa
                 : $.markets[address(asset)].baseConfiguration.collateralFactorMantissa
-        });
+        ).toExp();
     }
 
     /**
@@ -1377,7 +1364,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function _getLiquidationThreshold(IPToken asset, uint8 emodeCategory)
         internal
         view
-        returns (ExponentialNoError.Exp memory)
+        returns (ExponentialNoError.Exp)
     {
         RiskEngineData storage $ = _getRiskEngineStorage();
 
@@ -1385,10 +1372,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         bool useEmode =
             emodeCategory != 0 && $.collateralCategory[emodeCategory][address(asset)];
 
-        return ExponentialNoError.Exp({
-            mantissa: useEmode
+        return (
+            useEmode
                 ? $.emodes[emodeCategory].baseConfiguration.liquidationThresholdMantissa
                 : $.markets[address(asset)].baseConfiguration.liquidationThresholdMantissa
-        });
+        ).toExp();
     }
 }
