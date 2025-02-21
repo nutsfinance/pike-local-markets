@@ -120,6 +120,9 @@ contract LocalEMode is TestLocal {
         doDeposit(user1, user1, address(pUSDC), 2000e6);
 
         vm.prank(user1);
+        re.exitMarket(address(pUSDC));
+
+        vm.prank(user1);
         re.switchEMode(1);
 
         assertEq(re.accountCategory(user1), 1);

@@ -858,6 +858,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
          */
         $.accountTokens[onBehalfOf] = $.accountTokens[onBehalfOf] + mintTokens;
 
+        if (minter == onBehalfOf && $.accountTokens[minter] == 0) {
+            $.riskEngine.mintVerify(minter);
+        }
+
         /* We emit a Mint event, and a Transfer event */
         emit Deposit(minter, onBehalfOf, actualMintAmount, mintTokens);
         emit Transfer(address(0), onBehalfOf, mintTokens);

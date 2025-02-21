@@ -457,6 +457,13 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     /**
      * @inheritdoc IRiskEngine
      */
+    function mintVerify(address account) external {
+        addToMarketCollateralInternal(IPToken(msg.sender), account);
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
     function repayBorrowVerify(IPToken pToken, address account) external {
         /* Get sender tokensHeld and amountOwed underlying from the pToken */
         (, uint256 amountOwed,) = pToken.getAccountSnapshot(account);
