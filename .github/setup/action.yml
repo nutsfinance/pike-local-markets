@@ -6,7 +6,9 @@ runs:
   steps:
     - name: Install Foundry
       uses: foundry-rs/foundry-toolchain@v1
-
+      with:
+        version: v0.3.0
+        
     - uses: actions/setup-node@v4
       with:
         node-version: 20.x
