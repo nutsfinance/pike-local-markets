@@ -35,7 +35,8 @@
     "avoid-low-level-calls": "off",
     "no-complex-fallback": "off",
     "no-global-import": "off",
-    "avoid-tx-origin": "off"
+    "avoid-tx-origin": "off",
+    "gas-custom-errors": "off"
   },
   "plugins": ["prettier"]
 }
