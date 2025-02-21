@@ -636,6 +636,14 @@ contract TestHelpers is TestUtilities {
         vm.store(pToken, slot, bytes32(totalReserves));
     }
 
+    function setRiskEngineSlot(address pToken, address newRiskEngine) public {
+        vm.store(
+            pToken,
+            0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d03,
+            bytes32(uint256(uint160(newRiskEngine)) << 8)
+        );
+    }
+
     function setTotalBorrows(address pToken, uint256 totalBorrows) public {
         // totalBorrows slot
         bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0a;

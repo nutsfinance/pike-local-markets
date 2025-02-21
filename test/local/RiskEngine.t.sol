@@ -511,45 +511,50 @@ contract LocalRiskEngine is TestLocal {
 
         ///porivde liquidity
         doDeposit(depositor, depositor, address(pUSDC), 2000e6);
+        vm.prank(depositor);
+        re.exitMarket(address(pUSDC));
 
         doDepositAndEnter(user1, user1, address(pWETH), 1e18);
         doBorrow(user1, user1, address(pUSDC), 1450e6);
 
         address mockRE = deployRiskEngine();
-        // vm.prank(getAdmin());
-        // // change risk engine
+        vm.prank(getAdmin());
+        // change risk engine
+        setRiskEngineSlot(address(pWETH), mockRE);
+        console.logAddress(address(pWETH.riskEngine()));
+        console.logAddress(mockRE);
 
-        // // 1450 / 0.825(weth liq threshold) = 1757.57 is liquidation threshold price for collateral
+        // 1450 / 0.825(weth liq threshold) = 1757.57 is liquidation threshold price for collateral
 
-        // mockOracle.setPrice(address(pWETH), 1757e6, 18);
-        // // "LiquidateSeizeRiskEngineRejection(uint256)" selector
-        // LiquidationParams memory lp = LiquidationParams({
-        //     prankAddress: liquidator,
-        //     userToLiquidate: user1,
-        //     collateralPToken: address(pWETH),
-        //     borrowedPToken: address(pUSDC),
-        //     repayAmount: 725e6,
-        //     expectRevert: true,
-        //     error: abi.encodePacked(bytes4(0x995a5edc), uint256(4))
-        // });
-        // doLiquidate(lp);
+        mockOracle.setPrice(address(pWETH), 1757e6, 18);
+        // "LiquidateSeizeRiskEngineRejection(uint256)" selector
+        LiquidationParams memory lp = LiquidationParams({
+            prankAddress: liquidator,
+            userToLiquidate: user1,
+            collateralPToken: address(pWETH),
+            borrowedPToken: address(pUSDC),
+            repayAmount: 725e6,
+            expectRevert: true,
+            error: abi.encodePacked(bytes4(0x995a5edc), uint256(4))
+        });
+        doLiquidate(lp);
 
-        // vm.startPrank(getAdmin());
-        // IRiskEngine(mockRE).supportMarket(pWETH);
-        // IRiskEngine(mockRE).supportMarket(pUSDC);
-        // vm.stopPrank();
+        vm.startPrank(getAdmin());
+        IRiskEngine(mockRE).supportMarket(pWETH);
+        IRiskEngine(mockRE).supportMarket(pUSDC);
+        vm.stopPrank();
 
         // "LiquidateSeizeRiskEngineRejection(uint256)" selector
-        // LiquidationParams memory lp = LiquidationParams({
-        //     prankAddress: liquidator,
-        //     userToLiquidate: user1,
-        //     collateralPToken: address(pWETH),
-        //     borrowedPToken: address(pUSDC),
-        //     repayAmount: 725e6,
-        //     expectRevert: true,
-        //     error: abi.encodePacked(bytes4(0x995a5edc), uint256(1))
-        // });
-        // doLiquidate(lp);
+        lp = LiquidationParams({
+            prankAddress: liquidator,
+            userToLiquidate: user1,
+            collateralPToken: address(pWETH),
+            borrowedPToken: address(pUSDC),
+            repayAmount: 725e6,
+            expectRevert: true,
+            error: abi.encodePacked(bytes4(0x995a5edc), uint256(1))
+        });
+        doLiquidate(lp);
     }
 
     function testAddToMarket_Fail() public {
