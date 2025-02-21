@@ -200,7 +200,7 @@ contract LocalPToken is TestLocal {
         assertEq(pWETH.convertToAssets(liquidity), liquidity);
 
         ///porivde liquidity
-        doDeposit(depositor, depositor, address(pWETH), liquidity);
+        doDeposit(user1, depositor, address(pWETH), liquidity);
 
         doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
 

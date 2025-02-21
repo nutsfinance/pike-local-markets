@@ -132,6 +132,13 @@ interface IRiskEngine {
     /// *** Hooks ***
 
     /**
+     * @notice Enables collateral for an account if it previously had no balance of the pToken.
+     * @dev This function is called only by listed pTokens during the mint process.
+     * @param account The address of the account for which collateral will be enabled.
+     */
+    function mintVerify(address account) external;
+
+    /**
      * @notice Checks the account should borrow status after repaying debt
      * @dev If there is no debt remaining it removes borrow status for account
      * @param pToken The market to verify the repayment against
