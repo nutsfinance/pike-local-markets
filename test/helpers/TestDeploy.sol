@@ -296,45 +296,97 @@ contract TestDeploy is TestSetters, CannonDeploy {
 
     function generateSelectors(string memory _facetName)
         internal
-        returns (bytes4[] memory selectors)
+        returns (bytes4[] memory)
     {
-        //get string of contract methods
         string[] memory cmd = new string[](4);
         cmd[0] = "forge";
         cmd[1] = "inspect";
         cmd[2] = _facetName;
         cmd[3] = "methods";
-        bytes memory res = vm.ffi(cmd);
-        string memory st = string(res);
+        string memory st = string(vm.ffi(cmd));
 
-        // extract function signatures and take first 4 bytes of keccak
         strings.slice memory s = st.toSlice();
-
-        // Skip TRACE lines if any
         strings.slice memory nl = "\n".toSlice();
-        strings.slice memory trace = "TRACE".toSlice();
-        while (s.contains(trace)) {
+
+        // Skip traces
+        while (s.contains("TRACE".toSlice())) {
             s.split(nl);
         }
 
-        strings.slice memory colon = ":".toSlice();
-        strings.slice memory comma = ",".toSlice();
-        strings.slice memory dbquote = '"'.toSlice();
-        selectors = new bytes4[]((s.count(colon)));
+        // Skip to the actual data
+        while (!s.contains("+=".toSlice())) {
+            s.split(nl);
+        }
+        s.split(nl); // Skip the separator line
 
-        for (uint256 i = 0; i < selectors.length; i++) {
-            s.split(dbquote); // advance to next doublequote
-            // split at colon, extract string up to next doublequote for methodname
-            strings.slice memory method = s.split(colon).until(dbquote);
-            selectors[i] = bytes4(method.keccak());
-            s.split(comma).until(dbquote); // advance s to the next comma
+        // Count valid lines
+        uint256 count = 0;
+        strings.slice memory tempSlice = s.copy();
+        while (!tempSlice.empty()) {
+            strings.slice memory line = tempSlice.split(nl);
+            if (
+                line.contains("|".toSlice()) && !line.contains("+--".toSlice())
+                    && !line.contains("Identifier".toSlice())
+            ) {
+                count++;
+            }
         }
 
-        // retry if no selectors found
-        if (selectors.length == 0) {
-            return generateSelectors(_facetName);
+        require(count > 0, "No selectors found");
+        bytes4[] memory selectors = new bytes4[](count);
+
+        // Extract selectors
+        uint256 i = 0;
+        while (!s.empty() && i < count) {
+            strings.slice memory line = s.split(nl);
+            if (
+                !line.contains("|".toSlice()) || line.contains("+--".toSlice())
+                    || line.contains("Identifier".toSlice())
+            ) continue;
+
+            // Get the last column (selector)
+            strings.slice memory parts = line.copy();
+            strings.slice memory lastPart;
+            while (parts.contains("|".toSlice())) {
+                lastPart = parts.split("|".toSlice());
+            }
+
+            // Clean up whitespace
+            strings.slice memory space = " ".toSlice();
+            while (lastPart.startsWith(space)) {
+                lastPart.split(space);
+            }
+            while (lastPart.endsWith(space)) {
+                lastPart = lastPart.until(space);
+            }
+
+            string memory selStr = lastPart.toString();
+            if (bytes(selStr).length > 0) {
+                // Convert hex string to bytes4
+                bytes memory b = bytes(selStr);
+                require(b.length == 8, "Invalid selector length");
+
+                uint32 raw = 0;
+                for (uint32 j = 0; j < 8; j++) {
+                    uint8 digit = uint8(b[j]);
+                    // Convert hex char to value
+                    if (digit >= 48 && digit <= 57) digit -= 48; // 0-9
+
+                    else if (digit >= 97 && digit <= 102) digit = digit - 97 + 10; // a-f
+
+                    else if (digit >= 65 && digit <= 70) digit = digit - 65 + 10; // A-F
+
+                    else revert("Invalid hex character");
+
+                    raw |= uint32(digit) << ((7 - j) * 4);
+                }
+
+                selectors[i] = bytes4(raw);
+                i++;
+            }
         }
 
+        require(i == count, "Selector count mismatch");
         return selectors;
     }
 
