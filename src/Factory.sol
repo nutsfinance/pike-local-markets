@@ -194,8 +194,8 @@ contract Factory is
     {
         FactoryStorage storage $ = _getFactoryStorage();
         ProtocolInfo memory protocolInfo = $.protocolRegistry[setupParams.protocolId];
-        if (msg.sender != protocolInfo.timelock) {
-            revert InvalidTimelock();
+        if (!IRBAC(protocolInfo.riskEngine).hasPermission($.permissions[2], msg.sender)) {
+            revert UnauthorizedMarketDeployment();
         }
 
         bytes memory pTokenInit =

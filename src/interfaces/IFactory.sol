@@ -54,8 +54,8 @@ interface IFactory {
         address timelock
     );
 
-    /// revert when caller is not assigned timelock contract
-    error InvalidTimelock();
+    /// revert when caller has not assigned as configurator
+    error UnauthorizedMarketDeployment();
 
     /**
      * @dev The function is called by protocol owner governance to deploy new protocol
