@@ -93,3 +93,30 @@ The following security assumptions have been considered in the design of the pro
 3. **Upgradability**: The system’s deployment mechanism for PToken and Risk Engine implementation, managed through Cannon, ensures that upgrades (config) only happen when necessary (i.e., when bytecode or arguments change). The initial module deployment guarantees a clean start for upgrades, preventing redeployment unless specific criteria are met.
 
 4. **Factory**: Handles only the initial setup of pTokens and provides the Curator (Governor) with the necessary permissions to independently configure the oracle, RiskEngine, and pToken risk parameters.
+
+## Post-Audit Changes
+
+### MixBytes Audit (Interim)
+
+After the MixBytes audit, the following changes were implemented alongside fixes for reported issues:
+
+- Auto-enable collateral on first supply:
+  - When a user supplies an asset for the first time (i.e., no prior pToken balance), it is now automatically enabled as collateral.
+- Event Modifications:
+  - Added the Oracle Engine address to the `ProtocolDeployed` event to `deployProtocol` function in the Factory contract.
+  - Added the pToken address to the `NewCloseFactor` event in the RiskEngine contract.
+- New Getter Function in RiskEngine:
+
+  - Introduced the `emodeMarkets` function to retrieve supported pTokens for a given E-Mode category.
+  - This function allows users and integrators to query available collateral and borrow options within a specific E-Mode category.
+
+  ```
+    function emodeMarkets(uint8 categoryId)
+    external
+    view
+    returns (address[] memory collateralTokens, address[] memory borrowTokens);
+  ```
+
+- Factory Contract Authorization Change:
+  - The deployMarket function in the Factory contract now verifies whether the caller has the CONFIGURATOR role on the specified RiskEngine.
+  - Previously, this depended on an immutable Timelock contract. The new approach allows for more dynamic protocol management.

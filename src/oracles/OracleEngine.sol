@@ -87,8 +87,8 @@ contract OracleEngine is IOracleEngine, AccessControlUpgradeable {
     /**
      * @inheritdoc IOracleEngine
      */
-    function configs(address pToken) external view returns (AssetConfig memory) {
-        return _getOracleEngineStorage().configs[pToken];
+    function configs(address asset) external view returns (AssetConfig memory) {
+        return _getOracleEngineStorage().configs[asset];
     }
 
     /**
