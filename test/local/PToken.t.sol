@@ -35,6 +35,12 @@ contract LocalPToken is TestLocal {
         pWETH = getPToken("pWETH");
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //initail mint exceptioin case
+        doInitialMintRevert(pUSDC);
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     function testInitialize_FailIfAlreadyInitializedOrZeroAddress() public {
@@ -75,13 +81,13 @@ contract LocalPToken is TestLocal {
         vm.stopPrank();
     }
 
-    function testSetRE_Success() public {
-        IRiskEngine newRE = IRiskEngine(new RiskEngineModule());
-
+    function testSetBorrowRateMax_Success() public {
         vm.prank(getAdmin());
-        pUSDC.setRiskEngine(newRE);
 
-        assertEq(address(newRE), address(pUSDC.riskEngine()));
+        uint256 newBorrowRateMax = 2e6;
+        pUSDC.setBorrowRateMax(newBorrowRateMax);
+
+        assertEq(newBorrowRateMax, pUSDC.borrowRateMaxMantissa());
     }
 
     function testSweep_FailIfUnderlying() public {
@@ -90,6 +96,34 @@ contract LocalPToken is TestLocal {
         // "SweepNotAllowed()" selector
         vm.expectRevert(0x00b5509b);
         pUSDC.sweepToken(underlying);
+    }
+
+    function testSetProtocolShare_FailIfNotInRange() public {
+        vm.startPrank(getAdmin());
+
+        // "SetProtocolSeizeShareBoundsCheck()" selector
+        vm.expectRevert(0x5dc64e16);
+        pUSDC.setProtocolSeizeShare(1e18);
+    }
+
+    function testTransfer_FailIfReceiverIsZero() public {
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        pUSDC.transfer(address(0), 0);
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        pUSDC.transferFrom(address(0), address(0), 0);
+    }
+
+    function testRedeem_FailIfReceiverIsZero() public {
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        pUSDC.redeem(0, address(0), address(0));
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        pUSDC.withdraw(0, address(0), address(0));
     }
 
     function testMintBehalfOf_FailIfAddressIsZero() public {
@@ -122,7 +156,7 @@ contract LocalPToken is TestLocal {
         doBorrow(user1, user1, address(pUSDC), 1000e6);
 
         // borrowRateMaxMantissa slot
-        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d08;
+        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d07;
         vm.store(address(pUSDC), slot, bytes32(0));
 
         //skip time
@@ -131,6 +165,26 @@ contract LocalPToken is TestLocal {
         uint256 prevIndex = pUSDC.borrowIndex();
         pUSDC.accrueInterest();
         assertEq(prevIndex, pUSDC.borrowIndex());
+
+        // "MintFreshnessCheck()" selector
+        doDepositRevert(
+            user1, user1, address(pUSDC), 1000e6, abi.encodePacked(bytes4(0x38d88597))
+        );
+
+        // "RedeemFreshnessCheck()" selector
+        doWithdrawRevert(
+            user1, user1, address(pUSDC), 100, abi.encodePacked(bytes4(0x97b5cfcd))
+        );
+
+        // "BorrowFreshnessCheck()" selector
+        doBorrowRevert(
+            user1, user1, address(pUSDC), 100, abi.encodePacked(bytes4(0x3a363184))
+        );
+
+        // "RepayBorrowFreshnessCheck()" selector
+        doRepayRevert(
+            user1, user1, address(pUSDC), 100, abi.encodePacked(bytes4(0xc9021e2f))
+        );
     }
 
     function testRedeem_FailIfNotAllowed() public {
@@ -146,7 +200,7 @@ contract LocalPToken is TestLocal {
         assertEq(pWETH.convertToAssets(liquidity), liquidity);
 
         ///porivde liquidity
-        doDeposit(depositor, depositor, address(pWETH), liquidity);
+        doDeposit(user1, depositor, address(pWETH), liquidity);
 
         doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
 
@@ -158,7 +212,6 @@ contract LocalPToken is TestLocal {
 
         vm.prank(user1);
         pUSDC.withdraw(maxWithdraw, user1, user1);
-
         vm.prank(user1);
         // "RedeemRiskEngineRejection(uint256)" selector
         vm.expectRevert(abi.encodePacked(bytes4(0x9759ead5), uint256(3)));
@@ -167,7 +220,7 @@ contract LocalPToken is TestLocal {
         vm.prank(depositor);
         // "RedeemTransferOutNotPossible()" selector
         vm.expectRevert(0x91240a1b);
-        pWETH.withdraw(1e18, depositor, depositor);
+        pWETH.withdraw(2e18, depositor, depositor);
 
         mockOracle.setPrice(address(pWETH), 2500e6, 18);
         // no withdraw with shortfall

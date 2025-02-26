@@ -32,6 +32,10 @@ contract LocalRiskEngine is TestLocal {
         pWETH = getPToken("pWETH");
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     function testPauseMint_Success() public {
@@ -167,41 +171,43 @@ contract LocalRiskEngine is TestLocal {
 
     function testMint_FailIfCapReached() public {
         address user1 = makeAddr("user1");
-        uint256 mintAmount = 2000e6;
+        uint256 mintAmount = 2000e18;
 
         IPToken[] memory markets = new IPToken[](1);
-        markets[0] = pUSDC;
+        markets[0] = pWETH;
 
         uint256[] memory caps = new uint256[](1);
         caps[0] = mintAmount - 1;
 
-        changeList(address(pWETH), false);
+        changeList(address(pUSDC), false);
 
         // max deposit 0 for unlisted
-        assertEq(0, pWETH.maxDeposit(address(0)), "maxDeposit does not match unlisted");
+        assertEq(0, pUSDC.maxDeposit(address(0)), "maxDeposit does not match unlisted");
 
         // max deposit uint256 max by default
         assertEq(
             type(uint256).max,
-            pUSDC.maxDeposit(address(0)),
+            pWETH.maxDeposit(address(0)),
             "maxDeposit does not uint256 max"
         );
 
         vm.prank(getAdmin());
         re.setMarketSupplyCaps(markets, caps);
-        // applied cap
-        assertEq(caps[0], pUSDC.maxDeposit(address(0)), "maxDeposit does not match cap");
+        // applied cap - initial mint amount
         assertEq(
-            caps[0],
-            pUSDC.maxMint(address(0)) * pUSDC.exchangeRateCurrent() / ONE_MANTISSA,
-            "maxDeposit does not match cap"
+            caps[0] - 1001, pWETH.maxDeposit(address(0)), "maxDeposit does not match cap"
+        );
+        assertEq(
+            caps[0] - 1001,
+            pWETH.maxMint(address(0)) * pWETH.exchangeRateCurrent() / ONE_MANTISSA,
+            "maxMint does not match cap"
         );
 
         // "BorrowRiskEngineRejection(7)" selector
         doDepositRevert(
             user1,
             user1,
-            address(pUSDC),
+            address(pWETH),
             mintAmount,
             abi.encodePacked(bytes4(0x1d3413fb), uint256(7))
         );
@@ -238,6 +244,14 @@ contract LocalRiskEngine is TestLocal {
         re.configureMarket(IPToken(pUSDC), config);
     }
 
+    function testSetCF_FailIfNotInRange() public {
+        vm.startPrank(getAdmin());
+
+        // "InvalidCloseFactor()" selector
+        vm.expectRevert(0xee0bdbdf);
+        re.setCloseFactor(address(pUSDC), 2e18);
+    }
+
     function testSetCF_FailIfInvalidCF() public {
         vm.startPrank(getAdmin());
 
@@ -256,6 +270,19 @@ contract LocalRiskEngine is TestLocal {
         // "InvalidLiquidationThreshold()" selector
         vm.expectRevert(0x3e51d2c0);
         re.configureMarket(pUSDC, config);
+
+        config = IRiskEngine.BaseConfiguration(0.7e18, 0.8e18, 10e16);
+        // "InvalidIncentiveThreshold()" selector
+        vm.expectRevert(0x37fbf6a6);
+        re.configureMarket(pUSDC, config);
+    }
+
+    function testSetOracle_FailIfAddressIsZero() public {
+        vm.prank(getAdmin());
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(0xd92e233d);
+        re.setOracle(address(0));
     }
 
     function testSupportMarket_FailIfAlreadyListedOrUnsupported() public {
@@ -484,13 +511,18 @@ contract LocalRiskEngine is TestLocal {
 
         ///porivde liquidity
         doDeposit(depositor, depositor, address(pUSDC), 2000e6);
+        vm.prank(depositor);
+        re.exitMarket(address(pUSDC));
 
         doDepositAndEnter(user1, user1, address(pWETH), 1e18);
         doBorrow(user1, user1, address(pUSDC), 1450e6);
 
         address mockRE = deployRiskEngine();
         vm.prank(getAdmin());
-        pWETH.setRiskEngine(IRiskEngine(mockRE));
+        // change risk engine
+        setRiskEngineSlot(address(pWETH), mockRE);
+        console.logAddress(address(pWETH.riskEngine()));
+        console.logAddress(mockRE);
 
         // 1450 / 0.825(weth liq threshold) = 1757.57 is liquidation threshold price for collateral
 

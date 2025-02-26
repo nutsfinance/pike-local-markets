@@ -42,6 +42,13 @@ interface IPToken is IERC4626 {
     );
 
     /**
+     * @notice Event emitted when the max borrow rate is changed
+     */
+    event NewBorrowRateMax(
+        uint256 oldBorrowRateMaxMantissa, uint256 newBorrowRateMaxMantissa
+    );
+
+    /**
      * @notice Event emitted when the seize share is changed
      */
     event NewProtocolSeizeShare(
@@ -187,16 +194,16 @@ interface IPToken is IERC4626 {
     /// ***Admin Functions***
 
     /**
-     * @notice Sets a new risk engine for the market
-     * @dev Admin function to set a new risk engine
-     */
-    function setRiskEngine(IRiskEngine newRiskEngine) external;
-
-    /**
      * @notice accrues interest and sets a new reserve factor for the protocol
      * @dev Admin function to accrue interest and set a new reserve factor
      */
     function setReserveFactor(uint256 newReserveFactorMantissa) external;
+
+    /**
+     * @notice accrues interest and sets a new maximum borow rate for pToken
+     * @dev Admin function to accrue interest and set a new maximum borow rate
+     */
+    function setBorrowRateMax(uint256 newBorrowRateMaxMantissa) external;
 
     /**
      * @notice sets a new seize share for the protocol
@@ -230,6 +237,11 @@ interface IPToken is IERC4626 {
     function sweepToken(IERC20 token) external;
 
     /// ***Getter Functions***
+
+    /**
+     * @notice Return the latest max borrow rate
+     */
+    function borrowRateMaxMantissa() external view returns (uint256);
 
     /**
      * @notice Return the latest accrual timestamp of market

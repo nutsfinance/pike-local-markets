@@ -18,7 +18,7 @@ contract LocalAccrueInterest is TestLocal {
     IRiskEngine re;
 
     function setUp() public {
-        setDebug(true);
+        setDebug(false);
         setAdmin(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
         init();
 
@@ -31,6 +31,10 @@ contract LocalAccrueInterest is TestLocal {
         pWETH = getPToken("pWETH");
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     function testDBwithInterestInNormalSlope() public {

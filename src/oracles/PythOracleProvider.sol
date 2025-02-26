@@ -48,20 +48,25 @@ contract PythOracleProvider is
     IPyth public immutable pyth;
 
     /**
+     * @notice Initial Owner to prevent manipulation during deployment
+     */
+    address public immutable initialOwner;
+
+    /**
      * @notice Contract constructor
      * @param _pyth Pyth oracle address
      */
-    constructor(address _pyth) {
+    constructor(address _pyth, address _initialOwner) {
         pyth = IPyth(_pyth);
+        initialOwner = _initialOwner;
         _disableInitializers();
     }
 
     /**
      * @notice Initialize the contract
-     * @param owner Address of the owner
      */
-    function initialize(address owner) public initializer {
-        __Ownable_init(owner);
+    function initialize() public initializer {
+        __Ownable_init(initialOwner);
     }
 
     /**
@@ -96,6 +101,10 @@ contract PythOracleProvider is
 
         PythStructs.Price memory priceInfo =
             pyth.getPriceNoOlderThan(config.feed, config.maxStalePeriod);
+
+        if (priceInfo.price <= 0) {
+            revert InvalidPrice();
+        }
 
         if (
             priceInfo.conf > 0

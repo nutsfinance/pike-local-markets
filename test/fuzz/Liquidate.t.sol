@@ -54,6 +54,10 @@ contract FuzzLiquidate is TestFuzz {
 
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     function testFuzz_liquidate(address[3] memory addresses, uint256[9] memory amounts)

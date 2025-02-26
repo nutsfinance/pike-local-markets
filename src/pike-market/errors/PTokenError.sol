@@ -8,14 +8,17 @@ library PTokenError {
     error SetReserveFactorFreshCheck();
 
     error SetReserveFactorBoundsCheck();
+    error SetProtocolSeizeShareBoundsCheck();
 
     error MintRiskEngineRejection(uint256 errorCode);
     error MintFreshnessCheck();
+    error ZeroTokensMinted();
 
     error RedeemRiskEngineRejection(uint256 errorCode);
     error RedeemFreshnessCheck();
     error RedeemTransferOutNotPossible();
     error InvalidRedeemTokens();
+    error OnlyOneInputAllowed();
 
     error BorrowRiskEngineRejection(uint256 errorCode);
     error BorrowFreshnessCheck();

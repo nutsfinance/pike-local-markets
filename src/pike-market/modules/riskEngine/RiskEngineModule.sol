@@ -1,12 +1,11 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
+import {IRiskEngine, RiskEngineError} from "@interfaces/IRiskEngine.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
 import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
 import {RiskEngineStorage} from "@storage/RiskEngineStorage.sol";
 import {ExponentialNoError} from "@utils/ExponentialNoError.sol";
-import {RiskEngineError} from "@errors/RiskEngineError.sol";
 import {CommonError} from "@errors/CommonError.sol";
 import {OwnableMixin} from "@utils/OwnableMixin.sol";
 import {RBACMixin} from "@utils/RBACMixin.sol";
@@ -24,6 +23,8 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      */
     function setOracle(address newOracle) external {
         checkPermissionOrAdmin(_PROTOCOL_OWNER_PERMISSION, msg.sender);
+        require(newOracle != address(0), CommonError.ZeroAddress());
+
         RiskEngineData storage $ = _getRiskEngineStorage();
         emit NewOracleEngine($.oracle, newOracle);
         $.oracle = newOracle;
@@ -38,9 +39,11 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     ) external {
         checkPermissionOrAdmin(_PROTOCOL_OWNER_PERMISSION, msg.sender);
         // both can not exceed 100% of totalReserve
-        if (newOwnerShareMantissa + newConfiguratorShareMantissa > _MANTISSA_ONE) {
-            revert RiskEngineError.InvalidReserveShare();
-        }
+        require(
+            newOwnerShareMantissa + newConfiguratorShareMantissa <= _MANTISSA_ONE,
+            RiskEngineError.InvalidReserveShare()
+        );
+
         RiskEngineData storage $ = _getRiskEngineStorage();
         $.ownerShareMantissa = newOwnerShareMantissa;
         $.configuratorShareMantissa = newConfiguratorShareMantissa;
@@ -54,6 +57,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         external
     {
         checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
+        require(
+            newCloseFactorMantissa <= _MANTISSA_ONE, RiskEngineError.InvalidCloseFactor()
+        );
+
         RiskEngineData storage $ = _getRiskEngineStorage();
         uint256 oldCloseFactorMantissa = $.closeFactorMantissa[pTokenAddress];
         $.closeFactorMantissa[pTokenAddress] = newCloseFactorMantissa;
@@ -69,30 +76,32 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
         RiskEngineData storage $ = _getRiskEngineStorage();
         // Verify market is listed
-        if (!$.markets[address(pToken)].isListed) {
-            revert RiskEngineError.MarketNotListed();
-        }
-
-        ExponentialNoError.Exp memory newCollateralFactorExp =
-            ExponentialNoError.Exp({mantissa: baseConfig.collateralFactorMantissa});
+        require($.markets[address(pToken)].isListed, RiskEngineError.MarketNotListed());
 
         // Check collateral factor <= 0.9
-        ExponentialNoError.Exp memory highLimit =
-            ExponentialNoError.Exp({mantissa: _COLLATERAL_FACTOR_MAX_MANTISSA});
-        if (highLimit.lessThanExp(newCollateralFactorExp)) {
-            revert RiskEngineError.InvalidCollateralFactor();
-        }
+        require(
+            baseConfig.collateralFactorMantissa.toExp().lessThanOrEqualExp(
+                _COLLATERAL_FACTOR_MAX_MANTISSA.toExp()
+            ),
+            RiskEngineError.InvalidCollateralFactor()
+        );
+
+        require(
+            baseConfig.liquidationIncentiveMantissa >= _MANTISSA_ONE,
+            RiskEngineError.InvalidIncentiveThreshold()
+        );
 
         // Ensure that liquidation threshold <= 1
-        if (baseConfig.liquidationThresholdMantissa > _MANTISSA_ONE) {
-            revert RiskEngineError.InvalidLiquidationThreshold();
-        }
+        require(
+            baseConfig.liquidationThresholdMantissa <= _MANTISSA_ONE,
+            RiskEngineError.InvalidLiquidationThreshold()
+        );
 
         // Ensure that liquidation threshold >= CF
-        if (baseConfig.liquidationThresholdMantissa < baseConfig.collateralFactorMantissa)
-        {
-            revert RiskEngineError.InvalidLiquidationThreshold();
-        }
+        require(
+            baseConfig.liquidationThresholdMantissa >= baseConfig.collateralFactorMantissa,
+            RiskEngineError.InvalidLiquidationThreshold()
+        );
 
         BaseConfiguration memory oldConfiguration =
             $.markets[address(pToken)].baseConfiguration;
@@ -115,13 +124,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      */
     function supportMarket(IPToken pToken) external {
         checkPermission(_CONFIGURATOR_PERMISSION, msg.sender);
-        if (address(pToken) == address(0)) {
-            revert CommonError.ZeroAddress();
-        }
+        require(address(pToken) != address(0), CommonError.ZeroAddress());
+
         RiskEngineData storage $ = _getRiskEngineStorage();
-        if ($.markets[address(pToken)].isListed) {
-            revert RiskEngineError.AlreadyListed();
-        }
+        require(!$.markets[address(pToken)].isListed, RiskEngineError.AlreadyListed());
 
         Market storage newMarket = $.markets[address(pToken)];
         newMarket.isListed = true;
@@ -147,18 +153,15 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
 
         uint256 length = pTokens.length;
         // not allowed to configure default category
-        if (categoryId == 0) {
-            revert RiskEngineError.InvalidCategory();
-        }
+        require(categoryId != 0, RiskEngineError.InvalidCategory());
 
-        if (length != collateralPermissions.length || length != borrowPermissions.length)
-        {
-            revert CommonError.NoArrayParity();
-        }
+        require(
+            length == collateralPermissions.length && length == borrowPermissions.length,
+            CommonError.NoArrayParity()
+        );
+
         for (uint256 i = 0; i < length; i++) {
-            if (!$.markets[pTokens[i]].isListed) {
-                revert RiskEngineError.NotListed();
-            }
+            require($.markets[pTokens[i]].isListed, RiskEngineError.NotListed());
 
             EModeConfiguration storage newEMode = $.emodes[categoryId];
             newEMode.allowed = isAllowed;
@@ -187,20 +190,27 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         RiskEngineData storage $ = _getRiskEngineStorage();
 
         // can not be default category or not allowed category
-        if (categoryId == 0 || !$.emodes[categoryId].allowed) {
-            revert RiskEngineError.InvalidCategory();
-        }
+        require(
+            categoryId != 0 && $.emodes[categoryId].allowed,
+            RiskEngineError.InvalidCategory()
+        );
+
+        require(
+            baseConfig.liquidationIncentiveMantissa >= _MANTISSA_ONE,
+            RiskEngineError.InvalidIncentiveThreshold()
+        );
 
         // Ensure that liquidation threshold <= 1
-        if (baseConfig.liquidationThresholdMantissa > _MANTISSA_ONE) {
-            revert RiskEngineError.InvalidLiquidationThreshold();
-        }
+        require(
+            baseConfig.liquidationThresholdMantissa <= _MANTISSA_ONE,
+            RiskEngineError.InvalidLiquidationThreshold()
+        );
 
         // Ensure that liquidation threshold >= CF
-        if (baseConfig.liquidationThresholdMantissa < baseConfig.collateralFactorMantissa)
-        {
-            revert RiskEngineError.InvalidLiquidationThreshold();
-        }
+        require(
+            baseConfig.liquidationThresholdMantissa >= baseConfig.collateralFactorMantissa,
+            RiskEngineError.InvalidLiquidationThreshold()
+        );
 
         BaseConfiguration memory oldConfiguration = $.emodes[categoryId].baseConfiguration;
         BaseConfiguration storage baseConfiguration =
@@ -227,9 +237,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint256 numMarkets = pTokens.length;
         uint256 numBorrowCap = newBorrowCaps.length;
 
-        if (numMarkets != numBorrowCap || numMarkets == 0) {
-            revert CommonError.NoArrayParity();
-        }
+        require(
+            numMarkets == numBorrowCap && numMarkets != 0, CommonError.NoArrayParity()
+        );
 
         for (uint256 i = 0; i < numMarkets; ++i) {
             _getRiskEngineStorage().borrowCaps[address(pTokens[i])] = newBorrowCaps[i];
@@ -248,9 +258,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint256 numMarkets = pTokens.length;
         uint256 newSupplyCap = newSupplyCaps.length;
 
-        if (numMarkets != newSupplyCap || numMarkets == 0) {
-            revert CommonError.NoArrayParity();
-        }
+        require(
+            numMarkets == newSupplyCap && numMarkets != 0, CommonError.NoArrayParity()
+        );
 
         for (uint256 i; i < numMarkets; ++i) {
             _getRiskEngineStorage().supplyCaps[address(pTokens[i])] = newSupplyCaps[i];
@@ -265,9 +275,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         checkPermission(_PAUSE_GUARDIAN_PERMISSION, msg.sender);
         RiskEngineData storage $ = _getRiskEngineStorage();
 
-        if (!$.markets[address(pToken)].isListed) {
-            revert RiskEngineError.MarketNotListed();
-        }
+        require($.markets[address(pToken)].isListed, RiskEngineError.MarketNotListed());
 
         $.mintGuardianPaused[address(pToken)] = state;
         emit ActionPaused(pToken, "Mint", state);
@@ -280,9 +288,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function setBorrowPaused(IPToken pToken, bool state) external returns (bool) {
         checkPermission(_PAUSE_GUARDIAN_PERMISSION, msg.sender);
         RiskEngineData storage $ = _getRiskEngineStorage();
-        if (!$.markets[address(pToken)].isListed) {
-            revert RiskEngineError.MarketNotListed();
-        }
+        require($.markets[address(pToken)].isListed, RiskEngineError.MarketNotListed());
 
         $.borrowGuardianPaused[address(pToken)] = state;
         emit ActionPaused(pToken, "Borrow", state);
@@ -318,31 +324,25 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint8 category = $.accountCategory[msg.sender];
 
         // can not swtich if already in e-mode
-        if (category == newCategoryId) {
-            revert RiskEngineError.AlreadyInEMode();
-        }
+        require(category != newCategoryId, RiskEngineError.AlreadyInEMode());
         // checks if collateral and borrow category of e-mdoe match the user assets
         // for default category all assets are allowed for collateral and borrow
         if (newCategoryId != 0) {
             // can not swtich if not allowed
-            if (!$.emodes[newCategoryId].allowed) {
-                revert RiskEngineError.InvalidCategory();
-            }
+            require($.emodes[newCategoryId].allowed, RiskEngineError.InvalidCategory());
             // For each asset the account is in
             IPToken[] memory assets = $.accountAssets[msg.sender];
             for (uint256 i = 0; i < assets.length; i++) {
-                if (
-                    $.markets[address(assets[i])].collateralMembership[msg.sender]
-                        && !$.collateralCategory[newCategoryId][address(assets[i])]
-                ) {
-                    revert RiskEngineError.InvalidCollateralStatus(address(assets[i]));
-                }
-                if (
-                    $.markets[address(assets[i])].borrowMembership[msg.sender]
-                        && !$.borrowCategory[newCategoryId][address(assets[i])]
-                ) {
-                    revert RiskEngineError.InvalidBorrowStatus(address(assets[i]));
-                }
+                require(
+                    !$.markets[address(assets[i])].collateralMembership[msg.sender]
+                        || $.collateralCategory[newCategoryId][address(assets[i])],
+                    RiskEngineError.InvalidCollateralStatus(address(assets[i]))
+                );
+                require(
+                    !$.markets[address(assets[i])].borrowMembership[msg.sender]
+                        || $.borrowCategory[newCategoryId][address(assets[i])],
+                    RiskEngineError.InvalidBorrowStatus(address(assets[i]))
+                );
             }
         }
         // to switch e-mode we check if new category risk params create shortfall
@@ -350,14 +350,16 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         getHypotheticalAccountLiquidityInternal(
             msg.sender, IPToken(address(0)), newCategoryId, 0, 0, _getCollateralFactor
         );
-        if (err != RiskEngineError.Error.NO_ERROR) {
-            revert RiskEngineError.SwitchEMode(uint256(err));
-        }
-        if (shortfall > 0) {
-            revert RiskEngineError.SwitchEMode(
+        require(
+            err == RiskEngineError.Error.NO_ERROR,
+            RiskEngineError.SwitchEMode(uint256(err))
+        );
+        require(
+            shortfall == 0,
+            RiskEngineError.SwitchEMode(
                 uint256(RiskEngineError.Error.INSUFFICIENT_LIQUIDITY)
-            );
-        }
+            )
+        );
 
         //update user category
         $.accountCategory[msg.sender] = newCategoryId;
@@ -390,14 +392,16 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         (uint256 tokensHeld, uint256 amountOwed,) = pToken.getAccountSnapshot(msg.sender);
 
         /* Fail if the sender is not permitted to redeem all of their tokens */
-        uint256 allowed = redeemAllowedInternal(pTokenAddress, msg.sender, tokensHeld);
-        if (allowed != 0) {
-            revert RiskEngineError.ExitMarketRedeemRejection(allowed);
-        }
+        RiskEngineError.Error allowed =
+            redeemAllowedInternal(pTokenAddress, msg.sender, tokensHeld);
+        require(
+            allowed == RiskEngineError.Error.NO_ERROR,
+            RiskEngineError.ExitMarketRedeemRejection(uint256(allowed))
+        );
 
         Market storage marketToExit = _getRiskEngineStorage().markets[pTokenAddress];
 
-        /* Return true if the sender is not already ‘in’ the market as collateral */
+        /* Return early if the sender is not already ‘in’ the market as collateral */
         if (!marketToExit.collateralMembership[msg.sender]) {
             return;
         }
@@ -436,20 +440,26 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      * @inheritdoc IRiskEngine
      */
     function updateDelegate(address delegate, bool approved) external {
-        if (delegate == address(0)) {
-            revert CommonError.ZeroAddress();
-        }
+        require(delegate != address(0), CommonError.ZeroAddress());
         RiskEngineData storage $ = _getRiskEngineStorage();
 
-        if ($.approvedDelegates[msg.sender][delegate] == approved) {
-            revert RiskEngineError.DelegationStatusUnchanged();
-        }
+        require(
+            $.approvedDelegates[msg.sender][delegate] != approved,
+            RiskEngineError.DelegationStatusUnchanged()
+        );
 
         $.approvedDelegates[msg.sender][delegate] = approved;
         emit DelegateUpdated(msg.sender, delegate, approved);
     }
 
     /// *** Hooks ***
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function mintVerify(address account) external {
+        addToMarketCollateralInternal(IPToken(msg.sender), account);
+    }
 
     /**
      * @inheritdoc IRiskEngine
@@ -490,31 +500,27 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      */
     function borrowAllowed(address pToken, address borrower, uint256 borrowAmount)
         external
-        returns (uint256)
+        returns (RiskEngineError.Error)
     {
         RiskEngineData storage $ = _getRiskEngineStorage();
 
-        if ($.borrowGuardianPaused[pToken]) {
-            revert RiskEngineError.BorrowPaused();
-        }
+        require(!$.borrowGuardianPaused[pToken], RiskEngineError.BorrowPaused());
 
         if (!$.markets[pToken].isListed) {
-            return uint256(RiskEngineError.Error.MARKET_NOT_LISTED);
+            return RiskEngineError.Error.MARKET_NOT_LISTED;
         }
 
         uint8 category = $.accountCategory[borrower];
         // Should check if account is in emode and pToken is allowed
         if (category != 0) {
             if (!$.borrowCategory[category][pToken] || !$.emodes[category].allowed) {
-                return uint256(RiskEngineError.Error.NOT_ALLOWED_TO_BORROW);
+                return RiskEngineError.Error.NOT_ALLOWED_TO_BORROW;
             }
         }
 
         if (!$.markets[pToken].borrowMembership[borrower]) {
             // only pTokens may call borrowAllowed if borrower not in market
-            if (msg.sender != pToken) {
-                revert RiskEngineError.SenderNotPToken();
-            }
+            require(msg.sender == pToken, RiskEngineError.SenderNotPToken());
 
             // attempt to add borrower to the market
             // already checked if market is listed
@@ -525,7 +531,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         }
 
         if (IOracleEngine($.oracle).getUnderlyingPrice(IPToken(pToken)) == 0) {
-            return uint256(RiskEngineError.Error.PRICE_ERROR);
+            return RiskEngineError.Error.PRICE_ERROR;
         }
 
         uint256 cap = $.borrowCaps[pToken];
@@ -534,7 +540,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             uint256 totalBorrows = IPToken(pToken).totalBorrows();
             uint256 nextTotalBorrows = totalBorrows.add_(borrowAmount);
             if (nextTotalBorrows > cap) {
-                return uint256(RiskEngineError.Error.BORROW_CAP_EXCEEDED);
+                return RiskEngineError.Error.BORROW_CAP_EXCEEDED;
             }
         }
 
@@ -548,13 +554,13 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             _getCollateralFactor
         );
         if (err != RiskEngineError.Error.NO_ERROR) {
-            return uint256(err);
+            return err;
         }
         if (shortfall > 0) {
-            return uint256(RiskEngineError.Error.INSUFFICIENT_LIQUIDITY);
+            return RiskEngineError.Error.INSUFFICIENT_LIQUIDITY;
         }
 
-        return uint256(RiskEngineError.Error.NO_ERROR);
+        return RiskEngineError.Error.NO_ERROR;
     }
 
     /**
@@ -563,39 +569,36 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function mintAllowed(address account, address pToken, uint256 mintAmount)
         external
         view
-        returns (uint256)
+        returns (RiskEngineError.Error)
     {
         RiskEngineData storage $ = _getRiskEngineStorage();
 
         // Pausing is a very serious situation - we revert to sound the alarms
-        if ($.mintGuardianPaused[pToken]) {
-            revert RiskEngineError.MintPaused();
-        }
+        require(!$.mintGuardianPaused[pToken], RiskEngineError.MintPaused());
 
         if (!$.markets[pToken].isListed) {
-            return uint256(RiskEngineError.Error.MARKET_NOT_LISTED);
+            return RiskEngineError.Error.MARKET_NOT_LISTED;
         }
 
         uint8 category = $.accountCategory[account];
         // Should check if account is in emode and pToken is allowed
         if (category != 0 && !$.emodes[category].allowed) {
-            return uint256(RiskEngineError.Error.EMODE_NOT_ALLOWED);
+            return RiskEngineError.Error.EMODE_NOT_ALLOWED;
         }
 
         uint256 cap = $.supplyCaps[pToken];
         // Skipping the cap check for uncapped coins to save some gas
         if (cap != type(uint256).max) {
             uint256 pTokenSupply = IPToken(pToken).totalSupply();
-            ExponentialNoError.Exp memory exchangeRate =
-                ExponentialNoError.Exp({mantissa: IPToken(pToken).exchangeRateStored()});
-            uint256 nextTotalSupply =
-                exchangeRate.mul_ScalarTruncateAddUInt(pTokenSupply, mintAmount);
+
+            uint256 nextTotalSupply = IPToken(pToken).exchangeRateStored().toExp()
+                .mul_ScalarTruncateAddUInt(pTokenSupply, mintAmount);
             if (nextTotalSupply > cap) {
-                return uint256(RiskEngineError.Error.SUPPLY_CAP_EXCEEDED);
+                return RiskEngineError.Error.SUPPLY_CAP_EXCEEDED;
             }
         }
 
-        return uint256(RiskEngineError.Error.NO_ERROR);
+        return RiskEngineError.Error.NO_ERROR;
     }
 
     /**
@@ -604,25 +607,30 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function redeemAllowed(address pToken, address redeemer, uint256 redeemTokens)
         external
         view
-        returns (uint256)
+        returns (RiskEngineError.Error)
     {
-        uint256 allowed = redeemAllowedInternal(pToken, redeemer, redeemTokens);
-        if (allowed != uint256(RiskEngineError.Error.NO_ERROR)) {
+        RiskEngineError.Error allowed =
+            redeemAllowedInternal(pToken, redeemer, redeemTokens);
+        if (allowed != RiskEngineError.Error.NO_ERROR) {
             return allowed;
         }
 
-        return uint256(RiskEngineError.Error.NO_ERROR);
+        return RiskEngineError.Error.NO_ERROR;
     }
 
     /**
      * @inheritdoc IRiskEngine
      */
-    function repayBorrowAllowed(address pToken) external view returns (uint256) {
+    function repayBorrowAllowed(address pToken)
+        external
+        view
+        returns (RiskEngineError.Error)
+    {
         if (!_getRiskEngineStorage().markets[pToken].isListed) {
-            return uint256(RiskEngineError.Error.MARKET_NOT_LISTED);
+            return RiskEngineError.Error.MARKET_NOT_LISTED;
         }
 
-        return uint256(RiskEngineError.Error.NO_ERROR);
+        return RiskEngineError.Error.NO_ERROR;
     }
 
     /**
@@ -633,42 +641,39 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         address pTokenCollateral,
         address borrower,
         uint256 repayAmount
-    ) external view returns (uint256) {
+    ) external view returns (RiskEngineError.Error) {
         RiskEngineData storage $ = _getRiskEngineStorage();
 
         if (!$.markets[pTokenBorrowed].isListed || !$.markets[pTokenCollateral].isListed)
         {
-            return uint256(RiskEngineError.Error.MARKET_NOT_LISTED);
+            return RiskEngineError.Error.MARKET_NOT_LISTED;
         }
 
         uint256 borrowBalance = IPToken(pTokenBorrowed).borrowBalanceStored(borrower);
 
         /* allow accounts to be liquidated if the market is deprecated */
         if (isDeprecated(IPToken(pTokenBorrowed))) {
-            if (borrowBalance < repayAmount) {
-                revert RiskEngineError.RepayMoreThanBorrowed();
-            }
+            require(borrowBalance >= repayAmount, RiskEngineError.RepayMoreThanBorrowed());
         } else {
             /* The borrower must have shortfall in order to be liquidatable */
             (RiskEngineError.Error err,, uint256 shortfall) =
                 getAccountLiquidityInternal(borrower);
             if (err != RiskEngineError.Error.NO_ERROR) {
-                return uint256(err);
+                return err;
             }
 
             if (shortfall == 0) {
-                return uint256(RiskEngineError.Error.INSUFFICIENT_SHORTFALL);
+                return RiskEngineError.Error.INSUFFICIENT_SHORTFALL;
             }
 
             /* The liquidator may not repay more than what is allowed by the closeFactor */
-            uint256 maxClose = ExponentialNoError.Exp({
-                mantissa: $.closeFactorMantissa[pTokenBorrowed]
-            }).mul_ScalarTruncate(borrowBalance);
+            uint256 maxClose = $.closeFactorMantissa[pTokenBorrowed].toExp()
+                .mul_ScalarTruncate(borrowBalance);
             if (repayAmount > maxClose) {
-                return uint256(RiskEngineError.Error.TOO_MUCH_REPAY);
+                return RiskEngineError.Error.TOO_MUCH_REPAY;
             }
         }
-        return uint256(RiskEngineError.Error.NO_ERROR);
+        return RiskEngineError.Error.NO_ERROR;
     }
 
     /**
@@ -677,27 +682,25 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function seizeAllowed(address pTokenCollateral, address pTokenBorrowed)
         external
         view
-        returns (uint256)
+        returns (RiskEngineError.Error)
     {
         RiskEngineData storage $ = _getRiskEngineStorage();
 
         // Pausing is a very serious situation - we revert to sound the alarms
-        if ($.seizeGuardianPaused) {
-            revert RiskEngineError.SeizePaused();
-        }
+        require(!$.seizeGuardianPaused, RiskEngineError.SeizePaused());
 
         if (!$.markets[pTokenCollateral].isListed || !$.markets[pTokenBorrowed].isListed)
         {
-            return uint256(RiskEngineError.Error.MARKET_NOT_LISTED);
+            return RiskEngineError.Error.MARKET_NOT_LISTED;
         }
 
         if (
             IPToken(pTokenCollateral).riskEngine() != IPToken(pTokenBorrowed).riskEngine()
         ) {
-            return uint256(RiskEngineError.Error.RISKENGINE_MISMATCH);
+            return RiskEngineError.Error.RISKENGINE_MISMATCH;
         }
 
-        return uint256(RiskEngineError.Error.NO_ERROR);
+        return RiskEngineError.Error.NO_ERROR;
     }
 
     /**
@@ -706,21 +709,22 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function transferAllowed(address pToken, address src, uint256 transferTokens)
         external
         view
-        returns (uint256)
+        returns (RiskEngineError.Error)
     {
         // Pausing is a very serious situation - we revert to sound the alarms
-        if (_getRiskEngineStorage().transferGuardianPaused) {
-            revert RiskEngineError.TransferPaused();
-        }
+        require(
+            !_getRiskEngineStorage().transferGuardianPaused,
+            RiskEngineError.TransferPaused()
+        );
 
         // Currently the only consideration is whether or not
         //  the src is allowed to redeem this many tokens
-        uint256 allowed = redeemAllowedInternal(pToken, src, transferTokens);
-        if (allowed != uint256(RiskEngineError.Error.NO_ERROR)) {
+        RiskEngineError.Error allowed = redeemAllowedInternal(pToken, src, transferTokens);
+        if (allowed != RiskEngineError.Error.NO_ERROR) {
             return allowed;
         }
 
-        return uint256(RiskEngineError.Error.NO_ERROR);
+        return RiskEngineError.Error.NO_ERROR;
     }
 
     /**
@@ -743,8 +747,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint256 oraclePriceMantissa =
             IOracleEngine($.oracle).getUnderlyingPrice(IPToken(pToken));
 
-        ExponentialNoError.Exp memory oraclePrice =
-            ExponentialNoError.Exp({mantissa: oraclePriceMantissa});
+        ExponentialNoError.Exp oraclePrice = oraclePriceMantissa.toExp();
 
         (RiskEngineError.Error err, uint256 withdrawLiquidity) =
             getWithdrawLiquidityInternal(account, _getCollateralFactor);
@@ -807,12 +810,12 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function getAccountLiquidity(address account)
         external
         view
-        returns (uint256, uint256, uint256)
+        returns (RiskEngineError.Error, uint256, uint256)
     {
         (RiskEngineError.Error err, uint256 liquidity, uint256 shortfall) =
             getAccountLiquidityInternal(account);
 
-        return (uint256(err), liquidity, shortfall);
+        return (err, liquidity, shortfall);
     }
 
     /**
@@ -821,7 +824,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function getAccountBorrowLiquidity(address account)
         external
         view
-        returns (uint256, uint256, uint256)
+        returns (RiskEngineError.Error, uint256, uint256)
     {
         (RiskEngineError.Error err, uint256 liquidity, uint256 shortfall) =
         getHypotheticalAccountLiquidityInternal(
@@ -833,7 +836,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             _getCollateralFactor
         );
 
-        return (uint256(err), liquidity, shortfall);
+        return (err, liquidity, shortfall);
     }
 
     /**
@@ -844,7 +847,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         address pTokenModify,
         uint256 redeemTokens,
         uint256 borrowAmount
-    ) external view returns (uint256, uint256, uint256) {
+    ) external view returns (RiskEngineError.Error, uint256, uint256) {
         (RiskEngineError.Error err, uint256 liquidity, uint256 shortfall) =
         getHypotheticalAccountLiquidityInternal(
             account,
@@ -854,7 +857,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             borrowAmount,
             _getCollateralFactor
         );
-        return (uint256(err), liquidity, shortfall);
+        return (err, liquidity, shortfall);
     }
 
     /**
@@ -865,7 +868,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         address pTokenBorrowed,
         address pTokenCollateral,
         uint256 actualRepayAmount
-    ) external view returns (uint256, uint256) {
+    ) external view returns (RiskEngineError.Error, uint256) {
         address oracleEngine = _getRiskEngineStorage().oracle;
 
         /* Read oracle prices for borrowed and collateral markets */
@@ -874,7 +877,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint256 priceCollateralMantissa =
             IOracleEngine(oracleEngine).getUnderlyingPrice(IPToken(pTokenCollateral));
         if (priceBorrowedMantissa == 0 || priceCollateralMantissa == 0) {
-            return (uint256(RiskEngineError.Error.PRICE_ERROR), 0);
+            return (RiskEngineError.Error.PRICE_ERROR, 0);
         }
 
         /*
@@ -887,9 +890,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint256 exchangeRateMantissa = IPToken(pTokenCollateral).exchangeRateStored(); // Note: reverts on error
         uint256 seizeTokens;
         uint256 liquidationIncentiveMantissa;
-        ExponentialNoError.Exp memory numerator;
-        ExponentialNoError.Exp memory denominator;
-        ExponentialNoError.Exp memory ratio;
+        ExponentialNoError.Exp numerator;
+        ExponentialNoError.Exp denominator;
+        ExponentialNoError.Exp ratio;
 
         if (emodeCategory == 0) {
             liquidationIncentiveMantissa = _getRiskEngineStorage().markets[pTokenCollateral]
@@ -900,17 +903,16 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
                 .baseConfiguration
                 .liquidationIncentiveMantissa;
         }
-        numerator = ExponentialNoError.Exp({mantissa: liquidationIncentiveMantissa}).mul_(
-            ExponentialNoError.Exp({mantissa: priceBorrowedMantissa})
-        );
-        denominator = ExponentialNoError.Exp({mantissa: priceCollateralMantissa}).mul_(
-            ExponentialNoError.Exp({mantissa: exchangeRateMantissa})
-        );
+        numerator =
+            liquidationIncentiveMantissa.toExp().mul_(priceBorrowedMantissa.toExp());
+
+        denominator = priceCollateralMantissa.toExp().mul_(exchangeRateMantissa.toExp());
+
         ratio = numerator.div_(denominator);
 
         seizeTokens = ratio.mul_ScalarTruncate(actualRepayAmount);
 
-        return (uint256(RiskEngineError.Error.NO_ERROR), seizeTokens);
+        return (RiskEngineError.Error.NO_ERROR, seizeTokens);
     }
 
     /**
@@ -946,7 +948,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         view
         returns (uint256)
     {
-        return _getCollateralFactor(pToken, categoryId).mantissa;
+        return ExponentialNoError.Exp.unwrap(_getCollateralFactor(pToken, categoryId));
     }
 
     /**
@@ -969,7 +971,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         view
         returns (uint256)
     {
-        return _getLiquidationThreshold(pToken, categoryId).mantissa;
+        return ExponentialNoError.Exp.unwrap(_getLiquidationThreshold(pToken, categoryId));
     }
 
     /**
@@ -1073,9 +1075,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         RiskEngineData storage $ = _getRiskEngineStorage();
 
         for (uint256 i = 0; i < $.allMarkets[0].length; i++) {
-            if ($.allMarkets[0][i] == IPToken(pToken)) {
-                revert RiskEngineError.AlreadyListed();
-            }
+            require(
+                $.allMarkets[0][i] != IPToken(pToken), RiskEngineError.AlreadyListed()
+            );
         }
         $.allMarkets[0].push(IPToken(pToken));
     }
@@ -1180,22 +1182,22 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function redeemAllowedInternal(address pToken, address redeemer, uint256 redeemTokens)
         internal
         view
-        returns (uint256)
+        returns (RiskEngineError.Error)
     {
         RiskEngineData storage $ = _getRiskEngineStorage();
 
         if (!$.markets[pToken].isListed) {
-            return uint256(RiskEngineError.Error.MARKET_NOT_LISTED);
+            return RiskEngineError.Error.MARKET_NOT_LISTED;
         }
         uint8 category = $.accountCategory[redeemer];
         // Should check if account is in emode and pToken is allowed
         if (category != 0 && !$.emodes[category].allowed) {
-            return uint256(RiskEngineError.Error.EMODE_NOT_ALLOWED);
+            return RiskEngineError.Error.EMODE_NOT_ALLOWED;
         }
 
         /* If the redeemer is not 'in' the market as collateral, then we can bypass the liquidity check */
         if (!$.markets[pToken].collateralMembership[redeemer]) {
-            return uint256(RiskEngineError.Error.NO_ERROR);
+            return RiskEngineError.Error.NO_ERROR;
         }
 
         /* Otherwise, perform a hypothetical liquidity check to guard against shortfall */
@@ -1209,13 +1211,13 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             _getCollateralFactor
         );
         if (err != RiskEngineError.Error.NO_ERROR) {
-            return uint256(err);
+            return err;
         }
         if (shortfall > 0) {
-            return uint256(RiskEngineError.Error.INSUFFICIENT_LIQUIDITY);
+            return RiskEngineError.Error.INSUFFICIENT_LIQUIDITY;
         }
 
-        return uint256(RiskEngineError.Error.NO_ERROR);
+        return RiskEngineError.Error.NO_ERROR;
     }
 
     /**
@@ -1236,8 +1238,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
         uint8 categoryId,
         uint256 redeemTokens,
         uint256 borrowAmount,
-        function (IPToken,uint8) internal view returns (ExponentialNoError.Exp memory)
-            threshold
+        function (IPToken,uint8) internal view returns (ExponentialNoError.Exp) threshold
     ) internal view returns (RiskEngineError.Error, uint256, uint256) {
         AccountLiquidityLocalVars memory vars; // Holds all our calculation results
         vars.oracle = IOracleEngine(_getRiskEngineStorage().oracle);
@@ -1257,12 +1258,10 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
                 return (RiskEngineError.Error.PRICE_ERROR, 0, 0);
             }
 
-            vars.oraclePrice =
-                ExponentialNoError.Exp({mantissa: vars.oraclePriceMantissa});
+            vars.oraclePrice = vars.oraclePriceMantissa.toExp();
 
             vars.threshold = threshold(asset, categoryId);
-            vars.exchangeRate =
-                ExponentialNoError.Exp({mantissa: vars.exchangeRateMantissa});
+            vars.exchangeRate = vars.exchangeRateMantissa.toExp();
 
             // Pre-compute a conversion factor from tokens -> ether (normalized price value)
             vars.tokensToDenom =
@@ -1323,8 +1322,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      */
     function getWithdrawLiquidityInternal(
         address account,
-        function (IPToken,uint8) internal view returns (ExponentialNoError.Exp memory)
-            threshold
+        function (IPToken,uint8) internal view returns (ExponentialNoError.Exp) threshold
     ) internal view returns (RiskEngineError.Error, uint256) {
         AccountLiquidityLocalVars memory vars; // Holds all our calculation results
         vars.oracle = IOracleEngine(_getRiskEngineStorage().oracle);
@@ -1340,8 +1338,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
                 asset.getAccountSnapshot(account);
 
             vars.threshold = threshold(asset, vars.accountCategory);
-            vars.exchangeRate =
-                ExponentialNoError.Exp({mantissa: vars.exchangeRateMantissa});
+            vars.exchangeRate = vars.exchangeRateMantissa.toExp();
 
             // Get the normalized price of the asset
             vars.oraclePriceMantissa = vars.oracle.getUnderlyingPrice(asset);
@@ -1349,8 +1346,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
                 return (RiskEngineError.Error.PRICE_ERROR, 0);
             }
 
-            vars.oraclePrice =
-                ExponentialNoError.Exp({mantissa: vars.oraclePriceMantissa});
+            vars.oraclePrice = vars.oraclePriceMantissa.toExp();
 
             // Pre-compute a conversion factor from tokens -> ether (normalized price value) w/o threshold
             vars.tokensToDenom = vars.oraclePrice.mul_(vars.exchangeRate);
@@ -1394,21 +1390,19 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function _getCollateralFactor(IPToken asset, uint8 emodeCategory)
         internal
         view
-        returns (ExponentialNoError.Exp memory)
+        returns (ExponentialNoError.Exp)
     {
-        if (emodeCategory == 0) {
-            return ExponentialNoError.Exp({
-                mantissa: _getRiskEngineStorage().markets[address(asset)]
-                    .baseConfiguration
-                    .collateralFactorMantissa
-            });
-        } else {
-            return ExponentialNoError.Exp({
-                mantissa: _getRiskEngineStorage().emodes[emodeCategory]
-                    .baseConfiguration
-                    .collateralFactorMantissa
-            });
-        }
+        RiskEngineData storage $ = _getRiskEngineStorage();
+
+        // Check if asset is in emode category and category is not 0
+        bool useEmode =
+            emodeCategory != 0 && $.collateralCategory[emodeCategory][address(asset)];
+
+        return (
+            useEmode
+                ? $.emodes[emodeCategory].baseConfiguration.collateralFactorMantissa
+                : $.markets[address(asset)].baseConfiguration.collateralFactorMantissa
+        ).toExp();
     }
 
     /**
@@ -1419,20 +1413,18 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
     function _getLiquidationThreshold(IPToken asset, uint8 emodeCategory)
         internal
         view
-        returns (ExponentialNoError.Exp memory)
+        returns (ExponentialNoError.Exp)
     {
-        if (emodeCategory == 0) {
-            return ExponentialNoError.Exp({
-                mantissa: _getRiskEngineStorage().markets[address(asset)]
-                    .baseConfiguration
-                    .liquidationThresholdMantissa
-            });
-        } else {
-            return ExponentialNoError.Exp({
-                mantissa: _getRiskEngineStorage().emodes[emodeCategory]
-                    .baseConfiguration
-                    .liquidationThresholdMantissa
-            });
-        }
+        RiskEngineData storage $ = _getRiskEngineStorage();
+
+        // Check if asset is in emode category and category is not 0
+        bool useEmode =
+            emodeCategory != 0 && $.collateralCategory[emodeCategory][address(asset)];
+
+        return (
+            useEmode
+                ? $.emodes[emodeCategory].baseConfiguration.liquidationThresholdMantissa
+                : $.markets[address(asset)].baseConfiguration.liquidationThresholdMantissa
+        ).toExp();
     }
 }

@@ -158,6 +158,36 @@ contract TestHelpers is TestUtilities {
         }
     }
 
+    function doInitialMint(IPToken pToken) public {
+        address user = address(0xdead);
+        address asset = IPToken(pToken).asset();
+
+        vm.deal(user, 1 ether);
+
+        deal(asset, user, 1e18);
+        vm.startPrank(user);
+        IERC20(asset).approve(address(pToken), 1001);
+
+        pToken.deposit(1001, user);
+        vm.stopPrank();
+    }
+
+    function doInitialMintRevert(IPToken pToken) public {
+        address user = address(0xdead);
+        address asset = IPToken(pToken).asset();
+
+        vm.deal(user, 1 ether);
+
+        deal(asset, user, 1e18);
+        vm.startPrank(user);
+        IERC20(asset).approve(address(pToken), 1000);
+
+        // "ZeroTokensMinted()" selector
+        vm.expectRevert(0x4ba25a38);
+        pToken.deposit(1000, user);
+        vm.stopPrank();
+    }
+
     function _doTransfer(TransferParameters memory params) public {
         address user = params.prankAddress;
         bool onBehalfOf = params.onBehalfOf != params.prankAddress;
@@ -602,19 +632,27 @@ contract TestHelpers is TestUtilities {
 
     function setTotalReserves(address pToken, uint256 totalReserves) public {
         // totalReserves slot
-        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0c;
+        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0b;
         vm.store(pToken, slot, bytes32(totalReserves));
+    }
+
+    function setRiskEngineSlot(address pToken, address newRiskEngine) public {
+        vm.store(
+            pToken,
+            0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d03,
+            bytes32(uint256(uint160(newRiskEngine)) << 8)
+        );
     }
 
     function setTotalBorrows(address pToken, uint256 totalBorrows) public {
         // totalBorrows slot
-        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0b;
+        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0a;
         vm.store(pToken, slot, bytes32(totalBorrows));
     }
 
     function setPTokenTotalSupply(address pToken, uint256 totalSupply) public {
         // totalSupply slot
-        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0d;
+        bytes32 slot = 0x0be5863c0c782626615eed72fc4c521bcfabebe439cbc2683e49afadb49a0d0c;
         vm.store(pToken, slot, bytes32(totalSupply));
     }
 }

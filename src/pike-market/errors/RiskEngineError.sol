@@ -37,7 +37,9 @@ library RiskEngineError {
     error InvalidCollateralFactor();
     error InvalidPrice();
     error InvalidLiquidationThreshold();
+    error InvalidIncentiveThreshold();
     error InvalidReserveShare();
+    error InvalidCloseFactor();
 
     error AlreadyListed();
     error NotListed();

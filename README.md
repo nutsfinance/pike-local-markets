@@ -1,4 +1,4 @@
-![Endpoint Badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2Fzakrad%2F76be8eb437f8ba3a2f6b2ee5b7de9eb9%2Fraw%2FPike_local_market_line_coverage.json&style=flat-square) ![Static Badge](https://img.shields.io/badge/Built_with-Foundry-yellow?style=flat-square) ![Static Badge](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+![Endpoint Badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fgist.githubusercontent.com%2Fzakrad%2F76be8eb437f8ba3a2f6b2ee5b7de9eb9%2Fraw%2FPike_local_market_line_coverage.json&style=flat-square) ![Static Badge](https://img.shields.io/badge/Built_with-Foundry_v1.0-yellow?style=flat-square) ![Static Badge](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
 
 # Pike Market Protocol
 
@@ -74,7 +74,11 @@ $ yarn install --lock-file # or `npm install`
 yarn build
 ```
 
-### Test
+### Testing
+
+Pike Market uses Foundry v1 for testing.
+- Version: `forge 1.0.0-v1.0.0 (8692e92619 2025-02-10T09:05:59.911807000Z)`
+- **Important**: Previous versions of Foundry (e.g., v0.3.0) are not compatible with the current unit tests and may fail to execute them. Ensure you are using latest version for all test operations.
 
 ```bash
 yarn test

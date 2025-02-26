@@ -39,6 +39,10 @@ contract FuzzWithdraw is TestFuzz {
         pWETH = getPToken("pWETH");
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     function testFuzz_withdrawUnderlying(

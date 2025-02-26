@@ -16,6 +16,11 @@ interface IPythOracleProvider is IOracleProvider {
     error InvalidAsset();
 
     /**
+     * @notice Error emitted when returned price is not positive
+     */
+    error InvalidPrice();
+
+    /**
      * @notice Error emitted when min confidence ratio is invalid
      */
     error InvalidMinConfRatio();

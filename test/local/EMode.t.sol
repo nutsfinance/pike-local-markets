@@ -112,6 +112,11 @@ contract LocalEMode is TestLocal {
         vm.expectRevert(0x3e51d2c0);
         re.configureEMode(1, baseConfig);
 
+        baseConfig = IRiskEngine.BaseConfiguration(90e16, 93e16, 10e16);
+        // "InvalidIncentiveThreshold()" selector
+        vm.expectRevert(0x37fbf6a6);
+        re.configureEMode(1, baseConfig);
+
         vm.stopPrank();
     }
 
@@ -119,6 +124,9 @@ contract LocalEMode is TestLocal {
         address user1 = makeAddr("user1");
         // deposit and unsupported asset and switch to emode
         doDeposit(user1, user1, address(pUSDC), 2000e6);
+
+        vm.prank(user1);
+        re.exitMarket(address(pUSDC));
 
         vm.prank(user1);
         re.switchEMode(1);

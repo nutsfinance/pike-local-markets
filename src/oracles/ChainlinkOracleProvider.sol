@@ -41,6 +41,11 @@ contract ChainlinkOracleProvider is
      */
     AggregatorV3Interface public immutable sequencerUptimeFeed;
 
+    /**
+     * @notice Initial Owner to prevent manipulation during deployment
+     */
+    address public immutable initialOwner;
+
     /// keccak256(abi.encode(uint256(keccak256("pike.OE.provider")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 internal constant _ORACLE_PROVIDER_STORAGE =
         0x5fa1a95efabc4eee5395b3503834a3e8dddcd4f606102ddd245db9714a38bb00;
@@ -54,17 +59,17 @@ contract ChainlinkOracleProvider is
      * @notice Contract constructor
      * @param _sequencerUptimeFeed L2 Sequencer uptime feed
      */
-    constructor(AggregatorV3Interface _sequencerUptimeFeed) {
+    constructor(AggregatorV3Interface _sequencerUptimeFeed, address _initialOwner) {
         sequencerUptimeFeed = _sequencerUptimeFeed;
+        initialOwner = _initialOwner;
         _disableInitializers();
     }
 
     /**
      * @notice Initialize the contract
-     * @param owner Address of the owner
      */
-    function initialize(address owner) public initializer {
-        __Ownable_init(owner);
+    function initialize() public initializer {
+        __Ownable_init(initialOwner);
     }
 
     /**
@@ -102,6 +107,9 @@ contract ChainlinkOracleProvider is
         AssetConfig storage config = _getProviderStorage().configs[asset];
         uint256 priceDecimals = config.feed.decimals();
         (, int256 price,, uint256 updatedAt,) = config.feed.latestRoundData();
+        if (price <= 0) {
+            revert InvalidPrice();
+        }
 
         if (block.timestamp - updatedAt > config.maxStalePeriod) {
             revert StalePrice();
