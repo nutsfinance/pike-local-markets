@@ -1,42 +1,10 @@
+include = [
+    # global implementation deployment 
+    "./global.toml",
+]
+
 [contract.Factory]
-artifact = "src/factory/Factory.sol:Factory"
-
-[contract.Timelock]
-artifact = "src/factory/Timelock.sol:Timelock"
-
-[contract.InitialModuleBeacon]
-artifact = "src/pike-market/modules/InitialModuleBeacon.sol:InitialModuleBeacon"
-
-[contract.DoubleJumpRateModel]
-artifact = "DoubleJumpRateModel"
-
-[contract.RBACModule]
-artifact = "RBACModule"
-
-[contract.PTokenModule]
-artifact = "PTokenModule"
-
-[contract.RiskEngineModule]
-artifact = "RiskEngineModule"
-
-[contract.OracleEngine]
-artifact = "OracleEngine"
-
-#PToken
-[router.PTokenRouter]
-contracts = [
-    "InitialModuleBeacon",
-    "DoubleJumpRateModel",
-    "RBACModule",
-    "PTokenModule",
-]
-
-[router.RiskEngineRouter]
-contracts = [
-    "InitialModuleBeacon",
-    "RBACModule",
-    "RiskEngineModule",
-]
+artifact = "src/Factory.sol:Factory"
 
 [contract.reBeacon]
 artifact = "UpgradeableBeacon"
@@ -73,5 +41,4 @@ options.initialCallData = "<%= encodeFunctionData({abi: contracts.Factory.abi, f
 options.owner = "<%= settings.core_owner %>"
 options.abi = "<%= JSON.stringify(contracts.Factory.abi) %>"
 options.salt = "Factory"
-
 

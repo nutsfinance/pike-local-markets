@@ -3,9 +3,12 @@ cache/
 out/
 
 # Ignores development broadcast logs
-!/broadcast
-/broadcast/*/31337/
-/broadcast/**/dry-run/
+# !/broadcast
+# /broadcast/*/31337/
+# /broadcast/*/84532/
+# /broadcast/**/dry-run/
+
+/broadcast
 
 node_modules
 
@@ -22,8 +25,16 @@ docs/
 deployments/*
 !deployments/base-sepolia
 !deployments/base-sepolia/*
-!deployments/base-sepolia-demo
-!deployments/base-sepolia-demo/*
+!deployments/arb-sepolia
+!deployments/arb-sepolia/*
+!deployments/op-sepolia
+!deployments/op-sepolia/*
+!deployments/bera-bartio
+!deployments/bera-bartio/*
+!deployments/hyper-testnet
+!deployments/hyper-testnet/*
+!deployments/monad-testnet
+!deployments/monad-testnet/*
 
 coverage
 lcov.info

@@ -61,6 +61,12 @@ contract LocalEMode is TestLocal {
             categoryId, true, pToken, collateralPermissions, borrowPermissions
         );
         re.configureEMode(categoryId, baseConfig);
+        (address[] memory colTokens, address[] memory borTokens) =
+            re.emodeMarkets(categoryId);
+        // steth as collateral
+        assertEq(colTokens[0], pToken[1]);
+        // weth as borrowable
+        assertEq(borTokens[0], pToken[0]);
 
         vm.stopPrank();
 

@@ -1,0 +1,16 @@
+[contract.PythOracleProvider]
+artifact = "PythOracleProvider"
+args = ["<%= settings.pythAddress %>"]
+
+[clone.oracleEngine]
+source = "pike-upgradeable-proxy:0.1.0@oz"
+options.implementation = "<%= contracts.OracleEngine.address %>"
+options.owner = "<%= settings.oracleEngine_owner %>"
+options.abi = "<%= JSON.stringify(contracts.OracleEngine.abi) %>"
+options.salt = "oracleEngine"
+
+[invoke.initialize_oe]
+target = ["oracleEngine.Proxy"]
+func = "initialize"
+args = ["<%= settings.oracleEngine_owner %>", "<%= settings.oracleEngine_owner %>"]
+depends = [ "clone.oracleEngine"]

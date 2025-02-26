@@ -179,6 +179,7 @@ contract Factory is
             protocolInfo.protocolId,
             riskEngine,
             governorTimelock,
+            oracleEngine,
             protocolInfo.initialGovernor
         );
     }
@@ -186,15 +187,15 @@ contract Factory is
     /**
      * @inheritdoc IFactory
      */
-    function deployPToken(PTokenSetup memory setupParams)
+    function deployMarket(PTokenSetup memory setupParams)
         external
         nonReentrant
         returns (address pToken)
     {
         FactoryStorage storage $ = _getFactoryStorage();
         ProtocolInfo memory protocolInfo = $.protocolRegistry[setupParams.protocolId];
-        if (msg.sender != protocolInfo.timelock) {
-            revert InvalidTimelock();
+        if (!IRBAC(protocolInfo.riskEngine).hasPermission($.permissions[2], msg.sender)) {
+            revert UnauthorizedMarketDeployment();
         }
 
         bytes memory pTokenInit =

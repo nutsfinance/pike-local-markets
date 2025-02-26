@@ -530,4 +530,18 @@ interface IRiskEngine {
      * @return the borrow cap for the pToken
      */
     function borrowCap(address pToken) external view returns (uint256);
+
+    /**
+     * @notice Retrieves the list of supported markets in a specific eMode category.
+     *  Separates the markets into those supported as collateral and those supported as borrowable assets.
+     * @dev Iterates through all markets, checking their eligibility as collateral or borrowable assets
+     *  based on the specified eMode category.
+     * @param categoryId The ID of the eMode category.
+     * @return collateralTokens An array of token addresses supported as collateral in eMode.
+     * @return borrowTokens An array of token addresses supported as borrowable assets in specified eMode.
+     */
+    function emodeMarkets(uint8 categoryId)
+        external
+        view
+        returns (address[] memory collateralTokens, address[] memory borrowTokens);
 }

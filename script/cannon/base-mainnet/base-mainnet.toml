@@ -1,8 +1,3 @@
-name = "pike-market"
-version = "0.1.0"
-preset = "main"
-description = "Pike markets for Pike mainnet deployment"
-
 include = [
     # global params 
     "../global.toml",

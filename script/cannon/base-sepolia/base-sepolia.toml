@@ -1,14 +1,9 @@
-name = "pike-market-factory"
-version = "0.1.0"
-preset = "main"
-description = "Pike markets with factory"
-
 include = [
-    # global params 
-    "../global.toml",
+    # global implementation deployment 
+    # "../global.toml",
 
     # core factory deployment
-    "../core.toml",
+    # "../core.toml",
 
     # pTokens
     # "./pTokens/usdc.toml",

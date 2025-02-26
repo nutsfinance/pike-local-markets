@@ -1,5 +1,5 @@
 {
-  "address": "0x07CA2117Fbb1011Ed4D8511ddef2e47f4aa9EbFf",
+  "address": "0x5E94367d34B8c61B09573A755a89Eff1ca2629AC",
   "abi": [
     {
       "type": "constructor",
@@ -8,13 +8,13 @@
     },
     {
       "type": "function",
-      "name": "UPGRADE_INTERFACE_VERSION",
+      "name": "DEFAULT_ADMIN_ROLE",
       "inputs": [],
       "outputs": [
         {
           "name": "",
-          "type": "string",
-          "internalType": "string"
+          "type": "bytes32",
+          "internalType": "bytes32"
         }
       ],
       "stateMutability": "view"
@@ -24,31 +24,38 @@
       "name": "configs",
       "inputs": [
         {
-          "name": "",
+          "name": "pToken",
           "type": "address",
           "internalType": "address"
         }
       ],
       "outputs": [
         {
-          "name": "mainOracle",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "fallbackOracle",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "lowerBoundRatio",
-          "type": "uint256",
-          "internalType": "uint256"
-        },
-        {
-          "name": "upperBoundRatio",
-          "type": "uint256",
-          "internalType": "uint256"
+          "name": "",
+          "type": "tuple",
+          "internalType": "struct IOracleEngine.AssetConfig",
+          "components": [
+            {
+              "name": "mainOracle",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "fallbackOracle",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "lowerBoundRatio",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "upperBoundRatio",
+              "type": "uint256",
+              "internalType": "uint256"
+            }
+          ]
         }
       ],
       "stateMutability": "view"
@@ -74,6 +81,25 @@
     },
     {
       "type": "function",
+      "name": "getRoleAdmin",
+      "inputs": [
+        {
+          "name": "role",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "getUnderlyingPrice",
       "inputs": [
         {
@@ -93,10 +119,15 @@
     },
     {
       "type": "function",
-      "name": "initialize",
+      "name": "grantRole",
       "inputs": [
         {
-          "name": "owner",
+          "name": "role",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "account",
           "type": "address",
           "internalType": "address"
         }
@@ -106,34 +137,79 @@
     },
     {
       "type": "function",
-      "name": "owner",
-      "inputs": [],
-      "outputs": [
+      "name": "hasRole",
+      "inputs": [
         {
-          "name": "",
+          "name": "role",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "account",
           "type": "address",
           "internalType": "address"
         }
       ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "proxiableUUID",
-      "inputs": [],
       "outputs": [
         {
           "name": "",
-          "type": "bytes32",
-          "internalType": "bytes32"
+          "type": "bool",
+          "internalType": "bool"
         }
       ],
       "stateMutability": "view"
     },
     {
       "type": "function",
-      "name": "renounceOwnership",
-      "inputs": [],
+      "name": "initialize",
+      "inputs": [
+        {
+          "name": "owner",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "configurator",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "renounceRole",
+      "inputs": [
+        {
+          "name": "role",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "callerConfirmation",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "revokeRole",
+      "inputs": [
+        {
+          "name": "role",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "account",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
       "outputs": [],
       "stateMutability": "nonpayable"
     },
@@ -172,34 +248,22 @@
     },
     {
       "type": "function",
-      "name": "transferOwnership",
+      "name": "supportsInterface",
       "inputs": [
         {
-          "name": "newOwner",
-          "type": "address",
-          "internalType": "address"
+          "name": "interfaceId",
+          "type": "bytes4",
+          "internalType": "bytes4"
         }
       ],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "upgradeToAndCall",
-      "inputs": [
+      "outputs": [
         {
-          "name": "newImplementation",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
-          "name": "data",
-          "type": "bytes",
-          "internalType": "bytes"
+          "name": "",
+          "type": "bool",
+          "internalType": "bool"
         }
       ],
-      "outputs": [],
-      "stateMutability": "payable"
+      "stateMutability": "view"
     },
     {
       "type": "event",
@@ -253,16 +317,47 @@
     },
     {
       "type": "event",
-      "name": "OwnershipTransferred",
+      "name": "RoleAdminChanged",
       "inputs": [
         {
-          "name": "previousOwner",
+          "name": "role",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "previousAdminRole",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "newAdminRole",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "RoleGranted",
+      "inputs": [
+        {
+          "name": "role",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "account",
           "type": "address",
           "indexed": true,
           "internalType": "address"
         },
         {
-          "name": "newOwner",
+          "name": "sender",
           "type": "address",
           "indexed": true,
           "internalType": "address"
@@ -272,10 +367,22 @@
     },
     {
       "type": "event",
-      "name": "Upgraded",
+      "name": "RoleRevoked",
       "inputs": [
         {
-          "name": "implementation",
+          "name": "role",
+          "type": "bytes32",
+          "indexed": true,
+          "internalType": "bytes32"
+        },
+        {
+          "name": "account",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "sender",
           "type": "address",
           "indexed": true,
           "internalType": "address"
@@ -285,39 +392,28 @@
     },
     {
       "type": "error",
-      "name": "AddressEmptyCode",
+      "name": "AccessControlBadConfirmation",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "AccessControlUnauthorizedAccount",
       "inputs": [
         {
-          "name": "target",
+          "name": "account",
           "type": "address",
           "internalType": "address"
+        },
+        {
+          "name": "neededRole",
+          "type": "bytes32",
+          "internalType": "bytes32"
         }
       ]
     },
     {
       "type": "error",
       "name": "BoundValidationFailed",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "ERC1967InvalidImplementation",
-      "inputs": [
-        {
-          "name": "implementation",
-          "type": "address",
-          "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "ERC1967NonPayable",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "FailedInnerCall",
       "inputs": []
     },
     {
@@ -354,54 +450,16 @@
       "type": "error",
       "name": "NotInitializing",
       "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "OwnableInvalidOwner",
-      "inputs": [
-        {
-          "name": "owner",
-          "type": "address",
-          "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "OwnableUnauthorizedAccount",
-      "inputs": [
-        {
-          "name": "account",
-          "type": "address",
-          "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "UUPSUnauthorizedCallContext",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "UUPSUnsupportedProxiableUUID",
-      "inputs": [
-        {
-          "name": "slot",
-          "type": "bytes32",
-          "internalType": "bytes32"
-        }
-      ]
     }
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x7459a8a8b8a643459b3263721a71325f02bd11f513b176bc2709c9939043a599",
-  "deployTxnBlockNumber": "16959387",
-  "deployTimestamp": "1729687062",
+  "deployTxnHash": "0x6f8e9886404c141667b6d0355a559aa3534ab32ea6d80c4944e61dc8dcbcff96",
+  "deployTxnBlockNumber": "19988271",
+  "deployTimestamp": "1735744830",
   "sourceName": "src/oracles/OracleEngine.sol",
   "contractName": "OracleEngine",
   "deployedOn": "contract.OracleEngine",
-  "gasUsed": 1193987,
-  "gasCost": "3353680153"
+  "gasUsed": 1056504,
+  "gasCost": "1000355"
 }
