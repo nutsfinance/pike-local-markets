@@ -59,13 +59,10 @@
 <!-- 2 -->
 <g id="node3" class="node">
 <title>2</title>
-<polygon fill="#f2f2f2" stroke="black" points="1024,-0.5 1024,-100.5 1295.06,-100.5 1295.06,-0.5 1024,-0.5"/>
-<text text-anchor="middle" x="1159.53" y="-83.9" font-family="Times,serif" font-size="14.00">&lt;&lt;Library&gt;&gt;</text>
-<text text-anchor="middle" x="1159.53" y="-67.1" font-family="Times,serif" font-size="14.00">CommonError</text>
-<text text-anchor="middle" x="1159.53" y="-50.3" font-family="Times,serif" font-size="14.00">public/flatten/InitialModuleBundle.flatten.sol</text>
-<polyline fill="none" stroke="black" points="1024,-42.1 1295.06,-42.1 "/>
-<text text-anchor="start" x="1032" y="-25.5" font-family="Times,serif" font-size="14.00">Internal:</text>
-<text text-anchor="start" x="1032" y="-8.7" font-family="Times,serif" font-size="14.00"> &#160;&#160;NO_ERROR: uint256</text>
+<polygon fill="#f2f2f2" stroke="black" points="1024,-21.3 1024,-79.7 1295.06,-79.7 1295.06,-21.3 1024,-21.3"/>
+<text text-anchor="middle" x="1159.53" y="-63.1" font-family="Times,serif" font-size="14.00">&lt;&lt;Library&gt;&gt;</text>
+<text text-anchor="middle" x="1159.53" y="-46.3" font-family="Times,serif" font-size="14.00">CommonError</text>
+<text text-anchor="middle" x="1159.53" y="-29.5" font-family="Times,serif" font-size="14.00">public/flatten/InitialModuleBundle.flatten.sol</text>
 </g>
 <!-- 3 -->
 <g id="node4" class="node">
