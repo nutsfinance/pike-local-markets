@@ -1,6 +1,6 @@
 [contract.ChainlinkOracleProvider]
 artifact = "ChainlinkOracleProvider"
-args = ["<%= settings.chianlinkSequencerFeed %>"]
+args = ["<%= settings.chianlinkSequencerFeed %>", "<%= settings.chainlinkProvider_owner %>"]
 
 [clone.chainlinkOracleProvider]
 source = "pike-upgradeable-proxy:0.1.0@oz"
@@ -12,5 +12,4 @@ options.salt = "chainlinkOracleProvider"
 [invoke.initialize_chainlink]
 target = ["chainlinkOracleProvider.Proxy"]
 func = "initialize"
-args = ["<%= settings.chainlinkProvider_owner %>"]
 depends = [ "clone.chainlinkOracleProvider"]

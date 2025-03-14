@@ -1,35 +1,35 @@
 include = [
     # global params 
-    "../global.toml",
+    # "../global.toml",
 
     # core risk engine
     "../core.toml",
 
     # pTokens
-    "./pTokens/usdc.toml",
-    "./pTokens/weth.toml",
+    # "./pTokens/usdc.toml",
+    # "./pTokens/weth.toml",
 
     #oracles
-    "./oracles/oracleEngine.toml",
-    "./oracles/chainlink.toml",
-    "./oracles/pyth.toml",
+    # "./oracles/oracleEngine.toml",
+    # "./oracles/chainlink.toml",
+    # "./oracles/pyth.toml",
 ]
 
 [var.owner]
-core_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-oracleEngine_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-chainlinkProvider_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-pythProvider_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-usdc_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-weth_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-steth_owner = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+core_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+oracleEngine_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+chainlinkProvider_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+pythProvider_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+usdc_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+weth_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+steth_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
 
 [var.usdc]
-usdc_reserveManager = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-usdc_reserveWithdrawer = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-usdc_configurator = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-usdc_supplyGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-usdc_borrowGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+usdc_reserveManager = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+usdc_reserveWithdrawer = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+usdc_configurator = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+usdc_supplyGuard = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+usdc_borrowGuard = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
 usdc_decimals = "18"
 usdc_address = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 usdc_maxLTV = "<%= parseUnits('75', 16) %>" #75%
@@ -52,11 +52,11 @@ usdc_firstKink = "<%= parseUnits('5', 16) %>"
 usdc_secondKink = "<%= parseUnits('95', 16) %>"
 
 [var.weth]
-weth_reserveManager = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-weth_reserveWithdrawer = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-weth_configurator = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-weth_supplyGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-weth_borrowGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+weth_reserveManager = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+weth_reserveWithdrawer = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+weth_configurator = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+weth_supplyGuard = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+weth_borrowGuard = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
 weth_decimals = "18"
 weth_address = "0x4200000000000000000000000000000000000006"
 weth_maxLTV = "<%= parseUnits('80', 16) %>" #80%
@@ -79,8 +79,8 @@ weth_firstKink = "<%= parseUnits('5', 16) %>"
 weth_secondKink = "<%= parseUnits('95', 16) %>"
 
 [var.params]
-core_configurator = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
-core_pauseGuard = "0x8da29648bd3bbef6f0cc1C0b3a9a286ED14E2963"
+core_configurator = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+core_pauseGuard = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
 core_closeFactor = "<%= parseUnits('50', 16) %>"
 core_incentives = "<%= parseUnits('1.05', 18) %>"
 

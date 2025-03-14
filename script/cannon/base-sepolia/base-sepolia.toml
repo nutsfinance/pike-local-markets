@@ -3,7 +3,7 @@ include = [
     # "../global.toml",
 
     # core factory deployment
-    # "../core.toml",
+    "../core.toml",
 
     # pTokens
     # "./pTokens/usdc.toml",

@@ -13,25 +13,32 @@ roles_reserveManagerRole = "0x524553455256455f4d414e4147455200000000000000000000
 roles_reserveWithdrawerRole = "0x524553455256455f574954484452415745520000000000000000000000000000"
 
 [contract.InitialModuleBeacon]
-artifact = "InitialModuleBeacon"
+artifact = "src/pike-market/modules/InitialModuleBeacon.sol:InitialModuleBeacon"
+from = "<%= settings.core_owner %>"
 
 [contract.DoubleJumpRateModel]
 artifact = "DoubleJumpRateModel"
+from = "<%= settings.core_owner %>"
 
 [contract.RBACModule]
 artifact = "RBACModule"
+from = "<%= settings.core_owner %>"
 
 [contract.PTokenModule]
 artifact = "PTokenModule"
+from = "<%= settings.core_owner %>"
 
 [contract.RiskEngineModule]
 artifact = "RiskEngineModule"
+from = "<%= settings.core_owner %>"
 
 [contract.OracleEngine]
 artifact = "OracleEngine"
+from = "<%= settings.core_owner %>"
 
 [contract.Timelock]
 artifact = "Timelock"
+from = "<%= settings.core_owner %>"
 
 #PToken
 [router.PTokenRouter]
@@ -41,6 +48,7 @@ contracts = [
     "RBACModule",
     "PTokenModule",
 ]
+from = "<%= settings.core_owner %>"
 
 #RiskEngine
 [router.RiskEngineRouter]
@@ -49,3 +57,4 @@ contracts = [
     "RBACModule",
     "RiskEngineModule",
 ]
+from = "<%= settings.core_owner %>"

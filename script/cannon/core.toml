@@ -5,6 +5,7 @@ include = [
 
 [contract.Factory]
 artifact = "src/Factory.sol:Factory"
+from = "<%= settings.core_owner %>"
 
 [contract.reBeacon]
 artifact = "UpgradeableBeacon"
@@ -12,6 +13,7 @@ args = [
   "<%= contracts.RiskEngineRouter.address %>",
   "<%= settings.core_owner %>"
 ]
+from = "<%= settings.core_owner %>"
 
 [contract.pTokenBeacon]
 artifact = "UpgradeableBeacon"
@@ -19,6 +21,7 @@ args = [
   "<%= contracts.PTokenRouter.address %>",
   "<%= settings.core_owner %>"
 ]
+from = "<%= settings.core_owner %>"
 
 [contract.timelockBeacon]
 artifact = "UpgradeableBeacon"
@@ -26,6 +29,7 @@ args = [
   "<%= contracts.Timelock.address %>",
   "<%= settings.core_owner %>"
 ]
+from = "<%= settings.core_owner %>"
 
 [contract.oracleEngineBeacon]
 artifact = "UpgradeableBeacon"
