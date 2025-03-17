@@ -19,11 +19,7 @@ contract Deploy is Config {
 
     address factory;
 
-    constructor(uint256 _networkCount, bool _testnet) Config(_networkCount, _testnet) {
-        if (_testnet) {
-            PATH = "/deployments/base-sepolia-demo/";
-        }
-    }
+    constructor() Config() {}
 
     function deployBeacons() internal {
         console.log("---------------");

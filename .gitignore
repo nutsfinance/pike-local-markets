@@ -1,7 +1,7 @@
 # Compiler files
 cache/
 out/
-
+logs/
 # Ignores development broadcast logs
 # !/broadcast
 # /broadcast/*/31337/
@@ -22,19 +22,10 @@ docs/
 
 .DS_Store
 
-deployments/*
-!deployments/base-sepolia
-!deployments/base-sepolia/*
-!deployments/arb-sepolia
-!deployments/arb-sepolia/*
-!deployments/op-sepolia
-!deployments/op-sepolia/*
-!deployments/bera-bartio
-!deployments/bera-bartio/*
-!deployments/hyper-testnet
-!deployments/hyper-testnet/*
-!deployments/monad-testnet
-!deployments/monad-testnet/*
+!deployments/
+!deployments/*/
+!deployments/*/*/
+deployments/*/*/dry-run/
 
 coverage
 lcov.info

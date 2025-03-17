@@ -18,46 +18,47 @@ contract Market is Config {
     IFactory factory;
 
     IPToken pUSDC;
-    IPToken pWETH;
-    IPToken pSTETH;
+    IPToken pCBBTC;
+    IPToken pLBTC;
 
     IRiskEngine re;
     IOracleEngine oe;
     Timelock tm;
     MockProvider mp;
 
-    constructor() Config(6, true) {
+    constructor() Config() {
         PATH = "";
     }
 
     function run() public payable {
         setUp();
-        uint256 selectedFork = 5;
+        uint256 selectedFork = 1;
         vm.createSelectFork(vm.envString(rpcs[selectedFork]));
         forks[selectedFork] = vm.activeFork();
 
         vm.startBroadcast(adminPrivateKey);
 
-        address usdc = address(new MockTestToken("mockUSDC", "USDC", 6, 10_000e6));
-        address weth = address(new MockTestToken("mockWETH", "WETH", 18, 10e18));
-        address steth = address(new MockTestToken("mockSTETH", "STETH", 18, 10e18));
-        mp = MockProvider(0xeB25de08215e107ec96de7d58b20A932089E0E5e);
+        address usdc = 0xaFB14cF9A468CDb13739bf1268D0f9537478D04b;
+        address cbBTC =
+            address(new MockTestToken("Coinbase Wrapped BTC", "cbBTC", 8, 5e8));
+        address LBTC =
+            address(new MockTestToken("Lombard Staked Bitcoin", "LBTC", 8, 5e8));
+        mp = MockProvider(0x8737137431c31AD3533CBC14a399DD67E9f27d5d);
         mp.setPrice(usdc, 1e6, 6);
-        mp.setPrice(weth, 2000e6, 18);
-        mp.setPrice(steth, 2000e6, 18);
-        address chainlinkProvider = 0x7322C1FaeBa862bE83D404f20397B397a32B79EF;
+        mp.setPrice(cbBTC, 100_000e6, 8);
+        mp.setPrice(LBTC, 100_000e6, 8);
 
-        factory = IFactory(0xe9A6F322D8aB0722c9B2047612168BB85F184Ae4);
+        factory = IFactory(0x82072C90aacbb62dbD7A0EbAAe3b3e5D7d8cEEEA);
 
         uint256 protocolId = factory.protocolCount();
         IFactory.PTokenSetup memory pUSDCSetup = IFactory.PTokenSetup(
             protocolId, usdc, 1e18, 1e16, 2e16, 1e18, "pike usdc", "pUSDC", 8
         );
-        IFactory.PTokenSetup memory pWETHSetup = IFactory.PTokenSetup(
-            protocolId, weth, 1e18, 1e16, 2e16, 1e18, "pike weth", "pWETH", 8
+        IFactory.PTokenSetup memory pCBBTCSetup = IFactory.PTokenSetup(
+            protocolId, cbBTC, 1e18, 1e16, 2e16, 1e18, "pike cbBTC", "pCBBTC", 8
         );
-        IFactory.PTokenSetup memory pSTETHSetup = IFactory.PTokenSetup(
-            protocolId, steth, 1e18, 1e16, 2e16, 1e18, "pike steth", "pSTETH", 8
+        IFactory.PTokenSetup memory pLBTCSetup = IFactory.PTokenSetup(
+            protocolId, LBTC, 1e18, 1e16, 2e16, 1e18, "pike LBTC", "pLBTC", 8
         );
 
         IRiskEngine.BaseConfiguration memory config =
@@ -84,29 +85,29 @@ contract Market is Config {
         pUSDC = IPToken(factory.getMarket(protocolId, 0));
         console.log("deployed: %s", address(pUSDC));
 
-        console.log("deploying: %s", pWETHSetup.name);
+        console.log("deploying: %s", pCBBTCSetup.name);
         tm.emergencyExecute(
             address(factory),
             0,
-            abi.encodeWithSelector(factory.deployMarket.selector, pWETHSetup)
+            abi.encodeWithSelector(factory.deployMarket.selector, pCBBTCSetup)
         );
-        pWETH = IPToken(factory.getMarket(protocolId, 1));
-        console.log("deployed: %s", address(pWETH));
+        pCBBTC = IPToken(factory.getMarket(protocolId, 1));
+        console.log("deployed: %s", address(pCBBTC));
 
-        console.log("deploying: %s", pSTETHSetup.name);
+        console.log("deploying: %s", pLBTCSetup.name);
         tm.emergencyExecute(
             address(factory),
             0,
-            abi.encodeWithSelector(factory.deployMarket.selector, pSTETHSetup)
+            abi.encodeWithSelector(factory.deployMarket.selector, pLBTCSetup)
         );
-        pSTETH = IPToken(factory.getMarket(protocolId, 2));
-        console.log("deployed: %s", address(pSTETH));
+        pLBTC = IPToken(factory.getMarket(protocolId, 2));
+        console.log("deployed: %s", address(pLBTC));
 
         // step 3 set oracle engine data providers
         IPToken[] memory markets = new IPToken[](3);
         markets[0] = pUSDC;
-        markets[1] = pWETH;
-        markets[2] = pSTETH;
+        markets[1] = pCBBTC;
+        markets[2] = pLBTC;
 
         uint256[] memory caps = new uint256[](3);
         caps[0] = type(uint256).max;
@@ -124,14 +125,14 @@ contract Market is Config {
             address(oe),
             0,
             abi.encodeWithSelector(
-                oe.setAssetConfig.selector, pWETH.asset(), address(mp), address(0), 0, 0
+                oe.setAssetConfig.selector, pCBBTC.asset(), address(mp), address(0), 0, 0
             )
         );
         tm.emergencyExecute(
             address(oe),
             0,
             abi.encodeWithSelector(
-                oe.setAssetConfig.selector, pSTETH.asset(), address(mp), address(0), 0, 0
+                oe.setAssetConfig.selector, pLBTC.asset(), address(mp), address(0), 0, 0
             )
         );
         console.log(
@@ -141,13 +142,13 @@ contract Market is Config {
         );
         console.log(
             "oracle set for %s with price: %s",
-            pWETHSetup.name,
-            oe.getUnderlyingPrice(pWETH)
+            pCBBTCSetup.name,
+            oe.getUnderlyingPrice(pCBBTC)
         );
         console.log(
             "oracle set for %s with price: %s",
-            pSTETHSetup.name,
-            oe.getUnderlyingPrice(pSTETH)
+            pLBTCSetup.name,
+            oe.getUnderlyingPrice(pLBTC)
         );
 
         // step 4 set risk engine config for pTokens
@@ -159,12 +160,12 @@ contract Market is Config {
         tm.emergencyExecute(
             address(re),
             0,
-            abi.encodeWithSelector(re.configureMarket.selector, pWETH, config)
+            abi.encodeWithSelector(re.configureMarket.selector, pCBBTC, config)
         );
         tm.emergencyExecute(
             address(re),
             0,
-            abi.encodeWithSelector(re.configureMarket.selector, pSTETH, config)
+            abi.encodeWithSelector(re.configureMarket.selector, pLBTC, config)
         );
         tm.emergencyExecute(
             address(re),
@@ -174,12 +175,12 @@ contract Market is Config {
         tm.emergencyExecute(
             address(re),
             0,
-            abi.encodeWithSelector(re.setCloseFactor.selector, address(pWETH), 50e16)
+            abi.encodeWithSelector(re.setCloseFactor.selector, address(pCBBTC), 50e16)
         );
         tm.emergencyExecute(
             address(re),
             0,
-            abi.encodeWithSelector(re.setCloseFactor.selector, address(pSTETH), 50e16)
+            abi.encodeWithSelector(re.setCloseFactor.selector, address(pLBTC), 50e16)
         );
         tm.emergencyExecute(
             address(re),
@@ -208,7 +209,7 @@ contract Market is Config {
             )
         );
         tm.emergencyExecute(
-            address(pWETH),
+            address(pCBBTC),
             0,
             abi.encodeWithSelector(
                 IDoubleJumpRateModel.configureInterestRateModel.selector,
@@ -221,7 +222,7 @@ contract Market is Config {
             )
         );
         tm.emergencyExecute(
-            address(pSTETH),
+            address(pLBTC),
             0,
             abi.encodeWithSelector(
                 IDoubleJumpRateModel.configureInterestRateModel.selector,

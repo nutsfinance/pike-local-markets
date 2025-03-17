@@ -21,7 +21,7 @@ contract EMode is Config {
     IRiskEngine re;
     Timelock tm;
 
-    constructor() Config(6, true) {
+    constructor() Config() {
         PATH = "";
     }
 
