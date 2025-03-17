@@ -1,112 +1,16 @@
 include = [
-    # global implementation deployment 
+    # global params 
     # "../global.toml",
 
-    # core factory deployment
+    # core factory
     "../core.toml",
-
-    # pTokens
-    # "./pTokens/usdc.toml",
-    # "./pTokens/weth.toml",
-    # "./pTokens/steth.toml",
-
-    #oracles
-    # "./oracles/oracleEngine.toml",
-    # "./oracles/chainlink.toml",
-    # "./oracles/pyth.toml",
-    # "./oracles/mockProvider.toml",
 ]
 
 [var.owner]
 core_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
-protocol_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
 oracleEngine_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
 chainlinkProvider_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
 pythProvider_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
-
-[var.usdc]
-usdc_decimals = "18"
-usdc_address = "0xf10f12A5cB889CA699017898feE16ce82c9557eD"
-usdc_maxLTV = "<%= parseUnits('75', 16) %>" #75%
-usdc_LLTV = "<%= parseUnits('78', 16) %>" #78%
-usdc_LiqIncentive = "<%= parseUnits('105', 16) %>" #1.08%
-usdc_initial_exchange_rate = "<%= parseUnits('1', 18) %>" # 1e18
-usdc_reserve_factor = "<%= parseUnits('5', 16) %>" # 5%
-usdc_protocol_seize_factor = "<%= parseUnits('1', 16) %>" # 1%
-usdc_max_borrow_rate = "<%= parseUnits('5', 12) %>" # 5e12
-usdc_chainlinkFeed = "0xd30e2101a97dcbAeBCBC04F14C3f624E67A35165"
-usdc_pythID = "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a"
-usdc_maxStale = "<%= MaxUint256 %>"
-usdc_supplyCap = "<%= MaxUint256 %>"
-usdc_borrowCap = "<%= MaxUint256 %>"
-#IRM
-usdc_baseRate = "0"
-usdc_multiplier = "0"
-usdc_firstJumpMultiplier = "<%= parseUnits('6.111111', 16) %>"
-usdc_secondJumpMultiplier = "<%= parseUnits('6', 18) %>"
-usdc_firstKink = "<%= parseUnits('5', 16) %>"
-usdc_secondKink = "<%= parseUnits('95', 16) %>"
-
-[var.weth]
-weth_decimals = "18"
-weth_address = "0x565A622533868FA98d4D0D784712bEBBAba0AA64"
-weth_maxLTV = "<%= parseUnits('80', 16) %>" #80%
-weth_LLTV = "<%= parseUnits('83', 16) %>" #83%
-weth_LiqIncentive = "<%= parseUnits('105', 16) %>" #1.08%
-weth_initial_exchange_rate = "<%= parseUnits('1', 18) %>" # 1e18
-weth_reserve_factor = "<%= parseUnits('5', 16) %>" # 5%
-weth_protocol_seize_factor = "<%= parseUnits('1', 16) %>" # 1%
-weth_max_borrow_rate = "<%= parseUnits('5', 12) %>" # 5e12
-weth_chainlinkFeed = "0x4aDC67696bA383F43DD60A9e78F2C97Fbbfc7cb1"
-weth_pythID = "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
-weth_maxStale = "<%= MaxUint256 %>"
-weth_supplyCap = "<%= MaxUint256 %>"
-weth_borrowCap = "<%= MaxUint256 %>"
-weth_mockPrice = "<%= parseUnits('2000', 6) %>" # 
-#IRM
-weth_baseRate = "0"
-weth_multiplier = "0"
-weth_firstJumpMultiplier = "<%= parseUnits('3', 16) %>"
-weth_secondJumpMultiplier = "<%= parseUnits('8', 18) %>"
-weth_firstKink = "<%= parseUnits('5', 16) %>"
-weth_secondKink = "<%= parseUnits('95', 16) %>"
-
-[var.steth]
-stETH_decimals = "18"
-stETH_address = "0x133D6F8071C028C1F89A70d9D2f25798ec74dD3E"
-stETH_maxLTV = "<%= parseUnits('75', 16) %>" #75%
-stETH_LLTV = "<%= parseUnits('79', 16) %>" #79%
-stETH_LiqIncentive = "<%= parseUnits('105', 16) %>" #1.08%
-stETH_initial_exchange_rate = "<%= parseUnits('1', 18) %>" # 1e18
-stETH_reserve_factor = "<%= parseUnits('5', 16) %>" # 5%
-stETH_protocol_seize_factor = "<%= parseUnits('1', 16) %>" # 1%
-stETH_max_borrow_rate = "<%= parseUnits('5', 12) %>" # 5e12
-stETH_chainlinkFeed = "0x4aDC67696bA383F43DD60A9e78F2C97Fbbfc7cb1"
-stETH_pythID = "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
-stETH_maxStale = "<%= MaxUint256 %>"
-stETH_supplyCap = "<%= MaxUint256 %>"
-stETH_borrowCap = "<%= MaxUint256 %>"
-stETH_mockPrice = "<%= parseUnits('2000', 6) %>" # 
-#IRM
-stETH_baseRate = "0"
-stETH_multiplier = "0"
-stETH_firstJumpMultiplier = "<%= parseUnits('15.555556', 16) %>"
-stETH_secondJumpMultiplier = "<%= parseUnits('5.4545454545', 18) %>"
-stETH_firstKink = "<%= parseUnits('5', 16) %>"
-stETH_secondKink = "<%= parseUnits('50', 16) %>"
-
-[var.params]
-core_reserveManager = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
-core_reserveWithdrawer = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
-core_supplyGuard = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
-core_borrowGuard = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
-core_configurator = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
-core_pauseGuard = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
-core_closeFactor = "<%= parseUnits('50', 16) %>"
-
-[var.salt]
-salt = "main"
-
-[var.oracle]
-chianlinkSequencerFeed = "0xBCF85224fc0756B9Fa45aA7892530B47e10b6433"
-pythAddress = "0xA2aa501b19aff244D90cc15a4Cf739D2725B5729"
+usdc_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+weth_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
+steth_owner = "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"

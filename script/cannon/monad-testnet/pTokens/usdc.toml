@@ -1,6 +1,0 @@
-[invoke.chainlink_set_usdc]
-target = ["chainlinkOracleProvider.Proxy"]
-func = "setAssetConfig"
-fromCall.func = "owner"
-args = ["<%= settings.usdc_address %>", "<%= settings.usdc_chainlinkFeed %>", "<%= MaxUint256 %>"]
-depends = [ "invoke.initialize_chainlink"]

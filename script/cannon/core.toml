@@ -45,4 +45,4 @@ options.initialCallData = "<%= encodeFunctionData({abi: contracts.Factory.abi, f
 options.owner = "<%= settings.core_owner %>"
 options.abi = "<%= JSON.stringify(contracts.Factory.abi) %>"
 options.salt = "Factory"
-
+depends = ['contract.Factory','contract.oracleEngineBeacon', 'contract.reBeacon', 'contract.pTokenBeacon', 'contract.timelockBeacon']

@@ -1,7 +1,7 @@
 name = "pike-markets"
-version = "0.1.0"
-preset = "with-factory"
-description = "Pike markets"
+version = "1.0.0"
+preset = "main"
+description = "Factory based deployment"
 
 [var.roles]
 roles_confRole = "0x434f4e464947555241544f520000000000000000000000000000000000000000"
