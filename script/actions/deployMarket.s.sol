@@ -10,10 +10,9 @@ import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
 import {Timelock} from "@governance/Timelock.sol";
 import {MockTestToken} from "test/mocks/MockToken.sol";
 import {MockProvider} from "test/mocks/MockOracle.sol";
-
 import {Config, console} from "../Config.sol";
 
-contract Market is Config {
+contract DeployMarket is Config {
     struct MarketConfig {
         string name;
         string symbol;
@@ -171,7 +170,7 @@ contract Market is Config {
         string memory chain,
         uint256 protocolId,
         string memory marketKey
-    ) internal returns (bool) {
+    ) internal view returns (bool) {
         bool isDryRun = vm.envBool("DRY_RUN");
         string memory root = vm.projectRoot();
         string memory baseDir = isDryRun
@@ -229,28 +228,22 @@ contract Market is Config {
 
         console.log("Updating deployment data at: %s", deploymentPath);
 
-        // Read existing JSON if it exists, otherwise start with an empty object
         string memory existingJson;
         if (vm.exists(deploymentPath)) {
             existingJson = vm.readFile(deploymentPath);
         } else {
-            existingJson = "{}"; // Start with empty object if file doesn't exist
+            existingJson = "{}";
         }
 
-        // Use Foundry's vm.serialize* to build the updated JSON
-        string memory obj = "deploymentData"; // Temporary object name for serialization
-
-        // Parse existing keys and re-add them to the new JSON
+        string memory obj = "deploymentData";
         string[] memory keys = vm.parseJsonKeys(existingJson, ".");
         for (uint256 i = 0; i < keys.length; i++) {
             string memory key = keys[i];
             if (
                 keccak256(abi.encodePacked(key)) != keccak256(abi.encodePacked(marketKey))
             ) {
-                // Skip if key matches the new marketKey
                 bytes memory valueBytes =
                     vm.parseJson(existingJson, string(abi.encodePacked(".", key)));
-                // Determine type and serialize accordingly
                 if (startsWith(key, "market-")) {
                     address addr = abi.decode(valueBytes, (address));
                     vm.serializeAddress(obj, key, addr);
@@ -279,12 +272,7 @@ contract Market is Config {
             }
         }
 
-        // Add or update the new market key-value pair
         string memory updatedJson = vm.serializeAddress(obj, marketKey, marketAddress);
-
-        console.log("Updated JSON: %s", updatedJson);
-
-        // Write the updated JSON back to the file
         vm.writeFile(deploymentPath, updatedJson);
         console.log(
             "Updated deployment data with %s at %s", marketKey, vm.toString(marketAddress)
@@ -295,6 +283,12 @@ contract Market is Config {
         string memory chain = vm.envString("CHAIN");
         uint256 chainId = vm.envUint("CHAIN_ID");
         uint256 protocolId = vm.envUint("PROTOCOL_ID");
+        string memory version = vm.envString("VERSION");
+        bool dryRun = vm.envBool("DRY_RUN");
+        address safeAddress = vm.envOr("SAFE_ADDRESS", address(0));
+        bool useSafe = safeAddress != address(0);
+
+        console.log("safeAddress: %s, useSafe: %s", safeAddress, useSafe);
 
         (
             address factoryAddress,
@@ -313,15 +307,27 @@ contract Market is Config {
 
         MarketConfig[] memory marketConfigs = readMarketConfigs(chain, protocolId);
 
-        vm.startBroadcast(adminPrivateKey);
-        deployAllMarkets(chain, protocolId, marketConfigs);
-        vm.stopBroadcast();
+        configureSafe(safeAddress, chainId);
+
+        if (!dryRun) {
+            if (useSafe) {
+                deployAllMarkets(chain, protocolId, marketConfigs, true);
+            } else {
+                string memory privKey = vm.envString("PRIVATE_KEY");
+                uint256 privateKey = vm.parseUint(privKey);
+                adminPrivateKey = privateKey;
+                deployAllMarkets(chain, protocolId, marketConfigs, false);
+            }
+        } else {
+            deployAllMarkets(chain, protocolId, marketConfigs, useSafe);
+        }
     }
 
     function deployAllMarkets(
         string memory chain,
         uint256 protocolId,
-        MarketConfig[] memory marketConfigs
+        MarketConfig[] memory marketConfigs,
+        bool useSafe
     ) internal {
         for (uint256 i = 0; i < marketConfigs.length; i++) {
             MarketConfig memory config = marketConfigs[i];
@@ -333,15 +339,15 @@ contract Market is Config {
                 continue;
             }
 
-            IPToken pToken = deployMarket(protocolId, config);
-            configureMarket(pToken, config);
-            setMarketCaps(pToken, config);
-            configureInterestRateModel(pToken, config);
+            IPToken pToken = deployMarket(protocolId, config, useSafe);
+            configureMarket(pToken, config, useSafe);
+            setMarketCaps(pToken, config, useSafe);
+            configureInterestRateModel(pToken, config, useSafe);
             updateDeploymentData(chain, protocolId, marketKey, address(pToken));
         }
     }
 
-    function deployMarket(uint256 protocolId, MarketConfig memory config)
+    function deployMarket(uint256 protocolId, MarketConfig memory config, bool useSafe)
         internal
         returns (IPToken)
     {
@@ -358,34 +364,49 @@ contract Market is Config {
         );
 
         console.log("Deploying market: %s", config.name);
-        tm.emergencyExecute(
-            address(factory),
-            0,
-            abi.encodeWithSelector(factory.deployMarket.selector, pTokenSetup)
-        );
+        bytes memory deployCalldata =
+            abi.encodeWithSelector(factory.deployMarket.selector, pTokenSetup);
 
-        IPToken pToken = IPToken(
-            factory.getMarket(
+        address pTokenAddress;
+        if (useSafe) {
+            vm.prank(address(tm));
+            (bool success, bytes memory returnData) =
+                address(factory).call(deployCalldata);
+            require(success, "Simulation failed: deployMarket reverted");
+            pTokenAddress = abi.decode(returnData, (address));
+
+            executeSingle(
+                address(tm),
+                0,
+                abi.encodeWithSelector(
+                    tm.emergencyExecute.selector, address(factory), 0, deployCalldata
+                ),
+                true
+            ); // Send to Safe if not dry-run (handled by SafeScript)
+        } else {
+            vm.startBroadcast(adminPrivateKey);
+            tm.emergencyExecute(address(factory), 0, deployCalldata);
+            vm.stopBroadcast();
+            pTokenAddress = factory.getMarket(
                 protocolId, factory.getProtocolInfo(protocolId).numOfMarkets - 1
-            )
-        );
-        console.log("Deployed: %s at %s", config.name, address(pToken));
+            );
+        }
 
+        IPToken pToken = IPToken(pTokenAddress);
+        console.log("Deployed: %s at %s", config.name, address(pToken));
         return pToken;
     }
 
-    function configureMarket(IPToken pToken, MarketConfig memory config) internal {
-        tm.emergencyExecute(
-            address(oe),
+    function configureMarket(IPToken pToken, MarketConfig memory config, bool useSafe)
+        internal
+    {
+        bytes memory oracleCalldata = abi.encodeWithSelector(
+            oe.setAssetConfig.selector,
+            pToken.asset(),
+            config.mainProvider,
+            config.fallbackProvider,
             0,
-            abi.encodeWithSelector(
-                oe.setAssetConfig.selector,
-                pToken.asset(),
-                config.mainProvider,
-                config.fallbackProvider,
-                0,
-                0
-            )
+            0
         );
 
         IRiskEngine.BaseConfiguration memory riskConfig = IRiskEngine.BaseConfiguration(
@@ -394,55 +415,118 @@ contract Market is Config {
             config.liquidationIncentiveMantissa
         );
 
-        tm.emergencyExecute(
-            address(re),
-            0,
-            abi.encodeWithSelector(re.configureMarket.selector, pToken, riskConfig)
+        bytes memory riskConfigCalldata =
+            abi.encodeWithSelector(re.configureMarket.selector, pToken, riskConfig);
+
+        bytes memory closeFactorCalldata = abi.encodeWithSelector(
+            re.setCloseFactor.selector, address(pToken), config.closeFactor
         );
-        tm.emergencyExecute(
-            address(re),
-            0,
-            abi.encodeWithSelector(
-                re.setCloseFactor.selector, address(pToken), config.closeFactor
-            )
-        );
+
+        if (useSafe) {
+            executeSingle(
+                address(tm),
+                0,
+                abi.encodeWithSelector(
+                    tm.emergencyExecute.selector, address(oe), 0, oracleCalldata
+                ),
+                true
+            );
+
+            executeSingle(
+                address(tm),
+                0,
+                abi.encodeWithSelector(
+                    tm.emergencyExecute.selector, address(re), 0, riskConfigCalldata
+                ),
+                true
+            );
+
+            executeSingle(
+                address(tm),
+                0,
+                abi.encodeWithSelector(
+                    tm.emergencyExecute.selector, address(re), 0, closeFactorCalldata
+                ),
+                true
+            );
+        } else {
+            vm.startBroadcast(adminPrivateKey);
+            tm.emergencyExecute(address(oe), 0, oracleCalldata);
+            tm.emergencyExecute(address(re), 0, riskConfigCalldata);
+            tm.emergencyExecute(address(re), 0, closeFactorCalldata);
+            vm.stopBroadcast();
+        }
     }
 
-    function setMarketCaps(IPToken pToken, MarketConfig memory config) internal {
+    function setMarketCaps(IPToken pToken, MarketConfig memory config, bool useSafe)
+        internal
+    {
         IPToken[] memory markets = new IPToken[](1);
         markets[0] = pToken;
         uint256[] memory caps = new uint256[](1);
 
         caps[0] = config.supplyCap;
-        tm.emergencyExecute(
-            address(re),
-            0,
-            abi.encodeWithSelector(re.setMarketSupplyCaps.selector, markets, caps)
-        );
+        bytes memory supplyCapCalldata =
+            abi.encodeWithSelector(re.setMarketSupplyCaps.selector, markets, caps);
 
         caps[0] = config.borrowCap;
-        tm.emergencyExecute(
-            address(re),
-            0,
-            abi.encodeWithSelector(re.setMarketBorrowCaps.selector, markets, caps)
-        );
+        bytes memory borrowCapCalldata =
+            abi.encodeWithSelector(re.setMarketBorrowCaps.selector, markets, caps);
+
+        if (useSafe) {
+            executeSingle(
+                address(tm),
+                0,
+                abi.encodeWithSelector(
+                    tm.emergencyExecute.selector, address(re), 0, supplyCapCalldata
+                ),
+                true
+            );
+
+            executeSingle(
+                address(tm),
+                0,
+                abi.encodeWithSelector(
+                    tm.emergencyExecute.selector, address(re), 0, borrowCapCalldata
+                ),
+                true
+            );
+        } else {
+            vm.startBroadcast(adminPrivateKey);
+            tm.emergencyExecute(address(re), 0, supplyCapCalldata);
+            tm.emergencyExecute(address(re), 0, borrowCapCalldata);
+            vm.stopBroadcast();
+        }
     }
 
-    function configureInterestRateModel(IPToken pToken, MarketConfig memory config)
-        internal
-    {
-        tm.emergencyExecute(
-            address(pToken),
-            0,
-            abi.encodeWithSelector(
-                IDoubleJumpRateModel.configureInterestRateModel.selector,
-                config.baseRatePerYear,
-                config.multiplierPerYear,
-                config.firstJumpMultiplierPerYear,
-                config.secondJumpMultiplierPerYear,
-                config.firstKink,
-                config.secondKink
-            )
+    function configureInterestRateModel(
+        IPToken pToken,
+        MarketConfig memory config,
+        bool useSafe
+    ) internal {
+        bytes memory irmCalldata = abi.encodeWithSelector(
+            IDoubleJumpRateModel.configureInterestRateModel.selector,
+            config.baseRatePerYear,
+            config.multiplierPerYear,
+            config.firstJumpMultiplierPerYear,
+            config.secondJumpMultiplierPerYear,
+            config.firstKink,
+            config.secondKink
         );
+
+        if (useSafe) {
+            executeSingle(
+                address(tm),
+                0,
+                abi.encodeWithSelector(
+                    tm.emergencyExecute.selector, address(pToken), 0, irmCalldata
+                ),
+                true
+            );
+        } else {
+            vm.startBroadcast(adminPrivateKey);
+            tm.emergencyExecute(address(pToken), 0, irmCalldata);
+            vm.stopBroadcast();
+        }
     }
 }

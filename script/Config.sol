@@ -3,8 +3,9 @@ pragma solidity 0.8.28;
 
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
+import {SafeScript} from "./SafeScript.sol";
 
-contract Config is Script {
+contract Config is Script, SafeScript {
     uint256 deployerPrivateKey;
     uint256 adminPrivateKey;
 
@@ -92,9 +93,7 @@ contract Config is Script {
         timelockAddress = vm.parseJsonAddress(json, ".timelock");
     }
 
-    function writeJsonFile(string memory filePath, string memory obj, string memory json)
-        internal
-    {
+    function writeJsonFile(string memory filePath, string memory json) internal {
         if (vm.exists(filePath)) {
             console.log("File %s already exists, skipping", filePath);
             return;

@@ -51,7 +51,7 @@ contract LocalIRM is TestLocal {
         uint256 secondKinkLocal = 0;
 
         // "ZeroValue()" selector
-        vm.expectRevert(0x7c946ed7);
+        vm.expectRevert(bytes4(0x7c946ed7));
         pUSDCIRM.configureInterestRateModel(
             baseRatePerYear,
             multiplierPerYear,
@@ -66,7 +66,7 @@ contract LocalIRM is TestLocal {
         vm.prank(getAdmin());
 
         // "InvalidMultiplierForNonZeroBaseRate()" selector
-        vm.expectRevert(0x435fecd9);
+        vm.expectRevert(bytes4(0x435fecd9));
         pUSDCIRM.configureInterestRateModel(
             1,
             multiplierPerYear,
@@ -100,13 +100,13 @@ contract LocalIRM is TestLocal {
         vm.startPrank(getAdmin());
 
         // "InvalidKinkOrMultiplierOrder()" selector
-        vm.expectRevert(0x397bc3d5);
+        vm.expectRevert(bytes4(0x397bc3d5));
         pUSDCIRM.configureInterestRateModel(
             baseRatePerYear, 0, jumpMultiplierPerYear2, multiplierPerYear, 0, kink2
         );
 
         // "InvalidKinkOrMultiplierOrder()" selector
-        vm.expectRevert(0x397bc3d5);
+        vm.expectRevert(bytes4(0x397bc3d5));
         pUSDCIRM.configureInterestRateModel(
             0, 0, multiplierPerYear, jumpMultiplierPerYear2, kink2, kink2
         );

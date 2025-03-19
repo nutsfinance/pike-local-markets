@@ -8,7 +8,6 @@ import {IFactory} from "@factory/interfaces/IFactory.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
 import {Timelock} from "@governance/Timelock.sol";
-
 import {Config, console} from "../Config.sol";
 
 contract DeployProtocol is Config {
@@ -44,9 +43,8 @@ contract DeployProtocol is Config {
     }
 
     function readProtocolInfo() internal view returns (ProtocolInfo memory) {
-        string memory configPath = vm.envString("CONFIG_PATH"); // Set by Bash script
+        string memory configPath = vm.envString("CONFIG_PATH");
         string memory json = vm.readFile(configPath);
-
         return ProtocolInfo({
             initialGovernor: vm.parseJsonAddress(json, ".protocol-info.initialGovernor"),
             ownerShareMantissa: vm.parseJsonUint(json, ".protocol-info.ownerShareMantissa"),
@@ -88,7 +86,6 @@ contract DeployProtocol is Config {
         vm.createDir(protocolDir, true);
         string memory outputPath =
             string(abi.encodePacked(protocolDir, "/deploymentData.json"));
-
         string memory obj = "deployData";
         vm.serializeUint(obj, "protocolId", deployData.protocolId);
         vm.serializeAddress(obj, "factoryAddress", deployData.factoryAddress);
@@ -98,29 +95,81 @@ contract DeployProtocol is Config {
         vm.serializeAddress(obj, "initialGovernor", ADMIN);
         vm.serializeUint(obj, "deploymentTimestamp", block.timestamp);
         string memory jsonContent = vm.serializeBool(obj, "isDryRun", deployData.isDryRun);
-
-        writeJsonFile(outputPath, obj, jsonContent);
+        vm.writeJson(jsonContent, outputPath);
     }
 
-    function deployProtocolComponents(uint256 protocolId) internal {
+    function deployProtocolComponents(uint256 protocolId, bool useSafe) internal {
         ProtocolInfo memory info = readProtocolInfo();
 
         console.log("Deploying protocol: %s", protocolId);
-        factory.deployProtocol(
-            info.initialGovernor, info.ownerShareMantissa, info.configuratorShareMantissa
+        bytes memory deployCalldata = abi.encodeWithSelector(
+            IFactory.deployProtocol.selector,
+            info.initialGovernor,
+            info.ownerShareMantissa,
+            info.configuratorShareMantissa
         );
 
-        oe = IOracleEngine(factory.getProtocolInfo(protocolId).oracleEngine);
-        re = IRiskEngine(factory.getProtocolInfo(protocolId).riskEngine);
-        tm = Timelock(payable(factory.getProtocolInfo(protocolId).timelock));
+        address riskEngine;
+        address oracleEngine;
+        address payable governorTimelock;
 
-        console.log("Deployed risk engine: %s", address(re));
-        console.log("Deployed oracle engine: %s", address(oe));
-        console.log("Deployed timelock: %s", address(tm));
+        if (useSafe) {
+            // Simulate the call as the current owner
+            vm.prank(vm.envOr("SAFE_ADDRESS", address(0)));
+            (bool success, bytes memory returnData) =
+                deployData.factoryAddress.call(deployCalldata);
+            require(success, "Simulation failed: deployProtocol reverted");
 
-        deployData.riskEngine = address(re);
-        deployData.oracleEngine = address(oe);
-        deployData.timelock = address(tm);
+            // Decode returnData to get predicted addresses
+            (riskEngine, oracleEngine, governorTimelock) =
+                abi.decode(returnData, (address, address, address));
+
+            // Submit to Safe Transaction Service if not dry-run
+            executeSingle(
+                deployData.factoryAddress, 0, deployCalldata, !deployData.isDryRun
+            );
+
+            re = IRiskEngine(riskEngine);
+            oe = IOracleEngine(oracleEngine);
+            tm = Timelock(governorTimelock);
+
+            console.log("Predicted risk engine: %s", address(re));
+            console.log("Predicted oracle engine: %s", address(oe));
+            console.log("Predicted timelock: %s", address(tm));
+
+            deployData.riskEngine = address(re);
+            deployData.oracleEngine = address(oe);
+            deployData.timelock = address(tm);
+
+            if (!deployData.isDryRun) {
+                console.log(
+                    "Transaction sent to Safe. Addresses are predictions until executed."
+                );
+                console.log(
+                    "Ensure the Safe is the factory owner or has permission to call deployProtocol."
+                );
+            }
+        } else {
+            vm.startBroadcast(adminPrivateKey);
+            (riskEngine, oracleEngine, governorTimelock) = factory.deployProtocol(
+                info.initialGovernor,
+                info.ownerShareMantissa,
+                info.configuratorShareMantissa
+            );
+            vm.stopBroadcast();
+
+            re = IRiskEngine(riskEngine);
+            oe = IOracleEngine(oracleEngine);
+            tm = Timelock(governorTimelock);
+
+            console.log("Deployed risk engine: %s", address(re));
+            console.log("Deployed oracle engine: %s", address(oe));
+            console.log("Deployed timelock: %s", address(tm));
+
+            deployData.riskEngine = address(re);
+            deployData.oracleEngine = address(oe);
+            deployData.timelock = address(tm);
+        }
     }
 
     function run() public payable {
@@ -128,6 +177,8 @@ contract DeployProtocol is Config {
         uint256 chainId = vm.envUint("CHAIN_ID");
         string memory version = vm.envString("VERSION");
         bool dryRun = vm.envBool("DRY_RUN");
+        address safeAddress = vm.envOr("SAFE_ADDRESS", address(0));
+        bool useSafe = safeAddress != address(0);
 
         string memory path = string(
             abi.encodePacked("./deployments/", version, "/", chain, "/factory.Proxy.json")
@@ -153,15 +204,16 @@ contract DeployProtocol is Config {
         deployData.protocolId = protocolId;
         deployData.isDryRun = dryRun;
 
-        if (!dryRun) {
+        configureSafe(safeAddress, chainId);
+
+        if (useSafe && !dryRun) {
             string memory privKey = vm.envString("PRIVATE_KEY");
             uint256 privateKey = vm.parseUint(privKey);
             adminPrivateKey = privateKey;
+            deployProtocolComponents(protocolId, true);
+        } else {
+            deployProtocolComponents(protocolId, useSafe);
         }
-
-        vm.startBroadcast(adminPrivateKey);
-        deployProtocolComponents(protocolId);
-        vm.stopBroadcast();
 
         console.log("Writing deployment data to JSON file...");
         writeDeploymentData();

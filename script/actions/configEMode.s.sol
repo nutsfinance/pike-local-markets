@@ -25,7 +25,7 @@ contract EMode is Config {
 
     constructor() Config() {}
 
-    function readEModeConfigs() internal returns (EModeConfig[] memory) {
+    function readEModeConfigs() internal view returns (EModeConfig[] memory) {
         string memory configPath = vm.envString("CONFIG_PATH");
         if (!vm.exists(configPath)) {
             console.log(
@@ -126,6 +126,7 @@ contract EMode is Config {
 
     function isEModeConfigured(string memory chain, uint256 protocolId, uint8 categoryId)
         internal
+        view
         returns (bool)
     {
         string memory emodePath = getEModeFilePath(chain, protocolId, categoryId);
@@ -204,7 +205,7 @@ contract EMode is Config {
             obj, "liquidationIncentiveMantissa", riskConfig.liquidationIncentiveMantissa
         );
 
-        writeJsonFile(emodePath, obj, finalJson);
+        writeJsonFile(emodePath, finalJson);
     }
 
     function run() public payable {

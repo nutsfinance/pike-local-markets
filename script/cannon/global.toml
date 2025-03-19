@@ -1,4 +1,4 @@
-name = "pike-markets"
+name = "pike-markets-test"
 version = "1.0.0"
 preset = "main"
 description = "Factory based deployment"
@@ -14,31 +14,31 @@ roles_reserveWithdrawerRole = "0x524553455256455f5749544844524157455200000000000
 
 [contract.InitialModuleBeacon]
 artifact = "src/pike-market/modules/InitialModuleBeacon.sol:InitialModuleBeacon"
-from = "<%= settings.core_owner %>"
+from = "<%= settings.deployer %>"
 
 [contract.DoubleJumpRateModel]
 artifact = "DoubleJumpRateModel"
-from = "<%= settings.core_owner %>"
+from = "<%= settings.deployer %>"
 
 [contract.RBACModule]
 artifact = "RBACModule"
-from = "<%= settings.core_owner %>"
+from = "<%= settings.deployer %>"
 
 [contract.PTokenModule]
 artifact = "PTokenModule"
-from = "<%= settings.core_owner %>"
+from = "<%= settings.deployer %>"
 
 [contract.RiskEngineModule]
 artifact = "RiskEngineModule"
-from = "<%= settings.core_owner %>"
+from = "<%= settings.deployer %>"
 
 [contract.OracleEngine]
 artifact = "OracleEngine"
-from = "<%= settings.core_owner %>"
+from = "<%= settings.deployer %>"
 
 [contract.Timelock]
 artifact = "Timelock"
-from = "<%= settings.core_owner %>"
+from = "<%= settings.deployer %>"
 
 #PToken
 [router.PTokenRouter]
@@ -48,7 +48,7 @@ contracts = [
     "RBACModule",
     "PTokenModule",
 ]
-from = "<%= settings.core_owner %>"
+from = "<%= settings.deployer %>"
 
 #RiskEngine
 [router.RiskEngineRouter]
@@ -57,4 +57,4 @@ contracts = [
     "RBACModule",
     "RiskEngineModule",
 ]
-from = "<%= settings.core_owner %>"
+from = "<%= settings.deployer %>"

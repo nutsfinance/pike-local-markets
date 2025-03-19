@@ -9,6 +9,7 @@ SCRIPT_PATH=""
 CONFIG_PATH="./script/configs"
 FORCE=false
 PROTOCOL_ID=""
+SAFE_ADDRESS=""
 
 # Chain configurations
 declare -a MAINNET_CHAINS=("base-mainnet" "arb-mainnet" "op-mainnet")
@@ -43,6 +44,7 @@ show_help() {
     echo "  --script SCRIPT       Path to Solidity script (required)"
     echo "  --config-path PATH    Config directory (default: $CONFIG_PATH)"
     echo "  --protocol-id ID      Protocol ID for deployment"
+    echo "  --safe-address ADDR   Safe address for Safe-based deployment"
     echo "Available mainnet chains: ${MAINNET_CHAINS[*]}"
     echo "Available testnet chains: ${TESTNET_CHAINS[*]}"
     exit 0
@@ -66,6 +68,7 @@ while [[ $# -gt 0 ]]; do
         --script) SCRIPT_PATH="$2"; shift ;;
         --config-path) CONFIG_PATH="$2"; shift ;;
         --protocol-id) PROTOCOL_ID="$2"; shift ;;
+        --safe-address) SAFE_ADDRESS="$2"; shift ;;
         *) echo "Unknown option: $1"; show_help ;;
     esac
     shift
@@ -119,11 +122,22 @@ check_config_exists() {
 }
 
 # Handle private key for broadcasting
-if [[ "$DRY_RUN" == "false" && -z "$PRIVATE_KEY" ]]; then
-    echo -n "Enter private key for deployments: "
-    read -s PRIVATE_KEY
-    echo
-    [[ -z "$PRIVATE_KEY" ]] && { echo "Error: Private key required for broadcasting"; exit 1; }
+if [[ "$DRY_RUN" == "false" ]]; then
+    if [[ -n "$SAFE_ADDRESS" ]]; then
+        # Safe mode: WALLET_TYPE and PRIVATE_KEY/MNEMONIC_INDEX are set separately
+        WALLET_TYPE="${WALLET_TYPE:-local}"
+        if [[ "$WALLET_TYPE" == "local" && -z "$PRIVATE_KEY" ]]; then
+            echo -n "Enter private key for Safe signing: "
+            read -s PRIVATE_KEY
+            echo
+            [[ -z "$PRIVATE_KEY" ]] && { echo "Error: Private key required for Safe signing"; exit 1; }
+        fi
+    elif [[ -z "$PRIVATE_KEY" ]]; then
+        echo -n "Enter private key for EOA deployments: "
+        read -s PRIVATE_KEY
+        echo
+        [[ -z "$PRIVATE_KEY" ]] && { echo "Error: Private key required for broadcasting"; exit 1; }
+    fi
 fi
 
 # Default PROTOCOL_ID to 1 if not provided
@@ -135,10 +149,11 @@ echo "Script: $SCRIPT_NAME"
 echo "Network: $NETWORK"
 echo "Mode: $( [[ "$DRY_RUN" == "true" ]] && echo "Dry run" || echo "Broadcasting" )"
 echo "Protocol ID: $PROTOCOL_ID"
+[[ -n "$SAFE_ADDRESS" ]] && echo "Safe Address: $SAFE_ADDRESS" || echo "Using EOA mode"
 echo "Available chains: ${CHAINS[*]}"
 [[ ${#SELECTED_CHAINS[@]} -gt 0 ]] && echo "Selected chains: ${SELECTED_CHAINS[*]}"
 [[ ${#SKIP_CHAINS[@]} -gt 0 ]] && echo "Skipped chains: ${SKIP_CHAINS[*]}"
-[[ "$DRY_RUN" == "false" ]] && echo "Private key: ${PRIVATE_KEY:0:6}...${PRIVATE_KEY: -4}"
+[[ "$DRY_RUN" == "false" && -z "$SAFE_ADDRESS" ]] && echo "Private key: ${PRIVATE_KEY:0:6}...${PRIVATE_KEY: -4}"
 
 # Run deployments
 for chain in "${CHAINS[@]}"; do
@@ -153,22 +168,38 @@ for chain in "${CHAINS[@]}"; do
         mkdir -p "$log_dir"
         log_file="$log_dir/${SCRIPT_BASE_NAME}_$(date +%Y%m%d_%H%M%S).log"
         
-        export CHAIN="$chain"
-        export CHAIN_ID="$chain_id"
-        export VERSION="${VERSION:-1.0.0}"
-        export DRY_RUN="$DRY_RUN"
-        export CONFIG_PATH="$CONFIG_PATH/$chain/protocol-$PROTOCOL_ID.json"
-        export PROTOCOL_ID="$PROTOCOL_ID"
+        # Set environment variables
+        env_vars="CHAIN=$chain CHAIN_ID=$chain_id VERSION=${VERSION:-1.0.0} DRY_RUN=$DRY_RUN CONFIG_PATH=$CONFIG_PATH/$chain/protocol-$PROTOCOL_ID.json PROTOCOL_ID=$PROTOCOL_ID"
+        if [[ -n "$SAFE_ADDRESS" ]]; then
+            env_vars="$env_vars SAFE_ADDRESS=$SAFE_ADDRESS"
+        fi
         
         cmd="forge script $SCRIPT_PATH -vvv"
-        [[ "$DRY_RUN" == "false" ]] && { export PRIVATE_KEY="$PRIVATE_KEY"; cmd="$cmd --broadcast"; }
+        if [[ "$DRY_RUN" == "false" ]]; then
+            if [[ -n "$SAFE_ADDRESS" ]]; then
+                env_vars="$env_vars WALLET_TYPE=${WALLET_TYPE:-local}"
+                [[ "$WALLET_TYPE" == "local" ]] && env_vars="$env_vars PRIVATE_KEY=$PRIVATE_KEY"
+                [[ "$WALLET_TYPE" == "ledger" ]] && env_vars="$env_vars MNEMONIC_INDEX=${MNEMONIC_INDEX:-0}"
+                cmd="$cmd --broadcast"
+            else
+                env_vars="$env_vars PRIVATE_KEY=$PRIVATE_KEY"
+                cmd="$cmd --broadcast"
+            fi
+        fi
         
-        echo "Running: $cmd"
+        # Use env to ensure variables are passed
+        full_cmd="env $env_vars $cmd"
+        
+        echo "Running: $full_cmd"
         echo "Output saved to: $log_file"
-        eval "$cmd" 2>&1 | tee "$log_file"
+        if [[ "$SUDO" == "true" ]]; then
+            sudo -E bash -c "$full_cmd" 2>&1 | tee "$log_file"
+        else
+            eval "$full_cmd" 2>&1 | tee "$log_file"
+        fi
         [[ ${PIPESTATUS[0]} -eq 0 ]] && echo "Deployment for $chain completed successfully" || echo "Deployment for $chain failed"
         
-        unset CHAIN CHAIN_ID CONFIG_PATH DRY_RUN PRIVATE_KEY PROTOCOL_ID
+        unset CHAIN CHAIN_ID CONFIG_PATH DRY_RUN PRIVATE_KEY PROTOCOL_ID SAFE_ADDRESS WALLET_TYPE MNEMONIC_INDEX
     else
         echo "Skipping deployment for $chain"
     fi
