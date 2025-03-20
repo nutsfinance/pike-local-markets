@@ -7,7 +7,6 @@ import {IDoubleJumpRateModel} from "@interfaces/IDoubleJumpRateModel.sol";
 import {IFactory} from "@factory/interfaces/IFactory.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {Timelock} from "@governance/Timelock.sol";
-
 import {Config, console} from "../Config.sol";
 
 contract EMode is Config {
@@ -138,17 +137,7 @@ contract EMode is Config {
         view
         returns (string memory)
     {
-        bool isDryRun = vm.envBool("DRY_RUN");
-        string memory root = vm.projectRoot();
-        string memory baseDir = isDryRun
-            ? string(
-                abi.encodePacked(
-                    root, "/deployments/", vm.envString("VERSION"), "/", chain, "/dry-run"
-                )
-            )
-            : string(
-                abi.encodePacked(root, "/deployments/", vm.envString("VERSION"), "/", chain)
-            );
+        string memory baseDir = getBaseDir(chain, vm.envBool("DRY_RUN"));
         return string(
             abi.encodePacked(
                 baseDir,
@@ -212,6 +201,13 @@ contract EMode is Config {
         string memory chain = vm.envString("CHAIN");
         uint256 chainId = vm.envUint("CHAIN_ID");
         uint256 protocolId = vm.envUint("PROTOCOL_ID");
+        string memory version = vm.envString("VERSION");
+        bool dryRun = vm.envBool("DRY_RUN");
+        address safeAddress = vm.envOr("SAFE_ADDRESS", address(0));
+        bool useSafe = safeAddress != address(0);
+
+        console.log("safeAddress: %s, useSafe: %s", safeAddress, useSafe);
+        console.log("Dry run: %s", dryRun);
 
         (address factoryAddress, address riskEngineAddress,, address timelockAddress) =
             readDeploymentData(chain, protocolId);
@@ -229,15 +225,17 @@ contract EMode is Config {
             return;
         }
 
-        vm.startBroadcast(adminPrivateKey);
-        configureAllEModes(emodeConfigs, chain, protocolId);
-        vm.stopBroadcast();
+        configureSafe(safeAddress, chainId);
+
+        configureAllEModes(emodeConfigs, chain, protocolId, useSafe, dryRun);
     }
 
     function configureAllEModes(
         EModeConfig[] memory emodeConfigs,
         string memory chain,
-        uint256 protocolId
+        uint256 protocolId,
+        bool useSafe,
+        bool dryRun
     ) internal {
         for (uint256 i = 0; i < emodeConfigs.length; i++) {
             if (isEModeConfigured(chain, protocolId, emodeConfigs[i].categoryId)) {
@@ -252,8 +250,12 @@ contract EMode is Config {
                 emodeConfigs[i].ptokens,
                 emodeConfigs[i].collateralPermissions,
                 emodeConfigs[i].borrowPermissions,
-                emodeConfigs[i].riskConfig
+                emodeConfigs[i].riskConfig,
+                useSafe,
+                dryRun
             );
+
+            console.log("Writing EMode data for category %s", emodeConfigs[i].categoryId);
             writeEModeData(
                 chain,
                 protocolId,
@@ -263,6 +265,11 @@ contract EMode is Config {
                 emodeConfigs[i].borrowPermissions,
                 emodeConfigs[i].riskConfig
             );
+            if (useSafe) {
+                console.log(
+                    "Warning: EMode data written, but Safe transactions are pending approval"
+                );
+            }
         }
     }
 
@@ -271,7 +278,9 @@ contract EMode is Config {
         address[] memory ptokens,
         bool[] memory collateralPermissions,
         bool[] memory borrowPermissions,
-        IRiskEngine.BaseConfiguration memory config
+        IRiskEngine.BaseConfiguration memory config,
+        bool useSafe,
+        bool dryRun
     ) internal {
         console.log("=== Adding new EMode with ID %s ===", categoryId);
         for (uint256 i = 0; i < ptokens.length; i++) {
@@ -283,23 +292,62 @@ contract EMode is Config {
             );
         }
 
-        tm.emergencyExecute(
-            address(re),
-            0,
-            abi.encodeWithSelector(
-                re.supportEMode.selector,
-                categoryId,
-                true,
-                ptokens,
-                collateralPermissions,
-                borrowPermissions
-            )
+        bytes memory supportCalldata = abi.encodeWithSelector(
+            re.supportEMode.selector,
+            categoryId,
+            true,
+            ptokens,
+            collateralPermissions,
+            borrowPermissions
         );
 
-        tm.emergencyExecute(
-            address(re),
-            0,
-            abi.encodeWithSelector(re.configureEMode.selector, categoryId, config)
-        );
+        bytes memory configCalldata =
+            abi.encodeWithSelector(re.configureEMode.selector, categoryId, config);
+
+        if (useSafe) {
+            // Simulate supportEMode call
+            vm.prank(address(tm));
+            (bool supportSuccess,) = address(re).call(supportCalldata);
+            require(supportSuccess, "Simulation failed: supportEMode reverted");
+
+            // Simulate configureEMode call
+            vm.prank(address(tm));
+            (bool configSuccess,) = address(re).call(configCalldata);
+            require(configSuccess, "Simulation failed: configureEMode reverted");
+
+            if (!dryRun) {
+                // Submit to Safe via Timelock only if not dry-run
+                executeSingle(
+                    address(tm),
+                    0,
+                    abi.encodeWithSelector(
+                        tm.emergencyExecute.selector, address(re), 0, supportCalldata
+                    ),
+                    true
+                );
+
+                executeSingle(
+                    address(tm),
+                    0,
+                    abi.encodeWithSelector(
+                        tm.emergencyExecute.selector, address(re), 0, configCalldata
+                    ),
+                    true
+                );
+                console.log("Submitted Safe transactions for EMode %s", categoryId);
+            } else {
+                console.log("Dry run: Skipping Safe submission for EMode %s", categoryId);
+            }
+        } else {
+            if (!dryRun) {
+                vm.startBroadcast(adminPrivateKey);
+                tm.emergencyExecute(address(re), 0, supportCalldata);
+                tm.emergencyExecute(address(re), 0, configCalldata);
+                vm.stopBroadcast();
+                console.log("Broadcasted EMode %s configuration via EOA", categoryId);
+            } else {
+                console.log("Dry run: Skipping EOA broadcast for EMode %s", categoryId);
+            }
+        }
     }
 }
