@@ -5,6 +5,7 @@ DRY_RUN=false
 VERSION="v1.0.0"
 PRIVATE_KEY=""
 NETWORK="testnet"  # Default to testnet
+UPGRADE=false      # New flag for upgrade mode
 
 # Chain configurations
 # Format: [network]-[chain]
@@ -32,6 +33,7 @@ show_help() {
     echo "Options:"
     echo "  -h, --help                 Show this help message"
     echo "  -d, --dry-run              Enable dry run mode"
+    echo "  -u, --upgrade              Use global.toml for upgrades instead of chain-specific TOML"
     echo "  -v, --version VERSION      Specify deployment version (default: $VERSION)"
     echo "  -c, --chains CHAIN1,CHAIN2 Specify chains to deploy (comma-separated)"
     echo "  -s, --skip CHAIN1,CHAIN2   Skip specified chains (comma-separated)"
@@ -55,15 +57,16 @@ while [[ $# -gt 0 ]]; do
             DRY_RUN=true
             shift
             ;;
+        -u|--upgrade)
+            UPGRADE=true
+            shift
+            ;;
         -v|--version)
             VERSION="$2"
             shift 2
             ;;
         -c|--chains)
-            # Parse the comma-separated list into an array
             IFS=',' read -r -a INPUT_CHAINS <<< "$2"
-            
-            # Verify selected chains against available chains
             VALID_CHAINS=()
             for selected in "${INPUT_CHAINS[@]}"; do
                 chain_found=false
@@ -74,12 +77,9 @@ while [[ $# -gt 0 ]]; do
                         break
                     fi
                 done
-                
                 if [[ "$chain_found" == "false" ]]; then
                     echo "Error: Chain '$selected' not found in $NETWORK network."
                     echo "Available chains for $NETWORK: ${CHAINS[*]}"
-                    
-                    # Check if the chain exists in the other network
                     other_network_chains=()
                     if [[ "$NETWORK" == "mainnet" ]]; then
                         other_network_chains=("${TESTNET_CHAINS[@]}")
@@ -88,7 +88,6 @@ while [[ $# -gt 0 ]]; do
                         other_network_chains=("${MAINNET_CHAINS[@]}")
                         echo "Note: '$selected' might be a mainnet chain. Use --network mainnet if intended."
                     fi
-                    
                     for other_chain in "${other_network_chains[@]}"; do
                         if [[ "$selected" == "$other_chain" ]]; then
                             echo "Found '$selected' in the other network."
@@ -97,14 +96,11 @@ while [[ $# -gt 0 ]]; do
                     done
                 fi
             done
-            
             SELECTED_CHAINS=("${VALID_CHAINS[@]}")
-            
             if [[ ${#SELECTED_CHAINS[@]} -eq 0 ]]; then
                 echo "Error: No valid chains selected for $NETWORK network"
                 exit 1
             fi
-            
             shift 2
             ;;
         -s|--skip)
@@ -121,8 +117,6 @@ while [[ $# -gt 0 ]]; do
                 echo "Error: Network must be either 'mainnet' or 'testnet'"
                 exit 1
             fi
-            
-            # Update chains based on network selection
             if [[ "$NETWORK" == "mainnet" ]]; then
                 CHAINS=("${MAINNET_CHAINS[@]}")
                 CHAIN_IDS=("${MAINNET_CHAIN_IDS[@]}")
@@ -130,13 +124,10 @@ while [[ $# -gt 0 ]]; do
                 CHAINS=("${TESTNET_CHAINS[@]}")
                 CHAIN_IDS=("${TESTNET_CHAIN_IDS[@]}")
             fi
-            
-            # Re-validate selected chains if any were previously specified
             if [[ ${#SELECTED_CHAINS[@]} -gt 0 ]]; then
                 echo "Re-validating selected chains for new network: $NETWORK"
                 TEMP_CHAINS=("${SELECTED_CHAINS[@]}")
                 SELECTED_CHAINS=()
-                
                 for selected in "${TEMP_CHAINS[@]}"; do
                     chain_found=false
                     for available in "${CHAINS[@]}"; do
@@ -146,19 +137,16 @@ while [[ $# -gt 0 ]]; do
                             break
                         fi
                     done
-                    
                     if [[ "$chain_found" == "false" ]]; then
                         echo "Warning: Chain '$selected' not valid in new $NETWORK network."
                     fi
                 done
-                
                 if [[ ${#SELECTED_CHAINS[@]} -eq 0 && ${#TEMP_CHAINS[@]} -gt 0 ]]; then
                     echo "Error: None of the previously selected chains are valid in $NETWORK network"
                     echo "Available chains for $NETWORK: ${CHAINS[*]}"
                     exit 1
                 fi
             fi
-            
             shift 2
             ;;
         *)
@@ -171,7 +159,6 @@ done
 # Function to check if a chain should be processed
 should_process_chain() {
     local chain=$1
-    
     if [[ ${#SELECTED_CHAINS[@]} -gt 0 ]]; then
         for selected in "${SELECTED_CHAINS[@]}"; do
             if [[ "$selected" == "$chain" ]]; then
@@ -221,6 +208,7 @@ fi
 echo "Starting deployments with version: $VERSION"
 echo "Network: $NETWORK"
 echo "Dry run mode: $DRY_RUN"
+echo "Upgrade mode: $UPGRADE"
 echo "Available chains: ${CHAINS[*]}"
 if [[ ${#SELECTED_CHAINS[@]} -gt 0 ]]; then
     echo "Selected chains: ${SELECTED_CHAINS[*]}"
@@ -237,33 +225,24 @@ deployment_exists() {
     local version=$1
     local chain=$2
     local is_dry_run=$3
-    
     local path
     if [[ "$is_dry_run" == "true" ]]; then
         path="./deployments/$version/$chain/dry-run"
     else
-        # For regular deployments, we need to check that files exist in the main directory
-        # not just that the directory exists (it might only contain the dry-run subfolder)
         path="./deployments/$version/$chain"
-        
-        # Check if directory exists
         if [[ ! -d "$path" ]]; then
-            return 1 # Directory doesn't exist
+            return 1
         fi
-        
-        # Check if directory has files other than just the dry-run folder
         if [[ $(ls -A "$path" | grep -v "dry-run") ]]; then
-            return 0 # Non-dry-run files exist
+            return 0
         else
-            return 1 # Only dry-run exists or directory is empty
+            return 1
         fi
     fi
-    
-    # Standard check for dry-run mode
     if [[ -d "$path" ]]; then
-        return 0 # True, deployment exists
+        return 0
     else
-        return 1 # False, deployment doesn't exist
+        return 1
     fi
 }
 
@@ -272,19 +251,17 @@ confirm_overwrite() {
     local version=$1
     local chain=$2
     local is_dry_run=$3
-    
     local path_desc
     if [[ "$is_dry_run" == "true" ]]; then
         path_desc="$chain/dry-run"
     else
         path_desc="$chain"
     fi
-    
     read -p "Deployment for $path_desc with version $version already exists. Overwrite? (y/n): " answer
     if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
-        return 0 # True, user confirmed
+        return 0
     else
-        return 1 # False, user declined
+        return 1
     fi
 }
 
@@ -301,43 +278,40 @@ for chain in "${CHAINS[@]}"; do
             else
                 path_desc="$chain"
                 echo "Warning: Deployment for $path_desc with version $VERSION already exists."
-                
-                # Ask for confirmation before overwriting (only for non-dry-run)
                 if ! confirm_overwrite "$VERSION" "$chain" "$DRY_RUN"; then
                     echo "Skipping deployment for $chain to avoid overwriting"
                     continue
                 fi
-                
-                # Add timestamp to backup existing deployment
                 timestamp=$(date +%Y%m%d_%H%M%S)
                 backup_path="./deployments/${VERSION}_backup_${timestamp}/$chain"
                 src_path="./deployments/$VERSION/$chain"
-                
                 mkdir -p "$(dirname "$backup_path")"
-                
                 echo "Backing up existing deployment to $backup_path"
                 cp -r "$src_path" "$(dirname "$backup_path")"
             fi
         fi
         
-        cmd="cannon build script/cannon/$chain/$chain.toml --chain-id $chain_id"
+        # Determine which TOML file to use based on UPGRADE flag
+        if [[ "$UPGRADE" == "true" ]]; then
+            cmd="cannon build script/cannon/global.toml --chain-id $chain_id"
+            echo "Running upgrade deployment with global.toml for $chain"
+        else
+            cmd="cannon build script/cannon/$chain/$chain.toml --chain-id $chain_id"
+            echo "Running standard deployment with $chain/$chain.toml"
+        fi
         
         # Set deployment path
         if [[ "$DRY_RUN" == "true" ]]; then
-            # For dry run, use a dry-run subdirectory
             deploy_path="./deployments/$VERSION/$chain/dry-run"
-            # Make sure parent directory exists
             mkdir -p "$(dirname "$deploy_path")"
-            
             cmd="$cmd --dry-run -w $deploy_path"
         else
-            # For regular deployment, use standard path
             deploy_path="./deployments/$VERSION/$chain"
             cmd="$cmd --private-key $PRIVATE_KEY -w $deploy_path"
         fi
         
         echo "Running: $cmd"
-        eval $cmd
+        eval "$cmd"
         
         # Check if the command was successful
         if [[ $? -eq 0 ]]; then
