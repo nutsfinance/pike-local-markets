@@ -37,7 +37,7 @@ Usage: ./script/cannon/cannon-deploy.sh [options]
 Options:
   -h, --help                 Show this help message
   -d, --dry-run              Enable dry run mode
-  -v, --version VERSION      Specify deployment version (default: v1.0.0)
+  -v, --version VERSION      Specify deployment version (default: 1.0.0)
   -c, --chains CHAIN1,CHAIN2 Specify chains to deploy (comma-separated)
   -s, --skip CHAIN1,CHAIN2   Skip specified chains (comma-separated)
   -p, --private-key KEY      Specify private key for deployments

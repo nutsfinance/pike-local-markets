@@ -2,7 +2,7 @@
 
 # Default options
 DRY_RUN=false
-VERSION="v1.0.0"
+VERSION="1.0.0"
 PRIVATE_KEY=""
 NETWORK="testnet"  # Default to testnet
 UPGRADE=false      # New flag for upgrade mode
