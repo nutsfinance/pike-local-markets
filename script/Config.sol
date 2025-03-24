@@ -25,6 +25,8 @@ contract Config is Script, SafeScript {
         rpcs[80_069] = "BERA_BEPOLIA_RPC";
         rpcs[10_143] = "MONAD_TESTNET_RPC";
         rpcs[998] = "HYPER_TESTNET";
+        rpcs[146] = "SONIC_MAINNET_RPC";
+        rpcs[57_054] = "SONIC_TESTNET_RPC";
     }
 
     function setUp() internal {

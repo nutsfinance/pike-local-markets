@@ -204,7 +204,9 @@ contract DeployProtocol is Config {
         deployData.protocolId = protocolId;
         deployData.isDryRun = dryRun;
 
-        configureSafe(safeAddress, chainId);
+        if (useSafe) {
+            configureSafe(safeAddress, chainId);
+        }
 
         if (useSafe && !dryRun) {
             string memory privKey = vm.envString("PRIVATE_KEY");

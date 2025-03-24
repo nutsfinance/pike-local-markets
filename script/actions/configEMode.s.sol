@@ -225,7 +225,9 @@ contract EMode is Config {
             return;
         }
 
-        configureSafe(safeAddress, chainId);
+        if (useSafe) {
+            configureSafe(safeAddress, chainId);
+        }
 
         configureAllEModes(emodeConfigs, chain, protocolId, useSafe, dryRun);
     }

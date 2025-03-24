@@ -12,8 +12,8 @@ UPGRADE=false      # New flag for upgrade mode
 MAINNET_CHAINS=("base-mainnet" "arb-mainnet" "op-mainnet")
 MAINNET_CHAIN_IDS=(8453 42161 10)
 
-TESTNET_CHAINS=("base-sepolia" "arb-sepolia" "op-sepolia" "monad-testnet" "bera-bepolia")
-TESTNET_CHAIN_IDS=(84532 421614 11155420 10143 80069)
+TESTNET_CHAINS=("base-sepolia" "arb-sepolia" "op-sepolia" "monad-testnet" "bera-bepolia" "sonic-testnet")
+TESTNET_CHAIN_IDS=(84532 421614 11155420 10143 80069 57054)
 
 # Set active chains based on default network
 if [[ "$NETWORK" == "mainnet" ]]; then

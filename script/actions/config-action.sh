@@ -14,8 +14,8 @@ SAFE_ADDRESS=""
 # Chain configurations
 declare -a MAINNET_CHAINS=("base-mainnet" "arb-mainnet" "op-mainnet")
 declare -a MAINNET_CHAIN_IDS=(8453 42161 10)
-declare -a TESTNET_CHAINS=("base-sepolia" "arb-sepolia" "op-sepolia" "monad-testnet" "bera-bepolia")
-declare -a TESTNET_CHAIN_IDS=(84532 421614 11155420 10143 80069)
+declare -a TESTNET_CHAINS=("base-sepolia" "arb-sepolia" "op-sepolia" "monad-testnet" "bera-bepolia" "sonic-testnet")
+declare -a TESTNET_CHAIN_IDS=(84532 421614 11155420 10143 80069 57054)
 
 # Set active chains based on network
 if [[ "$NETWORK" == "mainnet" ]]; then

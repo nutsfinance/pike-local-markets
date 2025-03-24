@@ -307,7 +307,9 @@ contract DeployMarket is Config {
 
         MarketConfig[] memory marketConfigs = readMarketConfigs(chain, protocolId);
 
-        configureSafe(safeAddress, chainId);
+        if (useSafe) {
+            configureSafe(safeAddress, chainId);
+        }
 
         if (!dryRun) {
             if (useSafe) {
