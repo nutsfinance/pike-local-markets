@@ -850,6 +850,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
 
         require(mintTokens != 0, PTokenError.ZeroTokensMinted());
 
+        if (minter == onBehalfOf && $.accountTokens[minter] == 0) {
+            $.riskEngine.mintVerify(minter);
+        }
+
         /*
          * We calculate the new total supply of pTokens and onBehalfOf token balance, checking for overflow:
          *  totalSupplyNew = totalSupply + mintTokens
@@ -857,10 +861,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
          * And write them into storage
          */
         $.accountTokens[onBehalfOf] = $.accountTokens[onBehalfOf] + mintTokens;
-
-        if (minter == onBehalfOf && $.accountTokens[minter] == 0) {
-            $.riskEngine.mintVerify(minter);
-        }
 
         /* We emit a Mint event, and a Transfer event */
         emit Deposit(minter, onBehalfOf, actualMintAmount, mintTokens);
