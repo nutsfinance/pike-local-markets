@@ -183,7 +183,7 @@ contract TestHelpers is TestUtilities {
         IERC20(asset).approve(address(pToken), 1000);
 
         // "ZeroTokensMinted()" selector
-        vm.expectRevert(0x4ba25a38);
+        vm.expectRevert(bytes4(0x4ba25a38));
         pToken.deposit(1000, user);
         vm.stopPrank();
     }

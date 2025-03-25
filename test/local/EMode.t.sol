@@ -83,38 +83,38 @@ contract LocalEMode is TestLocal {
         vm.startPrank(getAdmin());
 
         // "InvalidCategory()" selector
-        vm.expectRevert(0xd67592f6);
+        vm.expectRevert(bytes4(0xd67592f6));
         re.supportEMode(0, true, pToken, collateralPermissions, borrowPermissions);
 
         // "NoArrayParity()" selector
-        vm.expectRevert(0x266c51bb);
+        vm.expectRevert(bytes4(0x266c51bb));
         re.supportEMode(2, true, pToken, newArray, borrowPermissions);
 
         pToken[1] = address(1);
 
         // "NotListed()" selector
-        vm.expectRevert(0x665c1c57);
+        vm.expectRevert(bytes4(0x665c1c57));
         re.supportEMode(2, true, pToken, collateralPermissions, borrowPermissions);
 
         IRiskEngine.BaseConfiguration memory baseConfig =
             IRiskEngine.BaseConfiguration(90e16, 93e17, 102e16);
 
         // "InvalidCategory()" selector
-        vm.expectRevert(0xd67592f6);
+        vm.expectRevert(bytes4(0xd67592f6));
         re.configureEMode(0, baseConfig);
 
         // "InvalidLiquidationThreshold()" selector
-        vm.expectRevert(0x3e51d2c0);
+        vm.expectRevert(bytes4(0x3e51d2c0));
         re.configureEMode(1, baseConfig);
 
         baseConfig = IRiskEngine.BaseConfiguration(94e16, 93e16, 102e16);
         // "InvalidLiquidationThreshold()" selector
-        vm.expectRevert(0x3e51d2c0);
+        vm.expectRevert(bytes4(0x3e51d2c0));
         re.configureEMode(1, baseConfig);
 
         baseConfig = IRiskEngine.BaseConfiguration(90e16, 93e16, 10e16);
         // "InvalidIncentiveThreshold()" selector
-        vm.expectRevert(0x37fbf6a6);
+        vm.expectRevert(bytes4(0x37fbf6a6));
         re.configureEMode(1, baseConfig);
 
         vm.stopPrank();

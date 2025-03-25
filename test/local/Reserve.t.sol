@@ -110,7 +110,7 @@ contract LocalReserve is TestLocal {
     function testSetReserveShares_Fail() public {
         // "InvalidReserveShare()" selector
         vm.prank(getAdmin());
-        vm.expectRevert(0x8415fb41);
+        vm.expectRevert(bytes4(0x8415fb41));
         re.setReserveShares(ONE_MANTISSA, ONE_MANTISSA);
     }
 
@@ -129,7 +129,7 @@ contract LocalReserve is TestLocal {
     function testReserveFactor_FailIfOutOfBound() public {
         vm.prank(getAdmin());
         // "SetReserveFactorBoundsCheck()" selector
-        vm.expectRevert(0xe2e441e6);
+        vm.expectRevert(bytes4(0xe2e441e6));
         pUSDC.setReserveFactor(10e18);
     }
 
@@ -138,7 +138,7 @@ contract LocalReserve is TestLocal {
 
         vm.prank(getAdmin());
         // "ReduceReservesCashNotAvailable()" selector
-        vm.expectRevert(0x3345e999);
+        vm.expectRevert(bytes4(0x3345e999));
         pUSDC.reduceReservesEmergency(1e18 + 1);
     }
 
@@ -147,7 +147,7 @@ contract LocalReserve is TestLocal {
 
         vm.prank(getAdmin());
         // "ReduceReservesCashValidation()" selector
-        vm.expectRevert(0xf1a5300a);
+        vm.expectRevert(bytes4(0xf1a5300a));
         pUSDC.reduceReservesEmergency(1e18);
     }
 

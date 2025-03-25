@@ -47,7 +47,7 @@ contract LocalPToken is TestLocal {
         vm.prank(getAdmin());
 
         // "AlreadyInitialized()" selector
-        vm.expectRevert(0x0dc149f0);
+        vm.expectRevert(bytes4(0x0dc149f0));
         PTokenModule(address(pUSDC)).initialize(
             address(0), IRiskEngine(address(0)), 0, 0, 0, 0, "", "", 0
         );
@@ -61,19 +61,19 @@ contract LocalPToken is TestLocal {
 
         vm.startPrank(getAdmin());
         // "ZeroValue()" selector
-        vm.expectRevert(0x7c946ed7);
+        vm.expectRevert(bytes4(0x7c946ed7));
         PTokenModule(pToken).initialize(
             address(0), IRiskEngine(address(0)), 0, 0, 0, 0, "", "", 0
         );
 
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         PTokenModule(pToken).initialize(
             address(0), IRiskEngine(address(0)), 1, 1, 1, 1, "", "", 0
         );
 
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         PTokenModule(pToken).initialize(
             address(1), IRiskEngine(address(0)), 1, 1, 1, 1, "", "", 0
         );
@@ -94,7 +94,7 @@ contract LocalPToken is TestLocal {
         IERC20 underlying = IERC20(pUSDC.asset());
         vm.prank(getAdmin());
         // "SweepNotAllowed()" selector
-        vm.expectRevert(0x00b5509b);
+        vm.expectRevert(bytes4(0x00b5509b));
         pUSDC.sweepToken(underlying);
     }
 
@@ -102,37 +102,37 @@ contract LocalPToken is TestLocal {
         vm.startPrank(getAdmin());
 
         // "SetProtocolSeizeShareBoundsCheck()" selector
-        vm.expectRevert(0x5dc64e16);
+        vm.expectRevert(bytes4(0x5dc64e16));
         pUSDC.setProtocolSeizeShare(1e18);
     }
 
     function testTransfer_FailIfReceiverIsZero() public {
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.transfer(address(0), 0);
 
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.transferFrom(address(0), address(0), 0);
     }
 
     function testRedeem_FailIfReceiverIsZero() public {
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.redeem(0, address(0), address(0));
 
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.withdraw(0, address(0), address(0));
     }
 
     function testMintBehalfOf_FailIfAddressIsZero() public {
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.deposit(0, address(0));
 
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.mint(0, address(0));
     }
 
@@ -140,13 +140,13 @@ contract LocalPToken is TestLocal {
         address pToken = address(new PTokenModule());
 
         // "LiquidateAccrueCollateralInterestFailed()" selector
-        vm.expectRevert(0x181b94c8);
+        vm.expectRevert(bytes4(0x181b94c8));
         pUSDC.liquidateBorrow(address(0), 0, IPToken(pToken));
     }
 
     function testApprove_FailIfAddressZero() public {
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.approve(address(0), 0);
     }
 
@@ -219,7 +219,7 @@ contract LocalPToken is TestLocal {
 
         vm.prank(depositor);
         // "RedeemTransferOutNotPossible()" selector
-        vm.expectRevert(0x91240a1b);
+        vm.expectRevert(bytes4(0x91240a1b));
         pWETH.withdraw(2e18, depositor, depositor);
 
         mockOracle.setPrice(address(pWETH), 2500e6, 18);
