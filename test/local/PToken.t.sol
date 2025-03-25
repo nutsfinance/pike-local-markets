@@ -81,6 +81,19 @@ contract LocalPToken is TestLocal {
         vm.stopPrank();
     }
 
+    function testAutoEnableCollateral() public {
+        vm.prank(getAdmin());
+
+        address user1 = makeAddr("user1");
+
+        assert(!re.checkCollateralMembership(user1, pUSDC));
+
+        doDeposit(user1, user1, address(pUSDC), 2000e6);
+
+        /// should enable as collateral for iniital deposit
+        assert(re.checkCollateralMembership(user1, pUSDC));
+    }
+
     function testSetBorrowRateMax_Success() public {
         vm.prank(getAdmin());
 
