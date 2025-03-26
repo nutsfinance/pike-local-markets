@@ -58,7 +58,7 @@ contract LocalRBAC is TestLocal {
 
         vm.startPrank(getAdmin());
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         IUpgrade(address(re)).upgradeTo(address(0));
 
         // "NotAContract(address)" selector
