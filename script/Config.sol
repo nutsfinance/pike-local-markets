@@ -20,7 +20,9 @@ contract Config is Script, SafeScript {
     constructor() {
         rpcs[8453] = "BASE_RPC";
         rpcs[84_532] = "BASE_SEPOLIA_RPC";
+        rpcs[42161] = "ARB_RPC";
         rpcs[421_614] = "ARB_SEPOLIA_RPC";
+        rpcs[10] = "OP_RPC";
         rpcs[11_155_420] = "OP_SEPOLIA_RPC";
         rpcs[80_069] = "BERA_BEPOLIA_RPC";
         rpcs[10_143] = "MONAD_TESTNET_RPC";
