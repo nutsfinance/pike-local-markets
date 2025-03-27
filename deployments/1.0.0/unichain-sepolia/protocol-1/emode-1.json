@@ -1,0 +1,10 @@
+{
+  "borrowableToken0": "0x62631439dc5469c1836d58f99A523B2A5596c568",
+  "borrowableToken1": "0xc0Eab35d15DDA6d9329548305063aD459b806E44",
+  "categoryId": 1,
+  "collateralFactorMantissa": 950000000000000000,
+  "collateralToken0": "0x62631439dc5469c1836d58f99A523B2A5596c568",
+  "collateralToken1": "0xc0Eab35d15DDA6d9329548305063aD459b806E44",
+  "liquidationIncentiveMantissa": 1020000000000000000,
+  "liquidationThresholdMantissa": 975000000000000000
+}

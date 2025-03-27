@@ -27,6 +27,7 @@ contract Config is Script, SafeScript {
         rpcs[998] = "HYPER_TESTNET";
         rpcs[146] = "SONIC_MAINNET_RPC";
         rpcs[57_054] = "SONIC_TESTNET_RPC";
+        rpcs[1301] = "UNICHAIN_SEPOLIA_RPC";
     }
 
     function setUp() internal {

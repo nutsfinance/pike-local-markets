@@ -1,4 +1,4 @@
-name = "pike-markets-test"
+name = "pike-markets"
 version = "1.0.0"
 preset = "main"
 description = "Factory based deployment"
