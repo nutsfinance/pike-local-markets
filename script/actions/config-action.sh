@@ -10,6 +10,7 @@ CONFIG_PATH="./script/configs"
 FORCE=false
 PROTOCOL_ID=""
 SAFE_ADDRESS=""
+EXTRA_ENV=""
 
 # Chain configurations
 declare -a MAINNET_CHAINS=("base-mainnet" "arb-mainnet" "op-mainnet" "sonic-mainnet")
@@ -45,6 +46,7 @@ show_help() {
     echo "  --config-path PATH    Config directory (default: $CONFIG_PATH)"
     echo "  --protocol-id ID      Protocol ID for deployment"
     echo "  --safe-address ADDR   Safe address for Safe-based deployment"
+    echo "  --extra 'KEY=VAL ...' Extra environment variables (space-separated)"
     echo "Available mainnet chains: ${MAINNET_CHAINS[*]}"
     echo "Available testnet chains: ${TESTNET_CHAINS[*]}"
     exit 0
@@ -69,6 +71,7 @@ while [[ $# -gt 0 ]]; do
         --config-path) CONFIG_PATH="$2"; shift ;;
         --protocol-id) PROTOCOL_ID="$2"; shift ;;
         --safe-address) SAFE_ADDRESS="$2"; shift ;;
+        --extra) EXTRA_ENV="$2"; shift ;;
         *) echo "Unknown option: $1"; show_help ;;
     esac
     shift
@@ -154,6 +157,7 @@ echo "Available chains: ${CHAINS[*]}"
 [[ ${#SELECTED_CHAINS[@]} -gt 0 ]] && echo "Selected chains: ${SELECTED_CHAINS[*]}"
 [[ ${#SKIP_CHAINS[@]} -gt 0 ]] && echo "Skipped chains: ${SKIP_CHAINS[*]}"
 [[ "$DRY_RUN" == "false" && -z "$SAFE_ADDRESS" ]] && echo "Private key: ${PRIVATE_KEY:0:6}...${PRIVATE_KEY: -4}"
+[[ -n "$EXTRA_ENV" ]] && echo "Extra env vars: $EXTRA_ENV"
 
 # Run deployments
 for chain in "${CHAINS[@]}"; do
@@ -172,6 +176,9 @@ for chain in "${CHAINS[@]}"; do
         env_vars="CHAIN=$chain CHAIN_ID=$chain_id VERSION=${VERSION:-1.0.0} DRY_RUN=$DRY_RUN CONFIG_PATH=$CONFIG_PATH/$chain/protocol-$PROTOCOL_ID.json PROTOCOL_ID=$PROTOCOL_ID"
         if [[ -n "$SAFE_ADDRESS" ]]; then
             env_vars="$env_vars SAFE_ADDRESS=$SAFE_ADDRESS"
+        fi
+        if [[ -n "$EXTRA_ENV" ]]; then
+            env_vars="$env_vars $EXTRA_ENV"
         fi
         
         cmd="forge script $SCRIPT_PATH -vvv"

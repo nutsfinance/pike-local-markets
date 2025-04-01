@@ -17,27 +17,27 @@ artifact = "src/pike-market/modules/InitialModuleBeacon.sol:InitialModuleBeacon"
 from = "<%= settings.deployer %>"
 
 [contract.DoubleJumpRateModel]
-artifact = "DoubleJumpRateModel"
+artifact = "src/pike-market/modules/interestRateModel/DoubleJumpRateModel.sol:DoubleJumpRateModel"
 from = "<%= settings.deployer %>"
 
 [contract.RBACModule]
-artifact = "RBACModule"
+artifact = "src/pike-market/modules/common/RBACModule.sol:RBACModule"
 from = "<%= settings.deployer %>"
 
 [contract.PTokenModule]
-artifact = "PTokenModule"
+artifact = "src/pike-market/modules/pToken/PTokenModule.sol:PTokenModule"
 from = "<%= settings.deployer %>"
 
 [contract.RiskEngineModule]
-artifact = "RiskEngineModule"
+artifact = "src/pike-market/modules/riskEngine/RiskEngineModule.sol:RiskEngineModule"
 from = "<%= settings.deployer %>"
 
 [contract.OracleEngine]
-artifact = "OracleEngine"
+artifact = "src/oracles/OracleEngine.sol:OracleEngine"
 from = "<%= settings.deployer %>"
 
 [contract.Timelock]
-artifact = "Timelock"
+artifact = "src/governance/Timelock.sol:Timelock"
 from = "<%= settings.deployer %>"
 
 #PToken
