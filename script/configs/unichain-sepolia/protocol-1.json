@@ -80,10 +80,11 @@
     "categoryId": 1,
     "ptokens": [
       "0x62631439dc5469c1836d58f99A523B2A5596c568",
-      "0xc0Eab35d15DDA6d9329548305063aD459b806E44"
+      "0xc0Eab35d15DDA6d9329548305063aD459b806E44",
+      "0xc7EAD26799a4F9dfdd32b18B3D154e27d68f7c5B"
     ],
-    "collateralPermissions": [true, true],
-    "borrowPermissions": [true, true],
+    "collateralPermissions": [false, true, true],
+    "borrowPermissions": [false, true, true],
     "riskConfig": {
       "collateralFactorMantissa": "950000000000000000",
       "liquidationThresholdMantissa": "975000000000000000",
@@ -93,14 +94,15 @@
   "emode-2": {
     "categoryId": 2,
     "ptokens": [
+      "0x62631439dc5469c1836d58f99A523B2A5596c568",
       "0xc0Eab35d15DDA6d9329548305063aD459b806E44",
       "0xc7EAD26799a4F9dfdd32b18B3D154e27d68f7c5B"
     ],
-    "collateralPermissions": [true, false],
-    "borrowPermissions": [false, true],
+    "collateralPermissions": [true, false, false],
+    "borrowPermissions": [false, true, false],
     "riskConfig": {
       "collateralFactorMantissa": "900000000000000000",
-      "liquidationThresholdMantissa": "920000000000000000",
+      "liquidationThresholdMantissa": "930000000000000000",
       "liquidationIncentiveMantissa": "1020000000000000000"
     }
   }

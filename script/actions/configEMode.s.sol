@@ -160,7 +160,8 @@ contract EMode is Config {
         IRiskEngine.BaseConfiguration memory riskConfig
     ) internal {
         string memory emodePath = getEModeFilePath(chain, protocolId, categoryId);
-        string memory obj = "emodeData";
+        string memory obj =
+            string(abi.encodePacked("emodeData_", vm.toString(categoryId)));
         vm.serializeUint(obj, "categoryId", categoryId);
 
         uint256 collateralCount = 0;
@@ -240,6 +241,15 @@ contract EMode is Config {
         bool dryRun
     ) internal {
         for (uint256 i = 0; i < emodeConfigs.length; i++) {
+            console.log("EMode %s:", emodeConfigs[i].categoryId);
+            for (uint256 j = 0; j < emodeConfigs[i].ptokens.length; j++) {
+                console.log(
+                    "Token %s: Collateral=%s Borrow=%s",
+                    emodeConfigs[i].ptokens[j],
+                    emodeConfigs[i].collateralPermissions[j],
+                    emodeConfigs[i].borrowPermissions[j]
+                );
+            }
             if (isEModeConfigured(chain, protocolId, emodeConfigs[i].categoryId)) {
                 console.log(
                     "EMode %s already configured, skipping", emodeConfigs[i].categoryId
