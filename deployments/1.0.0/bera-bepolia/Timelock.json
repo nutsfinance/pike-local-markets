@@ -1,5 +1,5 @@
 {
-  "address": "0xCB85355619c8508f4a7F11d25c1582CB7e06e4A1",
+  "address": "0x0200637680D76c323c83B9f3f42dDE1ceB468193",
   "abi": [
     {
       "type": "constructor",
@@ -413,6 +413,34 @@
           "name": "executors",
           "type": "address[]",
           "internalType": "address[]"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "initialize",
+      "inputs": [
+        {
+          "name": "minDelay",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "proposers",
+          "type": "address[]",
+          "internalType": "address[]"
+        },
+        {
+          "name": "executors",
+          "type": "address[]",
+          "internalType": "address[]"
+        },
+        {
+          "name": "admin",
+          "type": "address",
+          "internalType": "address"
         }
       ],
       "outputs": [],
@@ -998,7 +1026,7 @@
     },
     {
       "type": "error",
-      "name": "FailedInnerCall",
+      "name": "FailedCall",
       "inputs": []
     },
     {
@@ -1089,12 +1117,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x5364e38f00c2f23337f2b2fe4ec00ddb637f307de0edb98d99d1fa3df3e5cb9c",
-  "deployTxnBlockNumber": "1092857",
-  "deployTimestamp": "1742243516",
+  "deployTxnHash": "0x8917f779556a7d359688d1ba66ce31719152c52f6ed4b0e6d23cc546b1d05a79",
+  "deployTxnBlockNumber": "2082847",
+  "deployTimestamp": "1744042026",
   "sourceName": "src/governance/Timelock.sol",
-  "contractName": "Timelock",
+  "contractName": "src/governance/Timelock.sol:Timelock",
   "deployedOn": "contract.Timelock",
-  "gasUsed": 2323814,
+  "gasUsed": 2443800,
   "gasCost": "5000000007"
 }

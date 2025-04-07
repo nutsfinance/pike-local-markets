@@ -1,5 +1,5 @@
 {
-  "address": "0x7c08af991a10ed9cbbbc52d4cbfd971f6e2eb45f",
+  "address": "0x78067935010c9e1ac46b567d590d30c0c0a29bcf",
   "abi": [
     {
       "name": "facets",
@@ -2132,9 +2132,9 @@
     }
   ],
   "deployedOn": "router.RiskEngineRouter",
-  "deployTxnHash": "0x6006156697b3ec9581996db89af34f1b2c89e7faebae553a5616d82b18b6db8c",
-  "deployTxnBlockNumber": "27999372",
-  "deployTimestamp": "1742812617",
+  "deployTxnHash": "0x97e1bf4883d583d1583b09ea8766be007201e45881c7d37d1b95fc07dd1f3ac9",
+  "deployTxnBlockNumber": "31400544",
+  "deployTimestamp": "1744040644",
   "contractName": "RiskEngineRouter",
   "sourceName": "RiskEngineRouter.sol",
   "gasUsed": 2522073,

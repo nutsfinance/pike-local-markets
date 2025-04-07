@@ -1,5 +1,5 @@
 {
-  "address": "0x3E7A8381D312E733A63Bf8C792dBe4Cf42e2b0D3",
+  "address": "0xA48Ed4698438F4dE8Da7247574679771b96FAAee",
   "abi": [
     {
       "type": "function",
@@ -295,11 +295,11 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x85c592563d96503d995710c32695b39b1b332b129d40239ee6fbfcf7aa913f5b",
-  "deployTxnBlockNumber": "1092851",
-  "deployTimestamp": "1742243505",
+  "deployTxnHash": "0x6bc15b23214cd5529663486a80011696bf590a805d5915dfa00e72e7a5a7b613",
+  "deployTxnBlockNumber": "2082841",
+  "deployTimestamp": "1744042015",
   "sourceName": "src/pike-market/modules/common/RBACModule.sol",
-  "contractName": "RBACModule",
+  "contractName": "src/pike-market/modules/common/RBACModule.sol:RBACModule",
   "deployedOn": "contract.RBACModule",
   "gasUsed": 582432,
   "gasCost": "5000000007"

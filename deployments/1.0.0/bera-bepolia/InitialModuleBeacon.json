@@ -1,5 +1,5 @@
 {
-  "address": "0x8551b4545032521BbBB0f287Fd22Ad98cAB54055",
+  "address": "0xe069CfaEE4ECdBe6d08aE0f377e96E75F72eEf26",
   "abi": [
     {
       "type": "constructor",
@@ -181,9 +181,9 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x099276e982306e72fe9f12a9d20c84c2592bb35f0192a8204f9278ca42566fc3",
-  "deployTxnBlockNumber": "1092841",
-  "deployTimestamp": "1742243486",
+  "deployTxnHash": "0x2c1833cadda80e3f5feb04b1c54987d85575356ddd66cfc1ea6159844e90e512",
+  "deployTxnBlockNumber": "2082831",
+  "deployTimestamp": "1744041996",
   "sourceName": "src/pike-market/modules/InitialModuleBeacon.sol",
   "contractName": "src/pike-market/modules/InitialModuleBeacon.sol:InitialModuleBeacon",
   "deployedOn": "contract.InitialModuleBeacon",

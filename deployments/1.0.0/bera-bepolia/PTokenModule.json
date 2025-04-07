@@ -1,5 +1,5 @@
 {
-  "address": "0xfB8A3bc49a5DFFC2Ee1163D53D425e6585727431",
+  "address": "0x5243831D09F472C5dd455a105d647d09ec472a1B",
   "abi": [
     {
       "type": "function",
@@ -1493,28 +1493,6 @@
     },
     {
       "type": "error",
-      "name": "AddressEmptyCode",
-      "inputs": [
-        {
-          "name": "target",
-          "type": "address",
-          "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
-      "name": "AddressInsufficientBalance",
-      "inputs": [
-        {
-          "name": "account",
-          "type": "address",
-          "internalType": "address"
-        }
-      ]
-    },
-    {
-      "type": "error",
       "name": "AlreadyInitialized",
       "inputs": []
     },
@@ -1542,11 +1520,6 @@
     {
       "type": "error",
       "name": "DelegateNotAllowed",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "FailedInnerCall",
       "inputs": []
     },
     {
@@ -1839,12 +1812,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0xf864ba72b3959af48df2353ac1bbc587a9031166c6248d7a1beb1f9e80620740",
-  "deployTxnBlockNumber": "1092847",
-  "deployTimestamp": "1742243497",
+  "deployTxnHash": "0xbcaa5937729755e02c84636b77fe0cfb3a062ad8175477eb4a8ebf4aba24fc08",
+  "deployTxnBlockNumber": "2082837",
+  "deployTimestamp": "1744042007",
   "sourceName": "src/pike-market/modules/pToken/PTokenModule.sol",
-  "contractName": "PTokenModule",
+  "contractName": "src/pike-market/modules/pToken/PTokenModule.sol:PTokenModule",
   "deployedOn": "contract.PTokenModule",
-  "gasUsed": 4879433,
+  "gasUsed": 4818244,
   "gasCost": "5000000007"
 }
