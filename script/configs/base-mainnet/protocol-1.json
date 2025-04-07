@@ -74,7 +74,7 @@
     "baseRatePerYear": "0",
     "multiplierPerYear": "0",
     "firstJumpMultiplierPerYear": "6111110000000000",
-    "secondJumpMultiplierPerYear": "850000000000000000",
+    "secondJumpMultiplierPerYear": "8500000000000000000",
     "firstKink": "0",
     "secondKink": "900000000000000000",
     "mainProvider": "0x324B7e2620B866aaC6E7Ef46E36334698D2d0b7D",
