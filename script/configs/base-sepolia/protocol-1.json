@@ -25,7 +25,7 @@
     "secondJumpMultiplierPerYear": "6000000000000000000",
     "firstKink": "50000000000000000",
     "secondKink": "950000000000000000",
-    "mainProvider": "0x7322C1FaeBa862bE83D404f20397B397a32B79EF",
+    "mainProvider": "0xC34Df3ce38773AE01A61A6Cfc93A76060FbB5D84",
     "fallbackProvider": "0x0000000000000000000000000000000000000000"
   },
   "market-weth": {
@@ -49,7 +49,7 @@
     "secondJumpMultiplierPerYear": "6000000000000000000",
     "firstKink": "50000000000000000",
     "secondKink": "950000000000000000",
-    "mainProvider": "0x7322C1FaeBa862bE83D404f20397B397a32B79EF",
+    "mainProvider": "0xC34Df3ce38773AE01A61A6Cfc93A76060FbB5D84",
     "fallbackProvider": "0x0000000000000000000000000000000000000000"
   },
   "market-wsteth": {
@@ -73,17 +73,18 @@
     "secondJumpMultiplierPerYear": "6000000000000000000",
     "firstKink": "50000000000000000",
     "secondKink": "950000000000000000",
-    "mainProvider": "0x7322C1FaeBa862bE83D404f20397B397a32B79EF",
+    "mainProvider": "0xC34Df3ce38773AE01A61A6Cfc93A76060FbB5D84",
     "fallbackProvider": "0x0000000000000000000000000000000000000000"
   },
   "emode-1": {
     "categoryId": 1,
     "ptokens": [
-      "0x6a2D6403042F6eC95cd48DF88E81A5Dbc88764A5",
-      "0x6c4AcD876ce1e3e771C8F02CC23Be0A0bc868e23"
+      "0xC5BDD9012cF58DcC3000f351560576E8B671AcAD",
+      "0x6f76a89AE0A18AC1F95D079e2ac6585D5badc12E",
+      "0xcA713aed6D1962F82b494990970b2C111E4821f6"
     ],
-    "collateralPermissions": [true, true],
-    "borrowPermissions": [true, true],
+    "collateralPermissions": [false, true, true],
+    "borrowPermissions": [false, true, true],
     "riskConfig": {
       "collateralFactorMantissa": "950000000000000000",
       "liquidationThresholdMantissa": "975000000000000000",
@@ -93,14 +94,15 @@
   "emode-2": {
     "categoryId": 2,
     "ptokens": [
-      "0xEE72c9241F52BfE3B6B3f7dA845458f99f9b5F9a",
-      "0x6a2D6403042F6eC95cd48DF88E81A5Dbc88764A5"
+      "0xC5BDD9012cF58DcC3000f351560576E8B671AcAD",
+      "0x6f76a89AE0A18AC1F95D079e2ac6585D5badc12E",
+      "0xcA713aed6D1962F82b494990970b2C111E4821f6"
     ],
-    "collateralPermissions": [true, false],
-    "borrowPermissions": [false, true],
+    "collateralPermissions": [true, false, false],
+    "borrowPermissions": [false, true, false],
     "riskConfig": {
-      "collateralFactorMantissa": "950000000000000000",
-      "liquidationThresholdMantissa": "975000000000000000",
+      "collateralFactorMantissa": "900000000000000000",
+      "liquidationThresholdMantissa": "930000000000000000",
       "liquidationIncentiveMantissa": "1020000000000000000"
     }
   }
