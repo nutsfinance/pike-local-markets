@@ -4,7 +4,7 @@ include = [
 ]
 
 [contract.Factory]
-artifact = "src/Factory.sol:Factory"
+artifact = "Factory"
 from = "<%= settings.deployer %>"
 
 [contract.reBeacon]
