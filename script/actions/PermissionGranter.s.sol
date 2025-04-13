@@ -47,7 +47,7 @@ contract PermissionGranter is Config {
         re = IRBAC(riskEngineAddress);
         tm = Timelock(payable(timelockAddress));
 
-        vm.startBroadcast();
+        vm.startBroadcast(adminPrivateKey);
         grantPermission(permission, target);
         vm.stopBroadcast();
     }
