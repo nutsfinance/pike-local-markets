@@ -5,7 +5,7 @@
   "categoryId": 1,
   "collateralFactorMantissa": 900000000000000000,
   "collateralToken0": "0xEB47bF35477Bdd84e1B565bba58c8914753817D3",
-  "collateralToken1": "0xb6E8ef78D78624c2841716dEe17429cD7D5736De",
+  "collateralToken1": "0x71108C944fFfb90dFD58c5EA507EdEf852a06efB",
   "liquidationIncentiveMantissa": 1020000000000000000,
   "liquidationThresholdMantissa": 930000000000000000
 }
