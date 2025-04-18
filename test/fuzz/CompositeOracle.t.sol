@@ -81,9 +81,9 @@ contract FuzzOracle is TestFuzz {
     ) public {
         vm.startPrank(_testState.admin);
 
-        rate1 = bound(rate1, 0.85e18, 1.5e18);
-        rate2 = bound(rate2, 0.85e18, 1.5e18);
-        price1 = bound(price1, 800e8, 50_000e8);
+        rate1 = bound(rate1, 1e12, 100e18);
+        rate2 = bound(rate2, 1e12, 100e18);
+        price1 = bound(price1, 1, 1_000_000_000e8);
 
         mockRateFeed1.setRoundData(rate1, block.timestamp, block.timestamp);
         mockRateFeed2.setRoundData(rate2, block.timestamp, block.timestamp);

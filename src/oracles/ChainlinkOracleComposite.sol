@@ -11,13 +11,16 @@ import {IERC20Metadata} from
     "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {UUPSUpgradeable} from
     "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 contract ChainlinkOracleComposite is
     IChainlinkOracleComposite,
     UUPSUpgradeable,
     OwnableUpgradeable
 {
+    using Math for uint256;
     /// @custom:storage-location erc7201:pike.OE.provider
+
     struct OracleProviderStorage {
         /**
          * @notice Mapping of asset address to its configuration
@@ -136,11 +139,11 @@ contract ChainlinkOracleComposite is
 
             uint256 rate;
             if (config.invertRates[i]) {
-                rate = (SCALING_FACTOR * (10 ** feedDecimals)) / uint256(price);
+                rate = SCALING_FACTOR.mulDiv((10 ** feedDecimals), uint256(price));
             } else {
                 rate = uint256(price) * (10 ** (SCALING_DECIMALS - feedDecimals));
             }
-            compositePrice = (compositePrice * rate) / SCALING_FACTOR;
+            compositePrice = compositePrice.mulDiv(rate, SCALING_FACTOR);
         }
         return compositePrice / (10 ** assetDecimals);
     }
