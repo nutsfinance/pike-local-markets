@@ -20,6 +20,7 @@ remappings = [
   "@storage/=src/pike-market/storage/",
   "@modules/=src/pike-market/modules/",
   "@errors/=src/pike-market/errors/",
+  "@periphery/=src/periphery/",
   "@utils/=src/pike-market/utils/",
   "@oracles/=src/oracles/",
   "@governance/=src/governance/",
