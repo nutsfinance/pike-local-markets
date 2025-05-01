@@ -4,11 +4,11 @@ pragma solidity 0.8.28;
 import {IFLHelper} from "@periphery/interfaces/IFLHelper.sol";
 
 /**
- * @title ILeverage
+ * @title IMultiply
  * @notice Interface for leverage and deleverage operations with support for LP tokens
  * @dev Extends IFLHelper to use flash loans for leveraging positions
  */
-interface ILeverage is IFLHelper {
+interface IMultiply is IFLHelper {
     /**
      * @dev Parameters for leverage operations with LP tokens
      */
