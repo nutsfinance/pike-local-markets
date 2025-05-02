@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IFLHelper} from "@periphery/interfaces/IFLHelper.sol";
+import {IPToken} from "@interfaces/IPToken.sol";
 
 /**
  * @title IMultiply
@@ -160,7 +161,7 @@ interface IMultiply is IFLHelper {
      * @param supplyPToken Pike token for the supply collateral
      * @return maxBorrowAmount Maximum amount that can be borrowed safely (in usd value)
      */
-    function calculateMaxBorrowForLeverage(address account, address supplyPToken)
+    function calculateMaxBorrowForLeverage(address account, IPToken supplyPToken)
         external
         view
         returns (uint256 maxBorrowAmount);
@@ -175,8 +176,8 @@ interface IMultiply is IFLHelper {
      * @return maxCollateralAmount Maximum collateral amount that can be redeemed with given repay amount
      */
     function calculateMaxRedeemForDeleverage(
-        address borrowPToken,
-        address supplyPToken,
+        IPToken borrowPToken,
+        IPToken supplyPToken,
         uint256 repayAmount,
         uint256 initialCollateral
     ) external view returns (uint256 maxCollateralAmount);

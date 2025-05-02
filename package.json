@@ -46,6 +46,7 @@
     "husky": "9.1.6",
     "solhint": "5.0.3",
     "solhint-plugin-prettier": "0.1.0",
-    "sort-package-json": "2.10.0"
+    "sort-package-json": "2.10.0",
+    "swap-router-contracts": "git+https://github.com/Uniswap/swap-router-contracts.git"
   }
 }
