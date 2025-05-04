@@ -10,6 +10,12 @@ import {IPToken} from "@interfaces/IPToken.sol";
  * @dev Extends IFLHelper to use flash loans for leveraging positions
  */
 interface IMultiply is IFLHelper {
+    struct InternalContext {
+        address caller;
+        bool isLeverage;
+        bool isExisting;
+    }
+
     /**
      * @dev Parameters for leverage operations with LP tokens
      */
@@ -20,7 +26,7 @@ interface IMultiply is IFLHelper {
         uint256 collateralAmount; // Collateral amount to borrow against (it will be used as initial deposit if its called by leverageLP)
         uint256 safetyFactor; // Safety factor applied to the leverage to cover the fees
         SwapProtocol swapProtocol; // Protocol to use for swapping tokens
-        uint256[] proportions; // Proportions of collateralAmount to use for mint and swap the rest to pair token, based on swap index
+        uint256 proportionToSwap; // Proportions of collateralAmount to use for mint and swap the rest to pair token, based on swap index
         uint256[] minAmountOut; // Min. output amount for swap, based on swap index
         uint24[] feeTiers; // Fee tiers for swap operations, based on swap index
     }
@@ -38,8 +44,17 @@ interface IMultiply is IFLHelper {
         SwapProtocol swapProtocol; // Protocol to use for swapping tokens
         RedeemType redeemType; // Method to redeem LP tokens
         uint256 tokenIndexForSingle; // Token index for single redemption (if applicable)
-        uint256[] minAmountsOut; // Minimum amounts out for LP redemption, based on spa index
-        uint24[] feeTiers; // Fee tiers for swap operations, based on spa index
+        uint256[] minAmountOut; // Minimum amounts out for LP redemption, based on spa index, index 0 for swap, index 1 for mint
+        uint24[] feeTiers; // Fee tiers for swap operations, based on spa index, index 0 for swap
+    }
+
+    struct CallbackContext {
+        address caller;
+        address debtToken;
+        uint256 amount;
+        uint256 fee;
+        FlashLoanSource flSource;
+        bool isExisting;
     }
 
     /**
@@ -99,6 +114,13 @@ interface IMultiply is IFLHelper {
         uint256 fee
     );
 
+    error NotDelegatedToBorrow();
+    error InvalidSafetyFactor();
+    error InvalidProportion();
+    error InvalidPool();
+    error DebtTokenMismatch();
+    error InsufficientToRepay();
+
     /**
      * @notice Opens a leveraged LP position using an initial deposit of the borrow token
      * @dev
@@ -146,39 +168,42 @@ interface IMultiply is IFLHelper {
      * - Repays flash loan and returns excess (if any) to user
      *
      * @param params LP deleverage parameters
-     * @return tokens The tokens returned to user (if excess)
-     * @return amounts The amounts of each token returned
+     * @return excess amount of swapped debt token if redeem collateral more than repay amount
      */
     function deleverageLP(
         FlashLoanParams calldata flParams,
         DelevearageLPParams calldata params
-    ) external returns (address[] memory tokens, uint256[] memory amounts);
+    ) external returns (uint256 excess);
 
     /**
      * @notice Calculates maxBorrowAmount for an account given supply token in usd
      * @dev Based on account's borrowing capacity and collateral factor of the token
      * @param account User account address
+     * @param categoryId User emode to get collateral factor
      * @param supplyPToken Pike token for the supply collateral
      * @return maxBorrowAmount Maximum amount that can be borrowed safely (in usd value)
      */
-    function calculateMaxBorrowForLeverage(address account, IPToken supplyPToken)
-        external
-        view
-        returns (uint256 maxBorrowAmount);
+    function calculateLeverageMaxBorrow(
+        address account,
+        uint8 categoryId,
+        IPToken supplyPToken
+    ) external view returns (uint256 maxBorrowAmount);
 
     /**
-     * @notice Calculates maximum collateral allowed to be redeemed for deleveraging specified debt
+     * @notice Calculates maximum collateral allowed to be redeemed safely for deleveraging specified debt
      * @dev Based on current price of collateral and debt tokens
+     * @param account User account address
+     * @param categoryId User emode to get collateral factor
      * @param borrowPToken Pike token for the debt
      * @param supplyPToken Pike token for the collateral
      * @param repayAmount Amount of debt to repay
-     * @param initialCollateral Initial amount of deposit
      * @return maxCollateralAmount Maximum collateral amount that can be redeemed with given repay amount
      */
-    function calculateMaxRedeemForDeleverage(
+    function calculateDeleverageRedeemableCollateral(
+        address account,
         IPToken borrowPToken,
         IPToken supplyPToken,
-        uint256 repayAmount,
-        uint256 initialCollateral
+        uint8 categoryId,
+        uint256 repayAmount
     ) external view returns (uint256 maxCollateralAmount);
 }
