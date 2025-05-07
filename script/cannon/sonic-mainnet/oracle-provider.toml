@@ -1,5 +1,5 @@
 [contract.PythOracleProvider]
-artifact = "src/oracles/PythOracleProvider.sol:PythOracleProvider"
+artifact = "PythOracleProvider"
 args = [
   "<%= settings.pythFeed %>",
   "<%= settings.pythProvider_owner %>"
@@ -9,7 +9,7 @@ depends = ['var.config', 'var.owner']
 
 
 [contract.ChainlinkOracleProvider]
-artifact = "src/oracles/ChainlinkOracleProvider.sol:ChainlinkOracleProvider"
+artifact = "ChainlinkOracleProvider"
 args = [
   "<%= settings.chainlinkUptimeFeed %>",
   "<%= settings.chainlinkProvider_owner %>"
