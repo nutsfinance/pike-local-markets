@@ -70,9 +70,9 @@ contract Factory is
     bytes32 internal constant _RESERVE_MANAGER_PERMISSION = "RESERVE_MANAGER";
     bytes32 internal constant _RESERVE_WITHDRAWER_PERMISSION = "RESERVE_WITHDRAWER";
 
-    /// keccak256(abi.encode(uint256(keccak256("pike.facotry")) - 1)) & ~bytes32(uint256(0xff))
+    /// keccak256(abi.encode(uint256(keccak256("pike.factory")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 internal constant _FACTORY_STORAGE =
-        0xac42ae8baafcf09ffeb99e08f7111e43bf0a7cdbccbc7a91974415e2c3c2d700;
+        0x2123ddb3bc0e3ddb579620b217a9df111470695d13bf4198d6177cfc5622e800;
 
     constructor() {
         _disableInitializers();
