@@ -220,7 +220,7 @@ interface IRiskEngine {
      * Borrowing that brings total borrows to or above borrow cap will revert.
      * @dev borrowCapGuardian function to set the borrow caps.
      * A borrow cap of type(uint256).max corresponds to unlimited borrowing.
-     * @param pTokens The addresses of the markets (tokens) to change the borrow caps for
+     * @param pTokens The addresses of the markets (ptokens) to change the borrow caps for
      * @param newBorrowCaps The new borrow cap values in underlying to be set.
      * A value of type(uint256).max corresponds to unlimited borrowing.
      */
@@ -234,7 +234,7 @@ interface IRiskEngine {
      * Supplying that brings total supply to or above supply cap will revert.
      * @dev supplyCapGuardian function to set the supply caps.
      * A supply cap of type(uint256).max corresponds to unlimited supplying.
-     * @param pTokens The addresses of the markets (tokens) to change the supply caps for
+     * @param pTokens The addresses of the markets (ptokens) to change the supply caps for
      * @param newSupplyCaps The new supply cap values in underlying to be set.
      * A value of type(uint256).max corresponds to unlimited supplying.
      */
