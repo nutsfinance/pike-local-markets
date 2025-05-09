@@ -71,3 +71,50 @@ contract MockTestToken is ERC20, Ownable {
         mintAmount = amount;
     }
 }
+
+// MockPToken
+contract MockPToken is ERC20 {
+    address public immutable asset;
+    mapping(address => uint256) public collateralBalances;
+    mapping(address => uint256) public borrowBalances;
+
+    constructor(address _asset) ERC20("test", "tst") {
+        asset = _asset;
+    }
+
+    function deposit(uint256 amount, address account) external {
+        IERC20(asset).transferFrom(msg.sender, address(this), amount);
+        _mint(account, amount);
+        collateralBalances[account] += amount;
+    }
+
+    function borrowOnBehalfOf(address account, uint256 amount) external {
+        borrowBalances[account] += amount;
+        MockToken(asset).mint(msg.sender, amount);
+    }
+
+    function repayBorrowOnBehalfOf(address account, uint256 amount) external {
+        IERC20(asset).transferFrom(msg.sender, address(this), amount);
+        borrowBalances[account] -= amount;
+    }
+
+    function redeem(uint256 amount, address receiver, address account)
+        external
+        returns (uint256)
+    {
+        collateralBalances[account] -= amount;
+        _burn(account, amount);
+        IERC20(asset).transfer(receiver, amount);
+        return amount;
+    }
+
+    function withdraw(uint256 amount, address receiver, address account)
+        external
+        returns (uint256)
+    {
+        collateralBalances[account] -= amount;
+        _burn(account, amount);
+        IERC20(asset).transfer(receiver, amount);
+        return amount;
+    }
+}
