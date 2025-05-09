@@ -200,8 +200,8 @@ interface IPToken is IERC4626 {
     function setReserveFactor(uint256 newReserveFactorMantissa) external;
 
     /**
-     * @notice accrues interest and sets a new maximum borow rate for pToken
-     * @dev Admin function to accrue interest and set a new maximum borow rate
+     * @notice accrues interest and sets a new maximum borrow rate for pToken
+     * @dev Admin function to accrue interest and set a new maximum borrow rate
      */
     function setBorrowRateMax(uint256 newBorrowRateMaxMantissa) external;
 

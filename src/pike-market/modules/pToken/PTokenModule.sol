@@ -46,6 +46,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @param riskEngine_ The address of the RiskEngine
      * @param initialExchangeRateMantissa_ The initial exchange rate, scaled by 1e18
      * @param reserveFactorMantissa_ percentage of borrow interests that goes to protocol, scaled by 1e18
+     * @param protocolSeizeShareMantissa_ The share of seized collateral that goes to protocol reserves, scaled by 1e18
+     * @param borrowRateMaxMantissa_ The maximum borrow interest rate for the market, scaled by 1e18
      * @param name_ ERC20 name of this token
      * @param symbol_ ERC20 symbol of this token
      * @param decimals_ ERC20 decimal precision of this token
@@ -198,7 +200,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @notice Transfer `amount` tokens from `msg.sender` to `dst`
      * @param dst The address of the destination account
      * @param amount The number of tokens to transfer
-     * @return success True if the transfer succeeded, reverts otherwise
+     * @return True if the transfer succeeded, reverts otherwise
      */
     function transfer(address dst, uint256 amount)
         external
@@ -215,7 +217,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @param src The address of the source account
      * @param dst The address of the destination account
      * @param amount The number of tokens to transfer
-     * @return success True if the transfer succeeded, reverts otherwise
+     * @return True if the transfer succeeded, reverts otherwise
      */
     function transferFrom(address src, address dst, uint256 amount)
         external

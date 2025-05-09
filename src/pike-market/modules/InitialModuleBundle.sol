@@ -12,6 +12,8 @@ contract InitialModuleBundle is OwnableModule, UpgradeModule, Initializable {
         _disableInitializers();
     }
 
+    /// @notice Initialize the contract with an initial owner
+    /// @param initialOwner The address to set as the initial owner
     function initialize(address initialOwner) public initializer {
         _getOwnableStorage().owner = initialOwner;
     }
