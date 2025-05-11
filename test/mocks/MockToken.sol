@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+import {console} from "forge-std/console.sol";
+
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
@@ -82,10 +84,12 @@ contract MockPToken is ERC20 {
         asset = _asset;
     }
 
-    function deposit(uint256 amount, address account) external {
+    function deposit(uint256 amount, address account) external returns (uint256) {
         IERC20(asset).transferFrom(msg.sender, address(this), amount);
         _mint(account, amount);
         collateralBalances[account] += amount;
+
+        return amount;
     }
 
     function borrowOnBehalfOf(address account, uint256 amount) external {

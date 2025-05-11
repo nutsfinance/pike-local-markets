@@ -27,25 +27,24 @@ interface IMultiply is IFLHelper {
         uint256 safetyFactor; // Safety factor applied to the leverage to cover the fees
         SwapProtocol swapProtocol; // Protocol to use for swapping tokens
         uint256 proportionToSwap; // Proportions of collateralAmount to use for mint and swap the rest to pair token, based on swap index
-        uint256[] minAmountOut; // Min. output amount for swap, based on swap index
-        uint24[] feeTiers; // Fee tiers for swap operations, based on swap index
+        uint24 feeTier; // Fee tier for swap operations
+        uint256[2] minAmountOut; // Min. output amount for swap, based on swap index
     }
 
     /**
      * @dev Parameters for deleverage operations with LP tokens
      */
-    struct DelevearageLPParams {
+    struct DeleverageLPParams {
         address borrowPToken; // Pike token for the borrowed asset to be repaid
         address supplyPToken; // Pike token for the LP collateral to be redeemed
         address spa; // SPA contract address for LP operations
-        uint256 debtToRepay; // Amount of debt to repay on borrowPToken
         uint256 collateralToRedeem; // Amount of LP collateral to redeem
         uint256 safetyFactor; // Safety factor applied to the deleverage to cover the fees
         SwapProtocol swapProtocol; // Protocol to use for swapping tokens
         RedeemType redeemType; // Method to redeem LP tokens
         uint256 tokenIndexForSingle; // Token index for single redemption (if applicable)
-        uint256[] minAmountOut; // Minimum amounts out for LP redemption, based on spa index, index 0 for swap, index 1 for mint
-        uint24[] feeTiers; // Fee tiers for swap operations, based on spa index, index 0 for swap
+        uint24 feeTier; // Fee tier for swap operations
+        uint256[2] minAmountOut; // Minimum amounts out for LP redemption, based on spa index, index 0 for swap, index 1 for mint
     }
 
     struct CallbackContext {
@@ -84,6 +83,7 @@ interface IMultiply is IFLHelper {
         address indexed user,
         address supplyPToken,
         address borrowPToken,
+        uint256 suppliedCollateral,
         uint256 collateralAmount,
         uint256 borrowedAmount,
         uint256 swapFees,
@@ -172,7 +172,7 @@ interface IMultiply is IFLHelper {
      */
     function deleverageLP(
         FlashLoanParams calldata flParams,
-        DelevearageLPParams calldata params
+        DeleverageLPParams calldata params
     ) external returns (uint256 excess);
 
     /**

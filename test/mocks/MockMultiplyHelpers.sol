@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
+import {console} from "forge-std/console.sol";
+
 import {IV3SwapRouter} from "swap-router-contracts/contracts/interfaces/IV3SwapRouter.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@mocks/MockToken.sol";
@@ -36,7 +38,7 @@ contract MockZapContract {
         address spa,
         address lpToken,
         address recipient,
-        uint256 minAmountOut,
+        uint256,
         uint256[] memory amounts
     ) external returns (uint256) {
         address[] memory tokens = MockSPA(spa).getTokens();
@@ -60,10 +62,11 @@ contract MockZapContract {
         address[] memory tokens = MockSPA(spa).getTokens();
         require(tokens.length == 2, "Invalid SPA");
         MockToken(lpToken).transferFrom(msg.sender, address(this), amount);
+
         uint256[] memory amounts = new uint256[](2);
         for (uint256 i = 0; i < 2; i++) {
             amounts[i] = amount / 2;
-            IERC20(tokens[i]).transfer(recipient, amounts[i]);
+            MockToken(tokens[i]).mint(recipient, amounts[i]);
         }
         return amounts;
     }
@@ -73,8 +76,8 @@ contract MockZapContract {
 contract MockUniswapV3Pool {
     address public immutable token0;
     address public immutable token1;
-    uint256 public constant FLASH_FEE = 0;
-    uint256 public constant SWAP_FEE = 0;
+    uint256 public constant FLASH_FEE = 300;
+    uint256 public constant SWAP_FEE = 300;
 
     constructor(address _token0, address _token1) {
         token0 = _token0;
@@ -97,8 +100,8 @@ contract MockUniswapV3Pool {
 
         uint256 balance0After = IERC20(token0).balanceOf(address(this));
         uint256 balance1After = IERC20(token1).balanceOf(address(this));
-        require(balance0After >= fee0, "Insufficient token0 repayment");
-        require(balance1After >= fee1, "Insufficient token1 repayment");
+        require(balance0After >= fee0 + amount0, "Insufficient token0 repayment");
+        require(balance1After >= fee1 + amount1, "Insufficient token1 repayment");
     }
 
     function exactInputSingle(IV3SwapRouter.ExactInputSingleParams calldata params)
@@ -110,7 +113,7 @@ contract MockUniswapV3Pool {
         require(isToken0ToToken1 || isToken1ToToken0, "Invalid token pair");
 
         uint256 amountOutBeforeFee = params.amountIn; // 1:1
-        uint256 fee = (amountOutBeforeFee * SWAP_FEE) / 1_000_000;
+        uint256 fee = (amountOutBeforeFee * SWAP_FEE) / 10_000;
         uint256 amountOut = amountOutBeforeFee - fee;
 
         require(amountOut >= params.amountOutMinimum, "Insufficient output");

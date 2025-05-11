@@ -86,8 +86,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         IERC20 borrowToken = IERC20(IPToken(params.borrowPToken).asset());
         borrowToken.safeTransferFrom(msg.sender, address(this), params.collateralAmount);
 
-        bytes memory data = abi.encode(params);
-        _executeFlashLoan(flParams, mainParams, data);
+        _executeFlashLoanLeverage(flParams, mainParams, params);
     }
 
     /**
@@ -103,8 +102,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         );
         InternalContext memory mainParams = InternalContext(msg.sender, true, true);
 
-        bytes memory data = abi.encode(params);
-        _executeFlashLoan(flParams, mainParams, data);
+        _executeFlashLoanLeverage(flParams, mainParams, params);
     }
 
     /**
@@ -112,14 +110,12 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
      */
     function deleverageLP(
         FlashLoanParams calldata flParams,
-        DelevearageLPParams calldata params
+        DeleverageLPParams calldata params
     ) external nonReentrant returns (uint256 excess) {
         _validateDeleverageParams(params);
         /// there should be allowance to redeem on behalf of
         InternalContext memory mainParams = InternalContext(msg.sender, false, false);
-
-        bytes memory data = abi.encode(params);
-        _executeFlashLoan(flParams, mainParams, data);
+        _executeFlashLoanDeleverage(flParams, mainParams, params);
 
         // Return excess tokens to user
         IERC20 borrowToken = IERC20(IPToken(params.borrowPToken).asset());
@@ -149,7 +145,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
 
         address debtToken = fee0 > 0 ? uniswapPool.token0() : uniswapPool.token1();
         uint256 fee = fee0 > 0 ? fee0 : fee1;
-        uint256 amount = IERC20(debtToken).balanceOf(address(this)) - fee;
+        uint256 amount = IERC20(debtToken).balanceOf(address(this));
 
         CallbackContext memory ctx = CallbackContext(
             mainParams.caller,
@@ -159,14 +155,16 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
             FlashLoanSource.UNISWAP_V3,
             mainParams.isExisting
         );
-        bytes memory recipeData = data[96:];
+
+        bytes memory recipeData = data[128:];
+
         if (mainParams.isLeverage) {
             LeverageLPParams memory params = abi.decode(recipeData, (LeverageLPParams));
 
             _handleLeverageCallback(params, ctx);
         } else {
-            DelevearageLPParams memory params =
-                abi.decode(recipeData, (DelevearageLPParams));
+            DeleverageLPParams memory params =
+                abi.decode(recipeData, (DeleverageLPParams));
 
             _handleDeleverageCallback(params, ctx);
         }
@@ -227,17 +225,31 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
     }
 
     // Internal Functions
-
-    function _executeFlashLoan(
+    function _executeFlashLoanLeverage(
         FlashLoanParams memory flParams,
         InternalContext memory mainParams,
-        bytes memory data
+        LeverageLPParams memory params
     ) internal {
         bytes memory recipeData;
         if (flParams.source == FlashLoanSource.UNISWAP_V3) {
-            recipeData = abi.encode(mainParams, flParams.tokens[2], data);
+            recipeData = abi.encode(mainParams, flParams.tokens[2], params);
         } else {
-            recipeData = abi.encode(mainParams, data);
+            recipeData = abi.encode(mainParams, params);
+        }
+        executeFlashLoan(flParams, recipeData);
+    }
+
+    // Internal Functions
+    function _executeFlashLoanDeleverage(
+        FlashLoanParams memory flParams,
+        InternalContext memory mainParams,
+        DeleverageLPParams memory params
+    ) internal {
+        bytes memory recipeData;
+        if (flParams.source == FlashLoanSource.UNISWAP_V3) {
+            recipeData = abi.encode(mainParams, flParams.tokens[2], params);
+        } else {
+            recipeData = abi.encode(mainParams, params);
         }
         executeFlashLoan(flParams, recipeData);
     }
@@ -249,6 +261,10 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         address borrowToken = IPToken(params.borrowPToken).asset();
         require(ctx.debtToken == borrowToken, DebtTokenMismatch());
 
+        if (!ctx.isExisting) {
+            ctx.amount -= params.collateralAmount;
+        }
+
         uint256 adjustedAmount = ctx.amount * params.safetyFactor / PERCENTAGE_BASE;
         uint256 totalBorrowedBalance =
             !ctx.isExisting ? params.collateralAmount + adjustedAmount : adjustedAmount;
@@ -259,13 +275,15 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
             params.spa, IPToken(params.supplyPToken), amounts, params.minAmountOut[1]
         );
 
-        _supplyCollateral(IPToken(params.supplyPToken), lpAmount, ctx.caller);
-        _repayBorrowFlashLoan(IPToken(params.borrowPToken), ctx, totalBorrowedBalance);
+        uint256 suppliedCollateral =
+            _supplyCollateral(IPToken(params.supplyPToken), lpAmount, ctx.caller);
+        _repayBorrowFlashLoan(IPToken(params.borrowPToken), ctx);
 
         emit LeverageExecuted(
             ctx.caller,
             params.supplyPToken,
             params.borrowPToken,
+            suppliedCollateral,
             ctx.isExisting ? params.collateralAmount : 0,
             adjustedAmount,
             ctx.fee,
@@ -274,13 +292,15 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
     }
 
     function _handleDeleverageCallback(
-        DelevearageLPParams memory params,
+        DeleverageLPParams memory params,
         CallbackContext memory ctx
     ) internal {
         address borrowToken = IPToken(params.borrowPToken).asset();
         require(ctx.debtToken == borrowToken, DebtTokenMismatch());
 
-        _repayDebt(IPToken(params.borrowPToken), params.debtToRepay, ctx.caller);
+        uint256 adjustedAmount = ctx.amount * params.safetyFactor / PERCENTAGE_BASE;
+
+        _repayDebt(IPToken(params.borrowPToken), adjustedAmount, ctx.caller);
         uint256 redeemed = _redeemCollateral(
             IPToken(params.supplyPToken), params.collateralToRedeem, ctx.caller
         );
@@ -288,14 +308,14 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
             _redeemLPTokens(params, redeemed);
 
         uint256 debtReceived = _swapToBorrowToken(params, tokens, amounts, borrowToken);
-        require(debtReceived >= ctx.amount + ctx.fee, InsufficientToRepay());
+        require(debtReceived >= adjustedAmount, InsufficientToRepay());
         _repayFlashLoan(ctx.flSource, borrowToken, ctx.amount + ctx.fee);
 
         emit DeleverageExecuted(
             ctx.caller,
             params.borrowPToken,
             params.supplyPToken,
-            params.debtToRepay,
+            adjustedAmount,
             params.collateralToRedeem,
             ctx.fee,
             params.swapProtocol
@@ -309,6 +329,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
     ) internal returns (uint256[] memory amounts) {
         address[] memory underlyingTokens = ISPA(params.spa).getTokens();
         amounts = new uint256[](underlyingTokens.length);
+
         uint256 proportionToSwap =
             (totalBorrowedBalance * params.proportionToSwap) / PERCENTAGE_BASE;
 
@@ -322,7 +343,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
                         underlyingTokens[i],
                         proportionToSwap,
                         params.minAmountOut[0],
-                        params.feeTiers[0]
+                        params.feeTier
                     )
                     : _swapTokensTapio(
                         borrowToken,
@@ -352,18 +373,18 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
 
     function _supplyCollateral(IPToken supplyPToken, uint256 lpAmount, address caller)
         internal
+        returns (uint256)
     {
         address supplyToken = supplyPToken.asset();
         IERC20(supplyToken).forceApprove(address(supplyPToken), lpAmount);
-        supplyPToken.deposit(lpAmount, caller);
+
+        return supplyPToken.deposit(lpAmount, caller);
     }
 
-    function _repayBorrowFlashLoan(
-        IPToken borrowPToken,
-        CallbackContext memory ctx,
-        uint256 totalBorrowedBalance
-    ) internal {
-        uint256 totalRepay = totalBorrowedBalance + ctx.fee;
+    function _repayBorrowFlashLoan(IPToken borrowPToken, CallbackContext memory ctx)
+        internal
+    {
+        uint256 totalRepay = ctx.amount + ctx.fee;
         borrowPToken.borrowOnBehalfOf(ctx.caller, totalRepay);
         _repayFlashLoan(ctx.flSource, ctx.debtToken, totalRepay);
     }
@@ -381,10 +402,10 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         uint256 collateralToRedeem,
         address caller
     ) internal returns (uint256) {
-        return supplyPToken.redeem(collateralToRedeem, address(this), caller);
+        return supplyPToken.withdraw(collateralToRedeem, address(this), caller);
     }
 
-    function _redeemLPTokens(DelevearageLPParams memory params, uint256 redeemed)
+    function _redeemLPTokens(DeleverageLPParams memory params, uint256 redeemed)
         internal
         returns (address[] memory tokens, uint256[] memory amounts)
     {
@@ -404,20 +425,24 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
                 params.minAmountOut[params.tokenIndexForSingle]
             );
         } else {
+            uint256[] memory minAmountsOut = new uint256[](2);
+            for (uint256 i = 0; i < 2; i++) {
+                minAmountsOut[i] = params.minAmountOut[i];
+            }
             tokens = ISPA(params.spa).getTokens();
             amounts = zapContract.zapOut(
                 params.spa,
                 supplyToken,
                 address(this),
                 redeemed,
-                params.minAmountOut,
+                minAmountsOut,
                 params.redeemType == RedeemType.PROPORTIONAL
             );
         }
     }
 
     function _swapToBorrowToken(
-        DelevearageLPParams memory params,
+        DeleverageLPParams memory params,
         address[] memory tokens,
         uint256[] memory amounts,
         address borrowToken
@@ -431,7 +456,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
                         borrowToken,
                         amounts[i],
                         params.minAmountOut[i],
-                        params.feeTiers[0]
+                        params.feeTier
                     )
                     : _swapTokensTapio(
                         tokens[i], borrowToken, params.spa, amounts[i], params.minAmountOut[i]
@@ -528,15 +553,12 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         require(params.proportionToSwap <= PERCENTAGE_BASE, InvalidProportion());
     }
 
-    function _validateDeleverageParams(DelevearageLPParams memory params) internal pure {
+    function _validateDeleverageParams(DeleverageLPParams memory params) internal pure {
         require(
             params.borrowPToken != address(0) && params.supplyPToken != address(0)
                 && params.spa != address(0),
             CommonError.ZeroAddress()
         );
-        require(
-            params.debtToRepay > 0 && params.collateralToRedeem > 0,
-            CommonError.ZeroValue()
-        );
+        require(params.collateralToRedeem > 0, CommonError.ZeroValue());
     }
 }
