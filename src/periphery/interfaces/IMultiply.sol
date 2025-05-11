@@ -3,6 +3,8 @@ pragma solidity 0.8.28;
 
 import {IFLHelper} from "@periphery/interfaces/IFLHelper.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
+import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
+import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
 
 /**
  * @title IMultiply
@@ -184,6 +186,7 @@ interface IMultiply is IFLHelper {
      * @return maxBorrowAmount Maximum amount that can be borrowed safely (in usd value)
      */
     function calculateLeverageMaxBorrow(
+        IRiskEngine riskEngine,
         address account,
         uint8 categoryId,
         IPToken supplyPToken
@@ -200,6 +203,7 @@ interface IMultiply is IFLHelper {
      * @return maxCollateralAmount Maximum collateral amount that can be redeemed with given repay amount
      */
     function calculateDeleverageRedeemableCollateral(
+        IRiskEngine riskEngine,
         address account,
         IPToken borrowPToken,
         IPToken supplyPToken,

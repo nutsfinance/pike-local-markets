@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {IMultiply, IPToken} from "@periphery/interfaces/IMultiply.sol";
+import {
+    IMultiply,
+    IPToken,
+    IRiskEngine,
+    IOracleEngine
+} from "@periphery/interfaces/IMultiply.sol";
 import {
     IERC20,
     SafeERC20,
@@ -9,11 +14,9 @@ import {
     IFLHelper,
     IUniswapV3Pool
 } from "@periphery/FLHelper.sol";
-import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
-import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
-import {IZap} from "@periphery/interfaces/IZap.sol";
-import {ISPA} from "@periphery/interfaces/ISPA.sol";
-import {IV3SwapRouter} from "swap-router-contracts/contracts/interfaces/IV3SwapRouter.sol";
+import {
+    IV3SwapRouter, IZap, ISelfPeggingAsset
+} from "@periphery/interfaces/IProtocols.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {CommonError} from "@errors/CommonError.sol";
@@ -32,15 +35,11 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
 
     // Immutable state variables
     IV3SwapRouter public immutable uniswapRouter;
-    IOracleEngine public immutable priceOracle;
-    IRiskEngine public immutable riskEngine;
     IZap public immutable zapContract;
 
     constructor(
         address _uniswapRouter,
         address _zapContract,
-        address _priceOracle,
-        address _riskEngine,
         address _initialOwner,
         address _uniV3Factory,
         address _aaveV3LendingPool,
@@ -58,15 +57,12 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         Ownable(_initialOwner)
     {
         require(
-            _uniswapRouter != address(0) && _zapContract != address(0)
-                && _priceOracle != address(0) && _riskEngine != address(0),
+            _uniswapRouter != address(0) && _zapContract != address(0),
             CommonError.ZeroAddress()
         );
 
         uniswapRouter = IV3SwapRouter(_uniswapRouter);
         zapContract = IZap(_zapContract);
-        priceOracle = IOracleEngine(_priceOracle);
-        riskEngine = IRiskEngine(_riskEngine);
     }
 
     /**
@@ -77,9 +73,6 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         LeverageLPParams calldata params
     ) external nonReentrant {
         _validateLeverageParams(params);
-        require(
-            riskEngine.delegateAllowed(msg.sender, address(this)), NotDelegatedToBorrow()
-        );
 
         InternalContext memory mainParams = InternalContext(msg.sender, true, false);
 
@@ -97,9 +90,6 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         LeverageLPParams calldata params
     ) external nonReentrant {
         _validateLeverageParams(params);
-        require(
-            riskEngine.delegateAllowed(msg.sender, address(this)), NotDelegatedToBorrow()
-        );
         InternalContext memory mainParams = InternalContext(msg.sender, true, true);
 
         _executeFlashLoanLeverage(flParams, mainParams, params);
@@ -187,6 +177,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
      * @inheritdoc IMultiply
      */
     function calculateLeverageMaxBorrow(
+        IRiskEngine riskEngine,
         address account,
         uint8 categoryId,
         IPToken supplyPToken
@@ -205,14 +196,16 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
      * @inheritdoc IMultiply
      */
     function calculateDeleverageRedeemableCollateral(
+        IRiskEngine riskEngine,
         address account,
         IPToken borrowPToken,
         IPToken supplyPToken,
         uint8 categoryId,
         uint256 repayAmount
     ) external view returns (uint256 maxCollateralAmount) {
-        uint256 borrowPrice = priceOracle.getUnderlyingPrice(borrowPToken);
-        uint256 supplyPrice = priceOracle.getUnderlyingPrice(supplyPToken);
+        IOracleEngine oracle = IOracleEngine(riskEngine.oracle());
+        uint256 borrowPrice = oracle.getUnderlyingPrice(borrowPToken);
+        uint256 supplyPrice = oracle.getUnderlyingPrice(supplyPToken);
         uint256 collateralFactor =
             riskEngine.collateralFactor(categoryId, IPToken(supplyPToken));
         uint256 collateralBalance = supplyPToken.balanceOfUnderlying(account);
@@ -327,7 +320,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         address borrowToken,
         uint256 totalBorrowedBalance
     ) internal returns (uint256[] memory amounts) {
-        address[] memory underlyingTokens = ISPA(params.spa).getTokens();
+        address[] memory underlyingTokens = ISelfPeggingAsset(params.spa).getTokens();
         amounts = new uint256[](underlyingTokens.length);
 
         uint256 proportionToSwap =
@@ -362,7 +355,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         uint256[] memory amounts,
         uint256 minAmountOut
     ) internal returns (uint256 lpAmount) {
-        address[] memory underlyingTokens = ISPA(spa).getTokens();
+        address[] memory underlyingTokens = ISelfPeggingAsset(spa).getTokens();
         for (uint256 i = 0; i < underlyingTokens.length; i++) {
             IERC20(underlyingTokens[i]).forceApprove(address(zapContract), amounts[i]);
         }
@@ -415,7 +408,8 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         if (params.redeemType == RedeemType.SINGLE) {
             tokens = new address[](1);
             amounts = new uint256[](1);
-            tokens[0] = ISPA(params.spa).getTokens()[params.tokenIndexForSingle];
+            tokens[0] =
+                ISelfPeggingAsset(params.spa).getTokens()[params.tokenIndexForSingle];
             amounts[0] = zapContract.zapOutSingle(
                 params.spa,
                 supplyToken,
@@ -429,7 +423,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
             for (uint256 i = 0; i < 2; i++) {
                 minAmountsOut[i] = params.minAmountOut[i];
             }
-            tokens = ISPA(params.spa).getTokens();
+            tokens = ISelfPeggingAsset(params.spa).getTokens();
             amounts = zapContract.zapOut(
                 params.spa,
                 supplyToken,
@@ -503,7 +497,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         require(spa != address(0), CommonError.ZeroAddress());
         IERC20(tokenIn).forceApprove(address(spa), amountIn);
 
-        ISPA spaContract = ISPA(spa);
+        ISelfPeggingAsset spaContract = ISelfPeggingAsset(spa);
         (uint256 tokenInIndex, uint256 tokenOutIndex) =
             _getTokenIndices(spaContract, tokenIn, tokenOut);
         return spaContract.swap(tokenInIndex, tokenOutIndex, amountIn, minAmountOut);
@@ -527,11 +521,11 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         }
     }
 
-    function _getTokenIndices(ISPA spaContract, address tokenIn, address tokenOut)
-        internal
-        view
-        returns (uint256 tokenInIndex, uint256 tokenOutIndex)
-    {
+    function _getTokenIndices(
+        ISelfPeggingAsset spaContract,
+        address tokenIn,
+        address tokenOut
+    ) internal view returns (uint256 tokenInIndex, uint256 tokenOutIndex) {
         address[] memory spaTokens = spaContract.getTokens();
         for (uint256 i = 0; i < spaTokens.length; i++) {
             if (spaTokens[i] == tokenIn) {

@@ -45,8 +45,6 @@ contract MultiplyTest is Test {
             address(uniswapPool),
             address(zapContract),
             address(this),
-            address(new MockRiskEngine()),
-            address(this),
             address(uniswapPool),
             address(0),
             address(0),

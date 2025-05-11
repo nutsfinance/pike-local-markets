@@ -4,11 +4,13 @@ pragma solidity 0.8.28;
 import {
     SafeERC20, IERC20
 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IUniswapV3Pool} from "@periphery/interfaces/IUniswapV3Pool.sol";
-import {IMorphoBlue} from "@periphery/interfaces/IMorphoBlue.sol";
-import {IUniswapV3Factory} from "@periphery/interfaces/IUniswapV3Factory.sol";
-import {ILendingPoolV2} from "@periphery/interfaces/ILendingPoolV2.sol";
-import {IFlashLoans} from "@periphery/interfaces/IFlashLoans.sol";
+import {
+    IFlashLoans,
+    ILendingPoolV2,
+    IUniswapV3Factory,
+    IMorphoBlue,
+    IUniswapV3Pool
+} from "@periphery/interfaces/IProtocols.sol";
 import {IFLHelper} from "@periphery/interfaces/IFLHelper.sol";
 
 /**
