@@ -3,12 +3,11 @@ cache/
 out/
 logs/
 # Ignores development broadcast logs
-# !/broadcast
-# /broadcast/*/31337/
-# /broadcast/*/84532/
-# /broadcast/**/dry-run/
+!/broadcast
+/broadcast/*/*/
+/broadcast/**/dry-run/
 
-/broadcast
+# /broadcast
 
 node_modules
 
