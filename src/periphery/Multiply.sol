@@ -43,17 +43,10 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         address _initialOwner,
         address _uniV3Factory,
         address _aaveV3LendingPool,
-        address _aaveV2LendingPool,
         address _balancerVault,
         address _morphoBlue
     )
-        FLHelper(
-            _uniV3Factory,
-            _aaveV3LendingPool,
-            _aaveV2LendingPool,
-            _balancerVault,
-            _morphoBlue
-        )
+        FLHelper(_uniV3Factory, _aaveV3LendingPool, _balancerVault, _morphoBlue)
         Ownable(_initialOwner)
     {
         require(
@@ -117,11 +110,44 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
 
     function executeOperation(
         address[] memory assets,
-        uint256[] memory amounts,
+        uint256[] memory,
         uint256[] memory premiums,
         address initiator,
         bytes calldata data
-    ) external override(FLHelper, IFLHelper) nonReentrant returns (bool) {}
+    ) external override(FLHelper, IFLHelper) returns (bool) {
+        verifyAaveCallback(msg.sender, initiator);
+        require(assets.length == 1, CommonError.NoArrayParity());
+
+        (InternalContext memory mainParams) = abi.decode(data, (InternalContext));
+
+        address debtToken = assets[0];
+        uint256 fee = premiums[0];
+        uint256 amount = IERC20(debtToken).balanceOf(address(this));
+
+        CallbackContext memory ctx = CallbackContext(
+            mainParams.caller,
+            debtToken,
+            amount,
+            fee,
+            FlashLoanSource.AAVE_V3,
+            mainParams.isExisting
+        );
+
+        bytes memory recipeData = data[96:];
+
+        if (mainParams.isLeverage) {
+            LeverageLPParams memory params = abi.decode(recipeData, (LeverageLPParams));
+
+            _handleLeverageCallback(params, ctx);
+        } else {
+            DeleverageLPParams memory params =
+                abi.decode(recipeData, (DeleverageLPParams));
+
+            _handleDeleverageCallback(params, ctx);
+        }
+
+        return true;
+    }
 
     function uniswapV3FlashCallback(uint256 fee0, uint256 fee1, bytes calldata data)
         external
@@ -519,9 +545,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
     ) internal {
         if (flSource == FlashLoanSource.UNISWAP_V3) {
             IERC20(debtToken).safeTransfer(msg.sender, amountToRepay);
-        } else if (
-            flSource == FlashLoanSource.AAVE_V3 || flSource == FlashLoanSource.AAVE_V2
-        ) {
+        } else if (flSource == FlashLoanSource.AAVE_V3) {
             IERC20(debtToken).forceApprove(msg.sender, amountToRepay);
         } else if (flSource == FlashLoanSource.BALANCER) {
             IERC20(debtToken).safeTransfer(BALANCER_VAULT, amountToRepay);

@@ -16,7 +16,6 @@ contract DeployMultiply is Config {
         address initialOwner = vm.envAddress("INITIAL_OWNER");
         address uniV3Factory = vm.envAddress("UNI_V3_FACTORY");
         address aaveV3LendingPool = vm.envAddress("AAVE_V3_LENDING_POOL");
-        address aaveV2LendingPool = vm.envAddress("AAVE_V2_LENDING_POOL");
         address balancerVault = vm.envAddress("BALANCER_VAULT");
         address morphoBlue = vm.envAddress("MORPHO_BLUE");
 
@@ -30,7 +29,6 @@ contract DeployMultiply is Config {
                 initialOwner,
                 uniV3Factory,
                 aaveV3LendingPool,
-                aaveV2LendingPool,
                 balancerVault,
                 morphoBlue
             )

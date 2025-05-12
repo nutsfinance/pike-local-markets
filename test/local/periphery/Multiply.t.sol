@@ -48,7 +48,6 @@ contract MultiplyTest is Test {
             address(uniswapPool),
             address(0),
             address(0),
-            address(0),
             address(0)
         );
 

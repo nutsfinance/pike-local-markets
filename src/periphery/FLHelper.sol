@@ -24,7 +24,6 @@ abstract contract FLHelper is IFLHelper {
     // Protocol addresses
     address public immutable UNI_V3_FACTORY;
     address public immutable AAVE_V3_LENDING_POOL;
-    address public immutable AAVE_V2_LENDING_POOL;
     address public immutable BALANCER_VAULT;
     address public immutable MORPHO_BLUE_ADDR;
 
@@ -40,19 +39,17 @@ abstract contract FLHelper is IFLHelper {
     constructor(
         address _uniV3Factory,
         address _aaveV3LendingPool,
-        address _aaveV2LendingPool,
         address _balancerVault,
         address _morphoBlue
     ) {
         UNI_V3_FACTORY = _uniV3Factory;
         AAVE_V3_LENDING_POOL = _aaveV3LendingPool;
-        AAVE_V2_LENDING_POOL = _aaveV2LendingPool;
         BALANCER_VAULT = _balancerVault;
         MORPHO_BLUE_ADDR = _morphoBlue;
     }
 
     /**
-     * @notice Callback for Aave V2/V3 flash loans
+     * @notice Callback for Aave V3 flash loans
      * @dev Must be implemented by child contracts
      */
     function executeOperation(
@@ -99,8 +96,6 @@ abstract contract FLHelper is IFLHelper {
             _executeUniV3FlashLoan(_params, _recipeData);
         } else if (_params.source == FlashLoanSource.AAVE_V3) {
             _executeAaveV3FlashLoan(_params, _recipeData);
-        } else if (_params.source == FlashLoanSource.AAVE_V2) {
-            _executeAaveV2FlashLoan(_params, _recipeData);
         } else if (_params.source == FlashLoanSource.BALANCER) {
             _executeBalancerFlashLoan(_params, _recipeData);
         } else if (_params.source == FlashLoanSource.MORPHO_BLUE) {
@@ -174,11 +169,11 @@ abstract contract FLHelper is IFLHelper {
     }
 
     /**
-     * @notice Verifies that the caller is the Aave V3 and Aave V2 lending pool
+     * @notice Verifies that the caller is the Aave V3 lending pool
      * @param caller The address of the caller
      */
     function verifyAaveCallback(address caller, address initiator) internal view {
-        if (caller != AAVE_V3_LENDING_POOL || caller != AAVE_V2_LENDING_POOL) {
+        if (caller != AAVE_V3_LENDING_POOL) {
             revert UntrustedLender();
         }
         if (initiator != address(this)) revert UntrustedInitiator();
@@ -198,28 +193,6 @@ abstract contract FLHelper is IFLHelper {
      */
     function verifyMorphoBlueCallback(address caller) internal view {
         if (caller != MORPHO_BLUE_ADDR) revert UntrustedLender();
-    }
-
-    /**
-     * @notice Execute a flash loan from Aave V2
-     * @param _params Flash loan parameters
-     */
-    function _executeAaveV2FlashLoan(
-        FlashLoanParams memory _params,
-        bytes memory _recipeData
-    ) private {
-        // it should repay the loan in same transaction
-        uint256[] memory modes = new uint256[](_params.tokens.length);
-
-        ILendingPoolV2(AAVE_V2_LENDING_POOL).flashLoan(
-            address(this),
-            _params.tokens,
-            _params.amounts,
-            modes,
-            address(this),
-            _recipeData,
-            AAVE_REFERRAL_CODE
-        );
     }
 
     /**

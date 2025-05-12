@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 /**
  * @title IProtocols
  * @notice Consolidated interface for external protocol dependencies used in periphery
- * @dev Includes interfaces for Uniswap V3, Aave V2/V3, Balancer, Morpho Blue, and related protocols
+ * @dev Includes interfaces for Uniswap V3, Aave V3, Balancer, Morpho Blue, and related protocols
  */
 
 /* ========== Uniswap V3 Interfaces ========== */
@@ -224,7 +224,7 @@ interface IUniswapV3Pool is
     IUniswapV3PoolEvents
 {}
 
-/* ========== Aave V2/V3 Interfaces ========== */
+/* ========== Aave V3 Interfaces ========== */
 
 interface ILendingPoolV2 {
     /**

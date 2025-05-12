@@ -6,7 +6,6 @@ interface IFLHelper {
     enum FlashLoanSource {
         NONE,
         UNISWAP_V3,
-        AAVE_V2,
         AAVE_V3,
         BALANCER,
         MORPHO_BLUE
@@ -23,7 +22,7 @@ interface IFLHelper {
     event FLExecuted(FlashLoanParams params, bytes recipeData);
 
     /**
-     * @notice Callback for Aave V2/V3 flash loans
+     * @notice Callback for Aave V3 flash loans
      * @param assets The addresses of the assets being flash-borrowed
      * @param amounts The amounts of the assets being flash-borrowed
      * @param premiums The fees for the flash loan
