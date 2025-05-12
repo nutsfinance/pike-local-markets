@@ -131,6 +131,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
             abi.decode(data, (InternalContext, address));
 
         IUniswapV3Pool uniswapPool = IUniswapV3Pool(pool);
+
         require(msg.sender == address(uniswapPool), InvalidPool());
 
         address debtToken = fee0 > 0 ? uniswapPool.token0() : uniswapPool.token1();
@@ -151,10 +152,18 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
         if (mainParams.isLeverage) {
             LeverageLPParams memory params = abi.decode(recipeData, (LeverageLPParams));
 
+            verifyUniswapV3Callback(
+                msg.sender, uniswapPool.token0(), uniswapPool.token1(), params.feeTier
+            );
+
             _handleLeverageCallback(params, ctx);
         } else {
             DeleverageLPParams memory params =
                 abi.decode(recipeData, (DeleverageLPParams));
+
+            verifyUniswapV3Callback(
+                msg.sender, uniswapPool.token0(), uniswapPool.token1(), params.feeTier
+            );
 
             _handleDeleverageCallback(params, ctx);
         }

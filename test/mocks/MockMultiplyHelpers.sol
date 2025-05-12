@@ -121,6 +121,10 @@ contract MockUniswapV3Pool {
         MockToken(params.tokenOut).mint(params.recipient, amountOut);
         return amountOut;
     }
+
+    function getPool(address, address, uint24) external view returns (address) {
+        return address(this);
+    }
 }
 
 // MockRiskEngine
