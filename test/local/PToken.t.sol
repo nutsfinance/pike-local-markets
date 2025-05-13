@@ -85,13 +85,19 @@ contract LocalPToken is TestLocal {
         vm.prank(getAdmin());
 
         address user1 = makeAddr("user1");
+        address user2 = makeAddr("user2");
 
         assert(!re.checkCollateralMembership(user1, pUSDC));
+        assert(!re.checkCollateralMembership(user2, pUSDC));
 
         doDeposit(user1, user1, address(pUSDC), 2000e6);
 
+        // enable collateral with third party deposit
+        doDeposit(user1, user2, address(pUSDC), 2000e6);
+
         /// should enable as collateral for iniital deposit
         assert(re.checkCollateralMembership(user1, pUSDC));
+        assert(re.checkCollateralMembership(user2, pUSDC));
     }
 
     function testSetBorrowRateMax_Success() public {
@@ -214,6 +220,9 @@ contract LocalPToken is TestLocal {
 
         ///porivde liquidity
         doDeposit(user1, depositor, address(pWETH), liquidity);
+
+        vm.prank(depositor);
+        re.exitMarket(address(pWETH));
 
         doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
 
