@@ -852,8 +852,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
 
         require(mintTokens != 0, PTokenError.ZeroTokensMinted());
 
-        if (minter == onBehalfOf && $.accountTokens[minter] == 0) {
-            $.riskEngine.mintVerify(minter);
+        if ($.accountTokens[onBehalfOf] == 0) {
+            $.riskEngine.mintVerify(onBehalfOf);
         }
 
         /*
