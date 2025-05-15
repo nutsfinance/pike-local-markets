@@ -179,7 +179,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
             LeverageLPParams memory params = abi.decode(recipeData, (LeverageLPParams));
 
             verifyUniswapV3Callback(
-                msg.sender, uniswapPool.token0(), uniswapPool.token1(), params.feeTier
+                msg.sender, uniswapPool.token0(), uniswapPool.token1(), params.feeTier[1]
             );
 
             _handleLeverageCallback(params, ctx);
@@ -188,7 +188,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
                 abi.decode(recipeData, (DeleverageLPParams));
 
             verifyUniswapV3Callback(
-                msg.sender, uniswapPool.token0(), uniswapPool.token1(), params.feeTier
+                msg.sender, uniswapPool.token0(), uniswapPool.token1(), params.feeTier[1]
             );
 
             _handleDeleverageCallback(params, ctx);
@@ -371,7 +371,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
                         underlyingTokens[i],
                         proportionToSwap,
                         params.minAmountOut[0],
-                        params.feeTier
+                        params.feeTier[0]
                     )
                     : _swapTokensTapio(
                         borrowToken,
@@ -485,7 +485,7 @@ contract Multiply is IMultiply, FLHelper, Ownable, ReentrancyGuard {
                         borrowToken,
                         amounts[i],
                         params.minAmountOut[i],
-                        params.feeTier
+                        params.feeTier[0]
                     )
                     : _swapTokensTapio(
                         tokens[i], borrowToken, params.spa, amounts[i], params.minAmountOut[i]

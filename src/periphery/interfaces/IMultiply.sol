@@ -29,7 +29,7 @@ interface IMultiply is IFLHelper {
         uint256 safetyFactor; // Safety factor applied to the leverage to cover the fees
         SwapProtocol swapProtocol; // Protocol to use for swapping tokens
         uint256 proportionToSwap; // Proportions of collateralAmount to use for mint and swap the rest to pair token, based on swap index
-        uint24 feeTier; // Fee tier for swap operations
+        uint24[2] feeTier; // Fee tiers for swap/fl operations, index 0 is for swap pool, index 1 used for flashloan pool
         uint256[2] minAmountOut; // Min. output amount for swap, based on swap index
     }
 
@@ -45,7 +45,7 @@ interface IMultiply is IFLHelper {
         SwapProtocol swapProtocol; // Protocol to use for swapping tokens
         RedeemType redeemType; // Method to redeem LP tokens
         uint256 tokenIndexForSingle; // Token index for single redemption (if applicable)
-        uint24 feeTier; // Fee tier for swap operations
+        uint24[2] feeTier; // Fee tiers for swap/fl operations, index 0 is for swap pool, index 1 used for flashloan pool
         uint256[2] minAmountOut; // Minimum amounts out for LP redemption, based on spa index, index 0 for swap, index 1 for mint
     }
 

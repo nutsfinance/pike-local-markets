@@ -77,7 +77,8 @@ contract MultiplyTest is Test {
         });
 
         // Leverage params
-        uint24 feeTier = 3000;
+        uint24[2] memory feeTier;
+
         uint256[2] memory minAmountOut;
         minAmountOut[0] = 0;
         minAmountOut[1] = 0;
@@ -128,7 +129,8 @@ contract MultiplyTest is Test {
         });
 
         // Leverage params
-        uint24 feeTier = 3000;
+        uint24[2] memory feeTier;
+
         uint256[2] memory minAmountOut;
         minAmountOut[0] = 0;
         minAmountOut[1] = 0;
@@ -188,7 +190,8 @@ contract MultiplyTest is Test {
         });
 
         // Deleverage params
-        uint24 feeTier = 3000;
+        uint24[2] memory feeTier;
+
         uint256[2] memory minAmountOut;
         minAmountOut[0] = 0;
         minAmountOut[1] = 0;
