@@ -193,13 +193,13 @@ contract LocalRiskEngine is TestLocal {
 
         vm.prank(getAdmin());
         re.setMarketSupplyCaps(markets, caps);
+        uint256 cap = caps[0] - (5000 * pWETH.initialExchangeRate() / ONE_MANTISSA);
         // applied cap - initial mint amount
-        assertEq(
-            caps[0] - 1001, pWETH.maxDeposit(address(0)), "maxDeposit does not match cap"
-        );
-        assertEq(
-            caps[0] - 1001,
+        assertEq(cap, pWETH.maxDeposit(address(0)), "maxDeposit does not match cap");
+        assertApproxEqRel(
+            cap,
             pWETH.maxMint(address(0)) * pWETH.exchangeRateCurrent() / ONE_MANTISSA,
+            1e5,
             "maxMint does not match cap"
         );
 
@@ -521,8 +521,6 @@ contract LocalRiskEngine is TestLocal {
         vm.prank(getAdmin());
         // change risk engine
         setRiskEngineSlot(address(pWETH), mockRE);
-        console.logAddress(address(pWETH.riskEngine()));
-        console.logAddress(mockRE);
 
         // 1450 / 0.825(weth liq threshold) = 1757.57 is liquidation threshold price for collateral
 

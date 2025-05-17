@@ -37,7 +37,7 @@ contract LocalPToken is TestLocal {
         mockOracle = MockOracle(re.oracle());
 
         //initail mint exceptioin case
-        doInitialMintRevert(pUSDC);
+        doInitialMintRevert(pWETH);
         //inital mint
         doInitialMint(pUSDC);
         doInitialMint(pWETH);
@@ -204,13 +204,14 @@ contract LocalPToken is TestLocal {
         address user1 = makeAddr("user1");
         address depositor = makeAddr("depositor");
         uint256 liquidity = 1e18;
+        uint256 exchangeRate = pWETH.initialExchangeRate();
 
         // no withdraw before deposit
         assertEq(
             pUSDC.maxWithdraw(user1), 0, "does not match max withdraw before deposit"
         );
-        assertEq(pWETH.convertToShares(liquidity), liquidity);
-        assertEq(pWETH.convertToAssets(liquidity), liquidity);
+        assertEq(pWETH.convertToShares(liquidity), liquidity * 1e18 / exchangeRate);
+        assertEq(pWETH.convertToAssets(liquidity), liquidity * exchangeRate / 1e18);
 
         ///porivde liquidity
         doDeposit(user1, depositor, address(pWETH), liquidity);

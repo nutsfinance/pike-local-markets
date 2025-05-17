@@ -22,9 +22,15 @@ contract TestHelpers is TestUtilities {
         }
 
         if (action == Action.MINT || action == Action.SUPPLY || action == Action.REPAY) {
-            deal(params.tokenAddress, user, params.amount);
-            vm.prank(user);
-            IERC20(params.tokenAddress).approve(params.pToken, params.amount);
+            if (action == Action.MINT) {
+                deal(params.tokenAddress, user, type(uint256).max);
+                vm.prank(user);
+                IERC20(params.tokenAddress).approve(params.pToken, type(uint256).max);
+            } else {
+                deal(params.tokenAddress, user, params.amount);
+                vm.prank(user);
+                IERC20(params.tokenAddress).approve(params.pToken, params.amount);
+            }
         }
 
         ActionStateData memory beforeAction = getActionStateData(
@@ -40,7 +46,6 @@ contract TestHelpers is TestUtilities {
                     "Minting %s of %s", params.amount, IPToken(params.tokenAddress).name()
                 );
             }
-
             preview = IPToken(params.pToken).previewMint(params.amount);
             vm.prank(user);
             if (params.expectRevert) {
@@ -166,9 +171,8 @@ contract TestHelpers is TestUtilities {
 
         deal(asset, user, 1e18);
         vm.startPrank(user);
-        IERC20(asset).approve(address(pToken), 1001);
-
-        pToken.deposit(1001, user);
+        IERC20(asset).approve(address(pToken), 1e18);
+        pToken.mint(5000, user);
         vm.stopPrank();
     }
 
@@ -180,11 +184,11 @@ contract TestHelpers is TestUtilities {
 
         deal(asset, user, 1e18);
         vm.startPrank(user);
-        IERC20(asset).approve(address(pToken), 1000);
+        IERC20(asset).approve(address(pToken), 1e18);
 
         // "ZeroTokensMinted()" selector
         vm.expectRevert(bytes4(0x4ba25a38));
-        pToken.deposit(1000, user);
+        pToken.mint(1000, user);
         vm.stopPrank();
     }
 
