@@ -321,6 +321,13 @@ interface IPToken is IERC4626 {
     function exchangeRateStored() external view returns (uint256);
 
     /**
+     * @notice Returns the initial exchange rate used for minting pTokens,
+     *  calculated as 0.02 * 10^(18 + underlyingDecimals - pTokenDecimals)
+     * @return The initial exchange rate of the pToken
+     */
+    function initialExchangeRate() external view returns (uint256);
+
+    /**
      * @notice Get cash balance of this pToken in the underlying asset
      * @return The quantity of underlying asset owned by this contract
      */

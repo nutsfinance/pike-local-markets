@@ -603,6 +603,13 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     /**
      * @inheritdoc IPToken
      */
+    function initialExchangeRate() external view returns (uint256) {
+        return _getPTokenStorage().initialExchangeRateMantissa;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function borrowBalanceStored(address account) external view returns (uint256) {
         return borrowBalanceStoredInternal(account);
     }
