@@ -52,8 +52,7 @@ contract LocalGeneral is TestLocal {
         assertEq(liquidity, 84.5e18, "Invalid liquidity");
         // max liquidity to allow borrow for pUSDC is set to 74.5%
         assertEq(borrowLiquidity, 74.5e18, "Invalid liquidity to borrow");
-
-        doMint(user1, user1, address(pWETH), 1e18);
+        doMint(user1, user1, address(pWETH), 1e8);
     }
 
     function testDBehalf() public {
@@ -174,7 +173,8 @@ contract LocalGeneral is TestLocal {
         doDepositAndEnter(onBehalf, onBehalf, address(pUSDC), 2000e6);
         doBorrow(onBehalf, onBehalf, address(pWETH), 0.745e18);
         doRepay(onBehalf, onBehalf, address(pWETH), 0.745e18);
-        uint256 withdrawBalance = pUSDC.balanceOf(onBehalf);
+        uint256 withdrawBalance = pUSDC.balanceOfUnderlying(onBehalf);
+        uint256 expectedToken = pUSDC.previewWithdraw(withdrawBalance);
         // "InsufficientAllowance(address,uint256,uint256)" selector
         doWithdrawUnderlyingRevert(
             user1,
@@ -183,12 +183,11 @@ contract LocalGeneral is TestLocal {
             withdrawBalance,
             abi.encodePacked(
                 bytes4(0x192b9e4e),
-                abi.encode(address(user1), uint256(0), uint256(withdrawBalance))
+                abi.encode(address(user1), uint256(0), uint256(expectedToken))
             )
         );
 
-        doAllow(onBehalf, user1, pUSDC, withdrawBalance);
-
+        doAllow(onBehalf, user1, pUSDC, expectedToken);
         doWithdrawUnderlying(user1, onBehalf, address(pUSDC), withdrawBalance);
     }
 

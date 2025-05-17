@@ -119,6 +119,7 @@ contract TestDeploy is TestSetters, CannonDeploy {
         address underlying = deployUnderlying(name_, symbol_, underlyingDecimals);
 
         IRiskEngine re = IRiskEngine(getRiskEngine());
+        initialExchangeRate = 2 * (10 ** (8 + underlyingDecimals));
 
         PTokenInitialization memory initData = PTokenInitialization({
             underlying: underlying,
@@ -212,7 +213,8 @@ contract TestDeploy is TestSetters, CannonDeploy {
             keccak256(abi.encodePacked(IPToken(_pToken).symbol())),
             keccak256(abi.encodePacked(initData.symbol))
         );
-        assertEq(IPToken(_pToken).borrowIndex(), initData.initialExchangeRate);
+        assertEq(IPToken(_pToken).borrowIndex(), 1e18);
+        assertEq(IPToken(_pToken).initialExchangeRate(), initialExchangeRate);
 
         return _pToken;
     }
