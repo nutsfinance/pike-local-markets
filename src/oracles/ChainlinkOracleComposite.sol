@@ -28,16 +28,6 @@ contract ChainlinkOracleComposite is
         mapping(address => AssetConfig) configs;
     }
 
-    /**
-     * @notice Chainlink feed for the sequencer uptime
-     */
-    AggregatorV3Interface public immutable sequencerUptimeFeed;
-
-    /**
-     * @notice Initial Owner to prevent manipulation during deployment
-     */
-    address public immutable initialOwner;
-
     /// keccak256(abi.encode(uint256(keccak256("pike.OE.provider")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 internal constant _ORACLE_PROVIDER_STORAGE =
         0x5fa1a95efabc4eee5395b3503834a3e8dddcd4f606102ddd245db9714a38bb00;
@@ -58,6 +48,16 @@ contract ChainlinkOracleComposite is
     uint256 private constant SCALING_FACTOR = 10 ** SCALING_DECIMALS;
 
     /**
+     * @notice Chainlink feed for the sequencer uptime
+     */
+    AggregatorV3Interface public immutable sequencerUptimeFeed;
+
+    /**
+     * @notice Initial Owner to prevent manipulation during deployment
+     */
+    address public immutable initialOwner;
+
+    /**
      * @notice Contract constructor
      * @param _sequencerUptimeFeed L2 Sequencer uptime feed
      * @param _initialOwner Address of the initial owner
@@ -71,7 +71,7 @@ contract ChainlinkOracleComposite is
     /**
      * @notice Initialize the contract
      */
-    function initialize() public initializer {
+    function initialize() external initializer {
         __Ownable_init(initialOwner);
     }
 

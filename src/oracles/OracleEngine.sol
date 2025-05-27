@@ -30,7 +30,7 @@ contract OracleEngine is IOracleEngine, AccessControlUpgradeable {
      * @notice Initialize the contract
      * @param owner Address of the owner
      */
-    function initialize(address owner, address configurator) public initializer {
+    function initialize(address owner, address configurator) external initializer {
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
         _grantRole(_CONFIGURATOR_PERMISSION, configurator);
     }
