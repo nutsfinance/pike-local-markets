@@ -39,4 +39,3 @@ int_types = 'long'
 quote_style = 'double'
 number_underscore = 'thousands'
 multiline_func_header = 'attributes_first'
-ignore = ["test/mocks/Diamond/**"]
