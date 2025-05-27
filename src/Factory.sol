@@ -58,13 +58,12 @@ contract Factory is
          * @dev mapping protocol id -> index -> pToken
          */
         mapping(uint256 => mapping(uint256 => address)) markets;
-        bytes32[8] permissions;
+        bytes32[7] permissions;
     }
 
     bytes32 internal constant _CONFIGURATOR_PERMISSION = "CONFIGURATOR";
     bytes32 internal constant _PROTOCOL_OWNER_PERMISSION = "PROTOCOL_OWNER";
     bytes32 internal constant _OWNER_WITHDRAWER_PERMISSION = "OWNER_WITHDRAWER";
-    bytes32 internal constant _PAUSE_GUARDIAN_PERMISSION = "PAUSE_GUARDIAN";
     bytes32 internal constant _BORROW_CAP_GUARDIAN_PERMISSION = "BORROW_CAP_GUARDIAN";
     bytes32 internal constant _SUPPLY_CAP_GUARDIAN_PERMISSION = "SUPPLY_CAP_GUARDIAN";
     bytes32 internal constant _RESERVE_MANAGER_PERMISSION = "RESERVE_MANAGER";
@@ -100,7 +99,6 @@ contract Factory is
             _PROTOCOL_OWNER_PERMISSION,
             _OWNER_WITHDRAWER_PERMISSION,
             _CONFIGURATOR_PERMISSION,
-            _PAUSE_GUARDIAN_PERMISSION,
             _BORROW_CAP_GUARDIAN_PERMISSION,
             _SUPPLY_CAP_GUARDIAN_PERMISSION,
             _RESERVE_MANAGER_PERMISSION,
