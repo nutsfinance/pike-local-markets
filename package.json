@@ -44,7 +44,7 @@
     "cannon-std": "git+https://github.com/usecannon/cannon-std.git#master",
     "forge-std": "git+https://github.com/foundry-rs/forge-std.git",
     "husky": "9.1.6",
-    "solhint": "5.0.3",
+    "solhint": "5.1.0",
     "solhint-plugin-prettier": "0.1.0",
     "sort-package-json": "2.10.0"
   }

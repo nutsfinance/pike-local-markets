@@ -27,7 +27,7 @@ contract Timelock is TimelockControllerUpgradeable {
         uint256 minDelay,
         address[] memory proposers,
         address[] memory executors
-    ) public initializer {
+    ) external initializer {
         __TimelockController_init(minDelay, proposers, executors, admin);
         _grantRole(EMERGENCY_GUARDIAN_ROLE, admin);
     }

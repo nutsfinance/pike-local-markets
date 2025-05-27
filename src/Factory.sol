@@ -86,7 +86,7 @@ contract Factory is
         address _oracleEngineBeacon,
         address _pTokenBeacon,
         address _timelockBeacon
-    ) public initializer {
+    ) external initializer {
         __ReentrancyGuard_init();
         __Ownable_init(_initialOwner);
         FactoryStorage storage $ = _getFactoryStorage();
