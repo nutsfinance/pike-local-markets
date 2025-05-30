@@ -19,6 +19,7 @@ interface IFactory {
         uint256 numOfMarkets;
         address protocolOwner;
         address initialGovernor;
+        address emergencyGuardian;
         address riskEngine;
         address oracleEngine;
         address timelock;
@@ -31,13 +32,15 @@ interface IFactory {
      * @param timelock Address of the deployed Timelock contract responsible to
      * deploy new pTokens and configure market parameters.
      * @param initialGovernor Address of the governor for the deployed timelock.
+     * @param emergencyGuardian Address of the gurdian for the timelock emergency guardian.
      */
     event ProtocolDeployed(
         uint256 indexed protocolId,
         address indexed riskEngine,
         address indexed timelock,
         address oracleEngine,
-        address initialGovernor
+        address initialGovernor,
+        address emergencyGuardian
     );
 
     /**
@@ -62,12 +65,14 @@ interface IFactory {
      * @dev Deploys a new risk/oracle engine with protocol owner as default owner
      * @dev Deploys a new timelock and set governor as default admin and set
      * access on timelock to manage risk engine in order to modify markets
-     * @param governor address of governor that is set as admin of timelock contract
+     * @param governor address of governor that is set as proposer of timelock contract
+     * @param guardian address of emergency guardian that is set as emergency executor of timelock contract
      * @param ownerShareMantissa percentage of accumulated reserve that reserve for protocol owner
      * @param configuratorShareMantissa percentage of accumulated reserve that reserve for governor
      */
     function deployProtocol(
         address governor,
+        address guardian,
         uint256 ownerShareMantissa,
         uint256 configuratorShareMantissa
     )

@@ -1,10 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {
-    IInterestRateModel,
-    IDoubleJumpRateModel
-} from "@interfaces/IDoubleJumpRateModel.sol";
+import {IDoubleJumpRateModel} from "@interfaces/IDoubleJumpRateModel.sol";
 import {DoubleJumpRateStorage} from "@storage/DoubleJumpRateStorage.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
 import {IRBAC} from "@interfaces/IRBAC.sol";

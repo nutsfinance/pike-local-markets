@@ -16,6 +16,7 @@ import {MockOracle} from "@mocks/MockOracle.sol";
 
 contract LocalFactory is TestLocal {
     address governor;
+    address guardian;
     address underlyingToken;
     IPToken pUSDC;
     IPToken pWETH;
@@ -50,13 +51,14 @@ contract LocalFactory is TestLocal {
         );
 
         governor = makeAddr("Governor");
+        guardian = makeAddr("Guardian");
 
         factory = getFactory();
 
         vm.startPrank(getAdmin());
 
         (address riskEngine, address oracleEngine, address payable governorTimelock) =
-            factory.deployProtocol(governor, ownerShare, configuratorShare);
+            factory.deployProtocol(governor, guardian, ownerShare, configuratorShare);
         re = IRiskEngine(riskEngine);
         oe = OracleEngine(oracleEngine);
         governorTL = Timelock(governorTimelock);
@@ -69,7 +71,9 @@ contract LocalFactory is TestLocal {
     }
 
     function testDeployedProtocol_Success() public view {
-        assertEq(governorTL.hasRole(governorTL.DEFAULT_ADMIN_ROLE(), governor), true);
+        assertEq(governorTL.hasRole(governorTL.PROPOSER_ROLE(), governor), true);
+        assertEq(governorTL.hasRole(governorTL.CANCELLER_ROLE(), governor), true);
+        assertEq(governorTL.hasRole(governorTL.EMERGENCY_GUARDIAN_ROLE(), guardian), true);
         assertEq(factory.protocolCount(), 1);
         assertEq(factory.owner(), getAdmin());
         Factory.ProtocolInfo memory $ = factory.getProtocolInfo(1);
@@ -85,7 +89,7 @@ contract LocalFactory is TestLocal {
     function testDeployedProtocol_FailIfNotOwner() public {
         vm.startPrank(governor);
         vm.expectRevert();
-        factory.deployProtocol(governor, ownerShare, configuratorShare);
+        factory.deployProtocol(governor, guardian, ownerShare, configuratorShare);
         vm.stopPrank();
     }
 
@@ -116,7 +120,7 @@ contract LocalFactory is TestLocal {
     }
 
     function testDeployedPToken_Success() public {
-        vm.startPrank(governor);
+        vm.startPrank(guardian);
         uint256[] memory values = new uint256[](2);
         address[] memory targets = new address[](2);
         targets[0] = address(factory);
@@ -141,7 +145,7 @@ contract LocalFactory is TestLocal {
     }
 
     function testTimelock_FailIfNoArrayParity() public {
-        vm.startPrank(governor);
+        vm.startPrank(guardian);
         uint256[] memory values = new uint256[](1);
         address[] memory targets = new address[](2);
         targets[0] = address(factory);
