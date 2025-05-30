@@ -17,19 +17,25 @@ contract Timelock is TimelockControllerUpgradeable {
 
     /**
      * @notice Initialize the contract
-     * @param admin Address of the default admin
+     * @param admin Address of timelock contract admin
+     * @param protocolOwner Address of the protocol owner
+     * @param guardian Address of the emergency guardian
      * @param minDelay minDelay of queue period
      * @param proposers array of proposers that are able to schedule an action
      * @param executors array of executes that are able to execute an action
      */
     function initialize(
         address admin,
+        address protocolOwner,
+        address guardian,
         uint256 minDelay,
         address[] memory proposers,
         address[] memory executors
     ) external initializer {
         __TimelockController_init(minDelay, proposers, executors, admin);
-        _grantRole(EMERGENCY_GUARDIAN_ROLE, admin);
+        _grantRole(CANCELLER_ROLE, protocolOwner);
+        _grantRole(CANCELLER_ROLE, guardian);
+        _grantRole(EMERGENCY_GUARDIAN_ROLE, guardian);
     }
 
     /**
