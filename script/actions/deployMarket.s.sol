@@ -28,10 +28,10 @@ contract DeployMarket is Config {
         uint256 closeFactor;
         uint256 supplyCap;
         uint256 borrowCap;
-        uint256 baseRatePerYear;
-        uint256 multiplierPerYear;
-        uint256 firstJumpMultiplierPerYear;
-        uint256 secondJumpMultiplierPerYear;
+        uint256 baseRate;
+        uint256 initialMultiplier;
+        uint256 firstKinkMultiplier;
+        uint256 secondKinkMultiplier;
         uint256 firstKink;
         uint256 secondKink;
         address mainProvider;
@@ -132,19 +132,17 @@ contract DeployMarket is Config {
                     borrowCap: vm.parseJsonUint(
                         json, string(abi.encodePacked(marketPath, ".borrowCap"))
                     ),
-                    baseRatePerYear: vm.parseJsonUint(
-                        json, string(abi.encodePacked(marketPath, ".baseRatePerYear"))
+                    baseRate: vm.parseJsonUint(
+                        json, string(abi.encodePacked(marketPath, ".baseRate"))
                     ),
-                    multiplierPerYear: vm.parseJsonUint(
-                        json, string(abi.encodePacked(marketPath, ".multiplierPerYear"))
+                    initialMultiplier: vm.parseJsonUint(
+                        json, string(abi.encodePacked(marketPath, ".initialMultiplier"))
                     ),
-                    firstJumpMultiplierPerYear: vm.parseJsonUint(
-                        json,
-                        string(abi.encodePacked(marketPath, ".firstJumpMultiplierPerYear"))
+                    firstKinkMultiplier: vm.parseJsonUint(
+                        json, string(abi.encodePacked(marketPath, ".firstKinkMultiplier"))
                     ),
-                    secondJumpMultiplierPerYear: vm.parseJsonUint(
-                        json,
-                        string(abi.encodePacked(marketPath, ".secondJumpMultiplierPerYear"))
+                    secondKinkMultiplier: vm.parseJsonUint(
+                        json, string(abi.encodePacked(marketPath, ".secondKinkMultiplier"))
                     ),
                     firstKink: vm.parseJsonUint(
                         json, string(abi.encodePacked(marketPath, ".firstKink"))
@@ -508,10 +506,10 @@ contract DeployMarket is Config {
     ) internal {
         bytes memory irmCalldata = abi.encodeWithSelector(
             IDoubleJumpRateModel.configureInterestRateModel.selector,
-            config.baseRatePerYear,
-            config.multiplierPerYear,
-            config.firstJumpMultiplierPerYear,
-            config.secondJumpMultiplierPerYear,
+            config.baseRate,
+            config.initialMultiplier,
+            config.firstKinkMultiplier,
+            config.secondKinkMultiplier,
             config.firstKink,
             config.secondKink
         );

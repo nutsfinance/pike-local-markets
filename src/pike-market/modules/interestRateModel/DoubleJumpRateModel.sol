@@ -25,10 +25,10 @@ contract DoubleJumpRateModel is
      * @inheritdoc IDoubleJumpRateModel
      */
     function configureInterestRateModel(
-        uint256 baseRatePerYear,
-        uint256 multiplierPerYear,
-        uint256 firstJumpMultiplierPerYear,
-        uint256 secondJumpMultiplierPerYear,
+        uint256 baseRate,
+        uint256 initialMultiplier,
+        uint256 firstKinkMultiplier,
+        uint256 secondKinkMultiplier,
         uint256 firstKink,
         uint256 secondKink
     ) external {
@@ -37,20 +37,16 @@ contract DoubleJumpRateModel is
         if (secondKink == 0) {
             revert CommonError.ZeroValue();
         }
-        if (baseRatePerYear != 0 && firstKink != 0 && multiplierPerYear == 0) {
+        if (baseRate != 0 && firstKink != 0 && initialMultiplier == 0) {
             revert IRMError.InvalidMultiplierForNonZeroBaseRate();
         }
-        if (
-            firstJumpMultiplierPerYear >= secondJumpMultiplierPerYear
-                || firstKink >= secondKink
-        ) {
+        if (firstKinkMultiplier >= secondKinkMultiplier || firstKink >= secondKink) {
             revert IRMError.InvalidKinkOrMultiplierOrder();
         }
-        data.baseRatePerSecond = baseRatePerYear / SECONDS_PER_YEAR;
-        data.multiplierPerSecond = multiplierPerYear / SECONDS_PER_YEAR;
-        data.firstJumpMultiplierPerSecond = firstJumpMultiplierPerYear / SECONDS_PER_YEAR;
-        data.secondJumpMultiplierPerSecond =
-            secondJumpMultiplierPerYear / SECONDS_PER_YEAR;
+        data.baseRatePerSecond = baseRate / SECONDS_PER_YEAR;
+        data.multiplierPerSecond = initialMultiplier / SECONDS_PER_YEAR;
+        data.firstJumpMultiplierPerSecond = firstKinkMultiplier / SECONDS_PER_YEAR;
+        data.secondJumpMultiplierPerSecond = secondKinkMultiplier / SECONDS_PER_YEAR;
         data.firstKink = firstKink;
         data.secondKink = secondKink;
 

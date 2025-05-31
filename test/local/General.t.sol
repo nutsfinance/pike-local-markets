@@ -71,7 +71,7 @@ contract LocalGeneral is TestLocal {
 
         doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
         // base rate per second 0
-        assertEq(pWETH.borrowRatePerSecond(), baseRatePerYear, "Invalid rate per second");
+        assertEq(pWETH.borrowRatePerSecond(), baseRate, "Invalid rate per second");
 
         (, uint256 estimatedLiquidityNeededToBorrow,) =
             re.getHypotheticalAccountLiquidity(user1, address(pWETH), 0, 0.745e18);

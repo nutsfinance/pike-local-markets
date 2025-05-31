@@ -63,8 +63,8 @@ contract TestDeploy is TestSetters, CannonDeploy {
     uint256 borrowRateMax = 5e12;
     uint8 pTokenDecimals = 18;
 
-    uint256 baseRatePerYear = 0;
-    uint256 multiplierPerYear = 0;
+    uint256 baseRate = 0;
+    uint256 initialMultiplier = 0;
     uint256 jumpMultiplierPerYear1 = 6.111111e16;
     uint256 jumpMultiplierPerYear2 = 6e18;
     uint256 kink1 = 5e16;
@@ -172,8 +172,8 @@ contract TestDeploy is TestSetters, CannonDeploy {
 
         DoubleJumpRateModel interestRateModule = DoubleJumpRateModel(_pToken);
         interestRateModule.configureInterestRateModel(
-            baseRatePerYear,
-            multiplierPerYear,
+            baseRate,
+            initialMultiplier,
             jumpMultiplierPerYear1,
             jumpMultiplierPerYear2,
             kink1,
