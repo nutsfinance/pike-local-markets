@@ -18,21 +18,21 @@ interface IDoubleJumpRateModel is IInterestRateModel {
      * @dev This function sets the base rate, multipliers, and kink points for the interest rate model.
      * All annualized rates are converted to per-second rates for internal calculations.
      * Only callable by the configurator.
-     * @param baseRatePerYear The base interest rate per year (scaled by 1e18) before utilization hits the first kink.
-     * @param multiplierPerYear The multiplier per year (scaled by 1e18)
+     * @param baseRate The base interest rate per year (scaled by 1e18) before utilization hits the first kink.
+     * @param initialMultiplier The multiplier per year (scaled by 1e18)
      * that increases the interest rate as utilization increases before the first kink.
-     * @param firstJumpMultiplierPerYear The additional multiplier applied after the first kink point (scaled by 1e18).
-     * @param secondJumpMultiplierPerYear The additional multiplier applied after second kink point (scaled by 1e18).
+     * @param firstKinkMultiplier The additional multiplier per year applied after the first kink point (scaled by 1e18).
+     * @param secondKinkMultiplier The additional multiplier per year applied after second kink point (scaled by 1e18).
      * @param firstKink The utilization rate (scaled by 1e18) at which the interest rate "jumps"
      *  according to the first jump multiplier.
      * @param secondKink The utilization rate (scaled by 1e18) at which the interest rate "jumps"
      * according to the second jump multiplier.
      */
     function configureInterestRateModel(
-        uint256 baseRatePerYear,
-        uint256 multiplierPerYear,
-        uint256 firstJumpMultiplierPerYear,
-        uint256 secondJumpMultiplierPerYear,
+        uint256 baseRate,
+        uint256 initialMultiplier,
+        uint256 firstKinkMultiplier,
+        uint256 secondKinkMultiplier,
         uint256 firstKink,
         uint256 secondKink
     ) external;

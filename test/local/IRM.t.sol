@@ -53,8 +53,8 @@ contract LocalIRM is TestLocal {
         // "ZeroValue()" selector
         vm.expectRevert(bytes4(0x7c946ed7));
         pUSDCIRM.configureInterestRateModel(
-            baseRatePerYear,
-            multiplierPerYear,
+            baseRate,
+            initialMultiplier,
             jumpMultiplierPerYear1,
             jumpMultiplierPerYear2,
             kink1,
@@ -69,7 +69,7 @@ contract LocalIRM is TestLocal {
         vm.expectRevert(bytes4(0x435fecd9));
         pUSDCIRM.configureInterestRateModel(
             1,
-            multiplierPerYear,
+            initialMultiplier,
             jumpMultiplierPerYear1,
             jumpMultiplierPerYear2,
             kink1,
@@ -88,7 +88,7 @@ contract LocalIRM is TestLocal {
         );
         pUSDCIRM.configureInterestRateModel(
             1,
-            multiplierPerYear,
+            initialMultiplier,
             jumpMultiplierPerYear1,
             jumpMultiplierPerYear2,
             kink1,
@@ -102,13 +102,13 @@ contract LocalIRM is TestLocal {
         // "InvalidKinkOrMultiplierOrder()" selector
         vm.expectRevert(bytes4(0x397bc3d5));
         pUSDCIRM.configureInterestRateModel(
-            baseRatePerYear, 0, jumpMultiplierPerYear2, multiplierPerYear, 0, kink2
+            baseRate, 0, jumpMultiplierPerYear2, initialMultiplier, 0, kink2
         );
 
         // "InvalidKinkOrMultiplierOrder()" selector
         vm.expectRevert(bytes4(0x397bc3d5));
         pUSDCIRM.configureInterestRateModel(
-            0, 0, multiplierPerYear, jumpMultiplierPerYear2, kink2, kink2
+            0, 0, initialMultiplier, jumpMultiplierPerYear2, kink2, kink2
         );
 
         vm.stopPrank();
@@ -117,14 +117,14 @@ contract LocalIRM is TestLocal {
     function testConfig_SetParams(uint256[2] memory amounts) public {
         secondKink = bound(secondKink, 1, 1e18);
         firstKink = bound(firstKink, 0, secondKink - 1);
-        baseRatePerYear = bound(baseRatePerYear, 0, amounts[0]);
+        baseRate = bound(baseRate, 0, amounts[0]);
         baseMulPerYear = amounts[1];
         secondJumpMulPerYear = bound(secondJumpMulPerYear, 1, type(uint256).max);
         vm.assume(firstJumpMulPerYear < secondJumpMulPerYear);
 
         vm.prank(getAdmin());
         pUSDCIRM.configureInterestRateModel(
-            baseRatePerYear,
+            baseRate,
             baseMulPerYear,
             firstJumpMulPerYear,
             secondJumpMulPerYear,
@@ -139,7 +139,7 @@ contract LocalIRM is TestLocal {
 
         assertEq(set1stKink, firstKink);
         assertEq(set2ndKink, secondKink);
-        assertEq(setBaseRate, baseRatePerYear / SECONDS_PER_YEAR);
+        assertEq(setBaseRate, baseRate / SECONDS_PER_YEAR);
         assertEq(setBaseMultiplier, baseMulPerYear / SECONDS_PER_YEAR);
         assertEq(set1stJump, firstJumpMulPerYear / SECONDS_PER_YEAR);
         assertEq(set2ndJump, secondJumpMulPerYear / SECONDS_PER_YEAR);
