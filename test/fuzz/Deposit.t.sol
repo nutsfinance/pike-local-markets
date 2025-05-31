@@ -84,4 +84,59 @@ contract FuzzDeposit is TestFuzz {
             "Invalid liquidity to borrow"
         );
     }
+
+    function testFuzz_depositWithBorrowLimit(
+        address[2] memory addresses,
+        uint256[4] memory amounts
+    ) public {
+        depositor = addresses[0];
+        onBehalfOf = addresses[1];
+
+        /// bound usdc 10-1B$
+        underlyingToDeposit = bound(amounts[0], 10e6, 1e15);
+        /// set cash, totalBorrows and totalSupply to get random exchangeRate
+        cash = bound(amounts[1], 10e6, 1e15);
+        totalBorrows = bound(amounts[2], 10e6, 1e15);
+        pTokenTotalSupply = bound(amounts[3], 10e6, (totalBorrows + cash));
+
+        vm.assume(depositor != address(pUSDC) && depositor != address(0));
+        vm.assume(onBehalfOf != address(pUSDC) && onBehalfOf != address(0));
+        /// set boundry for exchangeRate ratio (with 20% apr per year it takes 40 years to 8x)
+        vm.assume((cash + totalBorrows) / pTokenTotalSupply < 8);
+
+        setPTokenTotalSupply(address(pUSDC), pTokenTotalSupply);
+        setTotalBorrows(address(pUSDC), totalBorrows);
+
+        setBorrowCapToZero();
+
+        deal(address(pUSDC.asset()), address(pUSDC), cash);
+        doDepositAndEnter(depositor, onBehalfOf, address(pUSDC), underlyingToDeposit);
+
+        (, uint256 liquidity,) = re.getAccountLiquidity(onBehalfOf);
+        (, uint256 borrowLiquidity,) = re.getAccountBorrowLiquidity(onBehalfOf);
+        // max liquidity to allow liquidation for pUSDC is set to 84.5%
+        assertApproxEqRel(
+            liquidity,
+            84.5e10 * underlyingToDeposit,
+            1e12, // ± 0.0001000000000000%
+            "Invalid liquidity"
+        );
+        // max liquidity to allow borrow for pUSDC is set to 74.5%
+        assertApproxEqRel(
+            borrowLiquidity,
+            74.5e10 * underlyingToDeposit,
+            1e12, // ± 0.0001000000000000%
+            "Invalid liquidity to borrow"
+        );
+    }
+
+    function setBorrowCapToZero() internal {
+        IPToken[] memory markets = new IPToken[](1);
+        markets[0] = IPToken(pUSDC);
+
+        uint256[] memory caps = new uint256[](1);
+        caps[0] = 0;
+        vm.prank(getAdmin());
+        re.setMarketBorrowCaps(markets, caps);
+    }
 }
