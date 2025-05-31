@@ -82,9 +82,16 @@ interface IPToken is IERC4626 {
     event ReservesAdded(address benefactor, uint256 addAmount, uint256 newTotalReserves);
 
     /**
-     * @notice Event emitted when the reserves are reduced
+     * @notice Event emitted when the reserves are reduced by protocol owner or governor
      */
     event ReservesReduced(address admin, uint256 reduceAmount, uint256 newTotalReserves);
+
+    /**
+     * @notice Event emitted when the reserves are reduced by emergency guardian
+     */
+    event EmergencyWithdrawn(
+        address caller, uint256 reduceAmount, uint256 newTotalReserves
+    );
 
     /**
      * @notice Sender supplies assets into the market and receives pTokens in exchange

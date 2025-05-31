@@ -11,6 +11,13 @@ import {TimelockControllerUpgradeable} from
 contract Timelock is TimelockControllerUpgradeable {
     bytes32 public constant EMERGENCY_GUARDIAN_ROLE = keccak256("EMERGENCY_GUARDIAN_ROLE");
 
+    /**
+     * @dev Emitted when a call is performed in an emergency execution flow.
+     */
+    event EmergencyCallExecuted(
+        uint256 indexed index, address target, uint256 value, bytes data
+    );
+
     constructor() {
         _disableInitializers();
     }
@@ -42,7 +49,7 @@ contract Timelock is TimelockControllerUpgradeable {
      * @dev Execute an emergency operation containing a single transaction.
      * @dev Needs emergency guardian role access
      * @dev Does not store operation id
-     * @dev Emits a {CallExecuted} event.
+     * @dev Emits a {EmergencyCallExecuted} event.
      */
     function emergencyExecute(address target, uint256 value, bytes calldata payload)
         public
@@ -50,14 +57,14 @@ contract Timelock is TimelockControllerUpgradeable {
         onlyRole(EMERGENCY_GUARDIAN_ROLE)
     {
         _execute(target, value, payload);
-        emit CallExecuted(0, 0, target, value, payload);
+        emit EmergencyCallExecuted(0, target, value, payload);
     }
 
     /**
      * @dev Execute an emergency operation containing a batch of transactions.
      * @dev Needs emergency guardian role access
      * @dev Does not store operation id
-     * @dev Emits a {CallExecuted} event.
+     * @dev Emits a {EmergencyCallExecuted} event.
      */
     function emergencyExecuteBatch(
         address[] calldata targets,
@@ -75,7 +82,7 @@ contract Timelock is TimelockControllerUpgradeable {
             uint256 value = values[i];
             bytes calldata payload = payloads[i];
             _execute(target, value, payload);
-            emit CallExecuted(0, i, target, value, payload);
+            emit EmergencyCallExecuted(i, target, value, payload);
         }
     }
 }

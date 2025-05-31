@@ -155,6 +155,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
 
         // store new reserve
         $.totalReserves = _reduceReserves(reduceAmount, $.totalReserves);
+        emit EmergencyWithdrawn(msg.sender, reduceAmount, $.totalReserves);
     }
 
     /**
@@ -168,6 +169,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         // store new reserve
         $.ownerReserves = _reduceReserves(reduceAmount, $.ownerReserves);
         $.totalReserves -= reduceAmount;
+        emit ReservesReduced(msg.sender, reduceAmount, $.ownerReserves);
     }
 
     /**
@@ -181,6 +183,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         // store new reserve
         $.configuratorReserves = _reduceReserves(reduceAmount, $.configuratorReserves);
         $.totalReserves -= reduceAmount;
+        emit ReservesReduced(msg.sender, reduceAmount, $.configuratorReserves);
     }
 
     /**
@@ -1450,8 +1453,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
 
         // doTransferOut reverts if anything goes wrong, since we can't be sure if side effects occurred.
         doTransferOut(msg.sender, reduceAmount);
-
-        emit ReservesReduced(msg.sender, reduceAmount, newReserve);
     }
 
     function _setRiskEngine(IRiskEngine newRiskEngine) internal {
