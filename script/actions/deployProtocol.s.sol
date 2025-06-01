@@ -24,7 +24,7 @@ contract DeployProtocol is Config {
 
     struct ProtocolInfo {
         address initialGovernor;
-        address emergencyGuardian;
+        address emergencyExecutor;
         uint256 ownerShareMantissa;
         uint256 configuratorShareMantissa;
     }
@@ -48,7 +48,7 @@ contract DeployProtocol is Config {
         string memory json = vm.readFile(configPath);
         return ProtocolInfo({
             initialGovernor: vm.parseJsonAddress(json, ".protocol-info.initialGovernor"),
-            emergencyGuardian: vm.parseJsonAddress(json, ".protocol-info.emergencyGuardian"),
+            emergencyExecutor: vm.parseJsonAddress(json, ".protocol-info.emergencyExecutor"),
             ownerShareMantissa: vm.parseJsonUint(json, ".protocol-info.ownerShareMantissa"),
             configuratorShareMantissa: vm.parseJsonUint(
                 json, ".protocol-info.configuratorShareMantissa"
@@ -95,7 +95,7 @@ contract DeployProtocol is Config {
         vm.serializeAddress(obj, "oracleEngine", deployData.oracleEngine);
         vm.serializeAddress(obj, "timelock", deployData.timelock);
         vm.serializeAddress(obj, "initialGovernor", ADMIN);
-        vm.serializeAddress(obj, "emergencyGuardian", ADMIN);
+        vm.serializeAddress(obj, "emergencyExecutor", ADMIN);
         vm.serializeUint(obj, "deploymentTimestamp", block.timestamp);
         string memory jsonContent = vm.serializeBool(obj, "isDryRun", deployData.isDryRun);
         vm.writeJson(jsonContent, outputPath);
@@ -108,7 +108,7 @@ contract DeployProtocol is Config {
         bytes memory deployCalldata = abi.encodeWithSelector(
             IFactory.deployProtocol.selector,
             info.initialGovernor,
-            info.emergencyGuardian,
+            info.emergencyExecutor,
             info.ownerShareMantissa,
             info.configuratorShareMantissa
         );
@@ -157,7 +157,7 @@ contract DeployProtocol is Config {
             vm.startBroadcast(adminPrivateKey);
             (riskEngine, oracleEngine, governorTimelock) = factory.deployProtocol(
                 info.initialGovernor,
-                info.emergencyGuardian,
+                info.emergencyExecutor,
                 info.ownerShareMantissa,
                 info.configuratorShareMantissa
             );

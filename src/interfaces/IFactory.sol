@@ -19,7 +19,7 @@ interface IFactory {
         uint256 numOfMarkets;
         address protocolOwner;
         address initialGovernor;
-        address emergencyGuardian;
+        address emergencyExecutor;
         address riskEngine;
         address oracleEngine;
         address timelock;
@@ -32,7 +32,7 @@ interface IFactory {
      * @param timelock Address of the deployed Timelock contract responsible to
      * deploy new pTokens and configure market parameters.
      * @param initialGovernor Address of the governor for the deployed timelock.
-     * @param emergencyGuardian Address of the gurdian for the timelock emergency guardian.
+     * @param emergencyExecutor Address of the gurdian for the timelock emergency guardian.
      */
     event ProtocolDeployed(
         uint256 indexed protocolId,
@@ -40,7 +40,7 @@ interface IFactory {
         address indexed timelock,
         address oracleEngine,
         address initialGovernor,
-        address emergencyGuardian
+        address emergencyExecutor
     );
 
     /**
