@@ -111,7 +111,7 @@ contract Factory is
      */
     function deployProtocol(
         address initialGovernor,
-        address emergencyGuardian,
+        address emergencyExecutor,
         uint256 ownerShareMantissa,
         uint256 configuratorShareMantissa
     )
@@ -131,7 +131,7 @@ contract Factory is
         executors[0] = address(0); // open to execute
         bytes memory timelockInit = abi.encodeCall(
             Timelock.initialize,
-            (address(0), owner(), emergencyGuardian, 1 days, proposers, executors)
+            (address(0), owner(), emergencyExecutor, 1 days, proposers, executors)
         );
         governorTimelock =
             payable(address(new BeaconProxy($.timelockBeacon, timelockInit)));
@@ -170,7 +170,7 @@ contract Factory is
         ProtocolInfo storage protocolInfo = $.protocolRegistry[++$.protocolCount];
         protocolInfo.protocolId = $.protocolCount;
         protocolInfo.initialGovernor = initialGovernor;
-        protocolInfo.emergencyGuardian = emergencyGuardian;
+        protocolInfo.emergencyExecutor = emergencyExecutor;
         protocolInfo.riskEngine = riskEngine;
         protocolInfo.oracleEngine = oracleEngine;
         protocolInfo.timelock = governorTimelock;
@@ -182,7 +182,7 @@ contract Factory is
             governorTimelock,
             oracleEngine,
             protocolInfo.initialGovernor,
-            protocolInfo.emergencyGuardian
+            protocolInfo.emergencyExecutor
         );
     }
 
