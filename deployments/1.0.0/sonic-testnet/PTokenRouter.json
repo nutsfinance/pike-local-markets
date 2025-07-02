@@ -1,5 +1,5 @@
 {
-  "address": "0xee178407f9bcccf906d9fd349372c29284948391",
+  "address": "0xfec6d62f33e3033ee4254629147d7ec02a588b77",
   "abi": [
     {
       "name": "facets",
@@ -273,22 +273,22 @@
       "name": "configureInterestRateModel",
       "inputs": [
         {
-          "name": "baseRatePerYear",
+          "name": "baseRate",
           "type": "uint256",
           "internalType": "uint256"
         },
         {
-          "name": "multiplierPerYear",
+          "name": "initialMultiplier",
           "type": "uint256",
           "internalType": "uint256"
         },
         {
-          "name": "firstJumpMultiplierPerYear",
+          "name": "firstKinkMultiplier",
           "type": "uint256",
           "internalType": "uint256"
         },
         {
-          "name": "secondJumpMultiplierPerYear",
+          "name": "secondKinkMultiplier",
           "type": "uint256",
           "internalType": "uint256"
         },
@@ -1183,6 +1183,19 @@
     },
     {
       "type": "function",
+      "name": "initialExchangeRate",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
       "name": "initialize",
       "inputs": [
         {
@@ -1997,6 +2010,31 @@
     },
     {
       "type": "event",
+      "name": "EmergencyWithdrawn",
+      "inputs": [
+        {
+          "name": "caller",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        },
+        {
+          "name": "reduceAmount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "newTotalReserves",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
       "name": "LiquidateBorrow",
       "inputs": [
         {
@@ -2519,11 +2557,11 @@
     }
   ],
   "deployedOn": "router.PTokenRouter",
-  "deployTxnHash": "0xa4234a42609254c8345eba55f3e490d5cfeaabe3578dfe224133d8553c134347",
-  "deployTxnBlockNumber": "31400524",
-  "deployTimestamp": "1744040638",
+  "deployTxnHash": "0x8b6f380577e7764d039347f5a5b1ced9fcb6282c92a909f0e9e083027bedf11c",
+  "deployTxnBlockNumber": "49854466",
+  "deployTimestamp": "1751465427",
   "contractName": "PTokenRouter",
   "sourceName": "PTokenRouter.sol",
-  "gasUsed": 3007549,
+  "gasUsed": 3043237,
   "gasCost": "1000000001"
 }

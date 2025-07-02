@@ -1,5 +1,5 @@
 {
-  "address": "0xBC5b4B009C0B4ceA25bAC407f29D06C94d187385",
+  "address": "0x088872aB28215A36dE4CB74060F8701CDF1d53E2",
   "abi": [
     {
       "type": "constructor",
@@ -143,13 +143,13 @@
     }
   ],
   "constructorArgs": [
-    "0x7c08af991a10ed9cbbbc52d4cbfd971f6e2eb45f",
+    "0xfde17f6912ff83f51f8e0ce9329aa3a05dbfa1b7",
     "0x92Bc7D2305EC97E138a5c98F6f5FD69703fe0589"
   ],
   "linkedLibraries": {},
-  "deployTxnHash": "0x70a4569f062da10defa0644477b3fe24a21c88aca693f87c68c44274c8122942",
-  "deployTxnBlockNumber": "27999390",
-  "deployTimestamp": "1742812628",
+  "deployTxnHash": "0xcc101f51a181a467821bcae3b068b54f37bb0f80f7fe77e7d37cac1b9ee6ebe6",
+  "deployTxnBlockNumber": "49854514",
+  "deployTimestamp": "1751465448",
   "sourceName": "node_modules/@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol",
   "contractName": "UpgradeableBeacon",
   "deployedOn": "contract.reBeacon",

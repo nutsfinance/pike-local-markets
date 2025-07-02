@@ -1,5 +1,5 @@
 {
-  "address": "0x9177eBBb59057BBB075915c3FC083Bf5812e932C",
+  "address": "0x1A416518e36d9ed893E9F2FD7A8108a5c2b1e7A0",
   "abi": [
     {
       "type": "constructor",
@@ -68,13 +68,13 @@
     }
   ],
   "constructorArgs": [
-    "0x1Dba4Ed49f6949aAb39abA2d59211fc657546719",
+    "0xD1b15e0291113E5213236a929e9Eef3653Ca8eB0",
     "0x"
   ],
   "linkedLibraries": {},
-  "deployTxnHash": "0xb381e494d3d98d8c77d040f68463e6709366e6034614b8e7c1b0aab43996fef8",
-  "deployTxnBlockNumber": "27999410",
-  "deployTimestamp": "1742812639",
+  "deployTxnHash": "0x38c2ccc5083635b696b0a3a9f380c67c799dfeabf06cc2987e28a42a88dc5f45",
+  "deployTxnBlockNumber": "49854544",
+  "deployTimestamp": "1751465460",
   "sourceName": "node_modules/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
   "contractName": "ERC1967Proxy",
   "deployedOn": "deploy.InitialProxy",

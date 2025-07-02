@@ -43,7 +43,7 @@ from = "<%= settings.deployer %>"
 source = "pike-upgradeable-proxy:0.1.0@oz"
 options.implementation = "<%= contracts.Factory.address %>"
 options.initialCallData = "<%= encodeFunctionData({abi: contracts.Factory.abi, functionName: 'initialize', args: [settings.core_owner, contracts.reBeacon.address, contracts.oracleEngineBeacon.address, contracts.pTokenBeacon.address, contracts.timelockBeacon.address]}) %>"
-options.owner = "<%= settings.deployer %>"
+options.owner = "<%= settings.core_owner %>"
 options.abi = "<%= JSON.stringify(contracts.Factory.abi) %>"
 options.salt = "Factory"
 depends = ['contract.Factory','contract.oracleEngineBeacon', 'contract.reBeacon', 'contract.pTokenBeacon', 'contract.timelockBeacon']

@@ -8,6 +8,7 @@ import {Config, console} from "../Config.sol";
 contract PermissionGranter is Config {
     IRBAC re;
     Timelock tm;
+    bool revoke;
 
     // Mapping from permission names to bytes32 values
     mapping(string => bytes32) public permissionMap;
@@ -32,6 +33,7 @@ contract PermissionGranter is Config {
         uint256 protocolId = vm.envUint("PROTOCOL_ID");
         string memory permissionName = vm.envString("PERMISSION");
         address target = vm.envAddress("TARGET");
+        revoke = vm.envBool("REVOKE");
 
         // Convert permission name to bytes32
         bytes32 permission = permissionMap[permissionName];
@@ -48,7 +50,9 @@ contract PermissionGranter is Config {
         tm = Timelock(payable(timelockAddress));
 
         vm.startBroadcast(adminPrivateKey);
-        grantPermission(permission, target);
+        revoke
+            ? revokePermission(permission, target)
+            : grantPermission(permission, target);
         vm.stopBroadcast();
     }
 
@@ -56,5 +60,11 @@ contract PermissionGranter is Config {
         console.log("=== Granting permission %s to %s ===", uint256(permission), target);
 
         re.grantPermission(permission, target);
+    }
+
+    function revokePermission(bytes32 permission, address target) internal {
+        console.log("=== Revoking permission %s to %s ===", uint256(permission), target);
+
+        re.revokePermission(permission, target);
     }
 }

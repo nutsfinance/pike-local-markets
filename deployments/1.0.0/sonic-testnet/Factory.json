@@ -1,5 +1,5 @@
 {
-  "address": "0xa8801C51d02268b05cf1562e8c20FD1D3D6F24c3",
+  "address": "0xa2622C8915549A240183045c534AeB9B5f7b98E6",
   "abi": [
     {
       "type": "constructor",
@@ -95,6 +95,11 @@
           "internalType": "address"
         },
         {
+          "name": "emergencyExecutor",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
           "name": "ownerShareMantissa",
           "type": "uint256",
           "internalType": "uint256"
@@ -181,6 +186,11 @@
             },
             {
               "name": "initialGovernor",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "emergencyExecutor",
               "type": "address",
               "internalType": "address"
             },
@@ -462,6 +472,12 @@
           "type": "address",
           "indexed": false,
           "internalType": "address"
+        },
+        {
+          "name": "emergencyExecutor",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
         }
       ],
       "anonymous": false
@@ -572,12 +588,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x6f1901c419fc1d91b208f2a30e11052d8db2f88190fefbd45219280af9339897",
-  "deployTxnBlockNumber": "27999245",
-  "deployTimestamp": "1742812556",
+  "deployTxnHash": "0x93a32519cae058546eeb484cd7730d601e310f3051aa3fbdeb10978359755940",
+  "deployTxnBlockNumber": "49854334",
+  "deployTimestamp": "1751465369",
   "sourceName": "src/Factory.sol",
-  "contractName": "src/Factory.sol:Factory",
+  "contractName": "Factory",
   "deployedOn": "contract.Factory",
-  "gasUsed": 2414849,
+  "gasUsed": 2453713,
   "gasCost": "1000000001"
 }

@@ -1,5 +1,5 @@
 {
-  "address": "0x4E39C2E3785a8667d26Fac22aA34Fb85DfFa5027",
+  "address": "0x0C8d1dA55D7aF1551b9C52b4B70A73652765A834",
   "abi": [
     {
       "type": "function",
@@ -19,22 +19,22 @@
       "name": "configureInterestRateModel",
       "inputs": [
         {
-          "name": "baseRatePerYear",
+          "name": "baseRate",
           "type": "uint256",
           "internalType": "uint256"
         },
         {
-          "name": "multiplierPerYear",
+          "name": "initialMultiplier",
           "type": "uint256",
           "internalType": "uint256"
         },
         {
-          "name": "firstJumpMultiplierPerYear",
+          "name": "firstKinkMultiplier",
           "type": "uint256",
           "internalType": "uint256"
         },
         {
-          "name": "secondJumpMultiplierPerYear",
+          "name": "secondKinkMultiplier",
           "type": "uint256",
           "internalType": "uint256"
         },
@@ -288,11 +288,11 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0xd84739cd3ede366493b70a01b70ef9c797a775ae73d7ae7c7221ee44985bf6d8",
-  "deployTxnBlockNumber": "31400397",
-  "deployTimestamp": "1744040599",
+  "deployTxnHash": "0x873c621646b5a95cf779f94b3145248c04c789a1a67519d2a622ff598adccf50",
+  "deployTxnBlockNumber": "49854320",
+  "deployTimestamp": "1751465363",
   "sourceName": "src/pike-market/modules/interestRateModel/DoubleJumpRateModel.sol",
-  "contractName": "src/pike-market/modules/interestRateModel/DoubleJumpRateModel.sol:DoubleJumpRateModel",
+  "contractName": "DoubleJumpRateModel",
   "deployedOn": "contract.DoubleJumpRateModel",
   "gasUsed": 645735,
   "gasCost": "1000000001"

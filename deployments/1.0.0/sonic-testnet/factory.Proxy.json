@@ -1,5 +1,5 @@
 {
-  "address": "0x9177eBBb59057BBB075915c3FC083Bf5812e932C",
+  "address": "0x1A416518e36d9ed893E9F2FD7A8108a5c2b1e7A0",
   "abi": [
     {
       "type": "constructor",
@@ -95,6 +95,11 @@
           "internalType": "address"
         },
         {
+          "name": "emergencyExecutor",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
           "name": "ownerShareMantissa",
           "type": "uint256",
           "internalType": "uint256"
@@ -181,6 +186,11 @@
             },
             {
               "name": "initialGovernor",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "emergencyExecutor",
               "type": "address",
               "internalType": "address"
             },
@@ -459,6 +469,12 @@
         },
         {
           "name": "initialGovernor",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        },
+        {
+          "name": "emergencyExecutor",
           "type": "address",
           "indexed": false,
           "internalType": "address"

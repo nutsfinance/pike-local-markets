@@ -1,5 +1,5 @@
 {
-  "address": "0xD2504daFF8b31eee599C66945e4B58f45886818f",
+  "address": "0x6b365121193cf478cCDACCd56660D5aC90c425D2",
   "abi": [
     {
       "type": "function",
@@ -400,6 +400,19 @@
     {
       "type": "function",
       "name": "getCash",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "initialExchangeRate",
       "inputs": [],
       "outputs": [
         {
@@ -1226,6 +1239,31 @@
     },
     {
       "type": "event",
+      "name": "EmergencyWithdrawn",
+      "inputs": [
+        {
+          "name": "caller",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        },
+        {
+          "name": "reduceAmount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "newTotalReserves",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
       "name": "LiquidateBorrow",
       "inputs": [
         {
@@ -1812,12 +1850,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x832b32521167c39b838b4eea3b5d8d409632dc009687004bf44e945084bf53ce",
-  "deployTxnBlockNumber": "31400444",
-  "deployTimestamp": "1744040614",
+  "deployTxnHash": "0x2b873e3ad2e461509758ec2e26232de87be1c527a39a267895226b2385098edb",
+  "deployTxnBlockNumber": "49854375",
+  "deployTimestamp": "1751465387",
   "sourceName": "src/pike-market/modules/pToken/PTokenModule.sol",
-  "contractName": "src/pike-market/modules/pToken/PTokenModule.sol:PTokenModule",
+  "contractName": "PTokenModule",
   "deployedOn": "contract.PTokenModule",
-  "gasUsed": 4818244,
+  "gasUsed": 4847231,
   "gasCost": "1000000001"
 }

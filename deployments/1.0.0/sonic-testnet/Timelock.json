@@ -1,5 +1,5 @@
 {
-  "address": "0x69cD73416eE6224BFFaeE64Bf36E094b11C06F57",
+  "address": "0x99E4e29424b5403b3cCe45ba0757363E7e3c4b3e",
   "abi": [
     {
       "type": "constructor",
@@ -395,11 +395,6 @@
       "name": "initialize",
       "inputs": [
         {
-          "name": "admin",
-          "type": "address",
-          "internalType": "address"
-        },
-        {
           "name": "minDelay",
           "type": "uint256",
           "internalType": "uint256"
@@ -413,6 +408,11 @@
           "name": "executors",
           "type": "address[]",
           "internalType": "address[]"
+        },
+        {
+          "name": "admin",
+          "type": "address",
+          "internalType": "address"
         }
       ],
       "outputs": [],
@@ -423,6 +423,21 @@
       "name": "initialize",
       "inputs": [
         {
+          "name": "admin",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "protocolOwner",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "guardian",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
           "name": "minDelay",
           "type": "uint256",
           "internalType": "uint256"
@@ -436,11 +451,6 @@
           "name": "executors",
           "type": "address[]",
           "internalType": "address[]"
-        },
-        {
-          "name": "admin",
-          "type": "address",
-          "internalType": "address"
         }
       ],
       "outputs": [],
@@ -898,6 +908,37 @@
     },
     {
       "type": "event",
+      "name": "EmergencyCallExecuted",
+      "inputs": [
+        {
+          "name": "index",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "target",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        },
+        {
+          "name": "value",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "data",
+          "type": "bytes",
+          "indexed": false,
+          "internalType": "bytes"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
       "name": "Initialized",
       "inputs": [
         {
@@ -1117,12 +1158,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x91fc790ed51a36452a45dcdfa9699807c58084409ef24fc317ce32e51190c11d",
-  "deployTxnBlockNumber": "31400500",
-  "deployTimestamp": "1744040631",
+  "deployTxnHash": "0xf7c8f0a9115b2c578207a7ae28f8ed4fb3422063b266e1b74260b537d10a9def",
+  "deployTxnBlockNumber": "49854424",
+  "deployTimestamp": "1751465406",
   "sourceName": "src/governance/Timelock.sol",
-  "contractName": "src/governance/Timelock.sol:Timelock",
+  "contractName": "Timelock",
   "deployedOn": "contract.Timelock",
-  "gasUsed": 2443800,
+  "gasUsed": 2473671,
   "gasCost": "1000000001"
 }
