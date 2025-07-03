@@ -103,11 +103,11 @@ contract TestProtocolFunctionality is Config, Test {
         console.log("WS Supply Rate (per second): %s", initialSupplyRate);
         console.log("WS Borrow Rate (per second): %s", initialBorrowRate);
 
-        // Step 9: Skip time (30 days)
-        uint256 timeSkip = 30 days;
+        // Step 9: Skip time (180 days)
+        uint256 timeSkip = 180 days;
         vm.warp(block.timestamp + timeSkip);
         console.log("=== Time Skip ===");
-        console.log("Skipped 30 days. New timestamp: %s", block.timestamp);
+        console.log("Skipped 180 days. New timestamp: %s", block.timestamp);
         wsPToken.accrueInterest();
 
         // Step 10: Log final APY and balances
