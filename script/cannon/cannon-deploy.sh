@@ -302,11 +302,11 @@ for chain in "${CHAINS[@]}"; do
         
         # Set deployment path
         if [[ "$DRY_RUN" == "true" ]]; then
-            deploy_path="./deployments/$VERSION/$chain/dry-run"
+            deploy_path="./deployments/$VERSION/$chain/dry-run/artifacts"
             mkdir -p "$(dirname "$deploy_path")"
             cmd="$cmd --dry-run -w $deploy_path"
         else
-            deploy_path="./deployments/$VERSION/$chain"
+            deploy_path="./deployments/$VERSION/$chain/artifacts"
             cmd="$cmd --private-key $PRIVATE_KEY -w $deploy_path"
         fi
         
