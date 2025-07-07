@@ -179,8 +179,9 @@ contract DeployProtocol is Config {
         address safeAddress = vm.envOr("SAFE_ADDRESS", address(0));
         bool useSafe = safeAddress != address(0);
 
+        string memory baseDir = getBaseDir(false); // always use deployed address
         string memory path = string(
-            abi.encodePacked("./deployments/", version, "/", chain, "/factory.Proxy.json")
+            abi.encodePacked(baseDir, "/artifacts/factory.Proxy.json")
         );
         console.log("Using deployment path: %s", path);
 

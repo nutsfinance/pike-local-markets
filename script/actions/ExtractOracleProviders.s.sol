@@ -16,7 +16,7 @@ contract ExtractOracleProviders is Script, Config {
         jsonFiles[1] = "chainlinkProvider.Proxy.json";
         jsonFiles[2] = "pythProvider.Proxy.json";
 
-        string memory baseDir = getBaseDir(chain, dryRun);
+        string memory baseDir = getBaseDir(dryRun);
 
         // Create the common dir
         string memory commonDir = string.concat(baseDir, "/common");
@@ -25,7 +25,7 @@ contract ExtractOracleProviders is Script, Config {
         string memory obj = "oracle-providers";
         string[] memory keys = new string[](jsonFiles.length);
         for (uint256 i = 0; i < jsonFiles.length; i++) {
-            string memory filePath = string.concat(baseDir, "/", jsonFiles[i]);
+            string memory filePath = string.concat(baseDir, "/artifacts/", jsonFiles[i]);
             // removing .Proxy.json
             string memory key = jsonFiles[i];
             uint256 dotIndex = findChar(key, bytes1("."));
@@ -42,7 +42,9 @@ contract ExtractOracleProviders is Script, Config {
         string memory jsonContent = vm.serializeAddress(
             obj,
             keys[keys.length - 1],
-            getAddresses(string.concat(baseDir, "/", jsonFiles[jsonFiles.length - 1]))
+            getAddresses(
+                string.concat(baseDir, "/artifacts/", jsonFiles[jsonFiles.length - 1])
+            )
         );
 
         // Write to oracle-providers.json

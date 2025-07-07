@@ -137,7 +137,7 @@ contract EMode is Config {
         view
         returns (string memory)
     {
-        string memory baseDir = getBaseDir(chain, vm.envBool("DRY_RUN"));
+        string memory baseDir = getBaseDir(vm.envBool("DRY_RUN"));
         return string(
             abi.encodePacked(
                 baseDir,
@@ -211,7 +211,7 @@ contract EMode is Config {
         console.log("Dry run: %s", dryRun);
 
         (address factoryAddress, address riskEngineAddress,, address timelockAddress) =
-            readDeploymentData(chain, protocolId);
+            readDeploymentData(protocolId);
 
         setUp();
         vm.createSelectFork(vm.envString(rpcs[chainId]));

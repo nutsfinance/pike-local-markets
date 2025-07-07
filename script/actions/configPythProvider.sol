@@ -18,9 +18,9 @@ contract ConfigurePythProvider is Config {
         string memory json = vm.readFile(configPath);
         string[] memory marketKeys = getMarketKeys(json);
 
-        string memory baseDir = getBaseDir(chain, dryRun);
+        string memory baseDir = getBaseDir(dryRun);
         string memory providerPath =
-            string(abi.encodePacked(baseDir, "/pythProvider.Proxy.json"));
+            string(abi.encodePacked(baseDir, "/artifacts/pythProvider.Proxy.json"));
         address providerAddress = getAddresses(providerPath);
         IPythOracleProvider provider = IPythOracleProvider(providerAddress);
 

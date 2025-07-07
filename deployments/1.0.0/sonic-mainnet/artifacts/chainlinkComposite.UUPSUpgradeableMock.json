@@ -1,5 +1,5 @@
 {
-  "address": "0x3A2E789998C44Ac61E31B5Db7d2A3cb821C9D860",
+  "address": "0x5cF7D5595bCc3F8cc2E8084A796FA9f5919D0534",
   "abi": [
     {
       "type": "function",
@@ -151,12 +151,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x6467400ce7fd2cbbc104ed03601660049cb02758924e7632c53e0d250b163bc8",
-  "deployTxnBlockNumber": "36995935",
-  "deployTimestamp": "1751546057",
+  "deployTxnHash": "0x422093590143b94e966a8061d0e7fe145a1ff4248c29f8513725132d124557ce",
+  "deployTxnBlockNumber": "37487807",
+  "deployTimestamp": "1751897668",
   "sourceName": "test/mocks/UUPSUpgradeableMock.sol",
   "contractName": "UUPSUpgradeableMock",
   "deployedOn": "deploy.UUPSUpgradeableMock",
   "gasUsed": 539961,
-  "gasCost": "50000000001"
+  "gasCost": "60500000000"
 }

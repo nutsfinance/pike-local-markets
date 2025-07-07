@@ -54,24 +54,25 @@ contract Config is Script, SafeScript {
         return true;
     }
 
-    function getBaseDir(string memory chain, bool isDryRun)
+    function getBaseDir(bool isDryRun)
         internal
         view
         returns (string memory)
     {
         string memory root = vm.projectRoot();
+        string memory chain = vm.envString("CHAIN");
         string memory version = vm.envString("VERSION");
         return isDryRun
             ? string(abi.encodePacked(root, "/deployments/", version, "/", chain, "/dry-run"))
             : string(abi.encodePacked(root, "/deployments/", version, "/", chain));
     }
 
-    function getDeploymentPath(string memory chain, uint256 protocolId)
+    function getDeploymentPath(uint256 protocolId)
         internal
         view
         returns (string memory)
     {
-        string memory baseDir = getBaseDir(chain, vm.envBool("DRY_RUN"));
+        string memory baseDir = getBaseDir(vm.envBool("DRY_RUN"));
         return string(
             abi.encodePacked(
                 baseDir, "/protocol-", vm.toString(protocolId), "/deploymentData.json"
@@ -79,7 +80,7 @@ contract Config is Script, SafeScript {
         );
     }
 
-    function readDeploymentData(string memory chain, uint256 protocolId)
+    function readDeploymentData(uint256 protocolId)
         internal
         view
         returns (
@@ -89,7 +90,7 @@ contract Config is Script, SafeScript {
             address timelockAddress
         )
     {
-        string memory deploymentPath = getDeploymentPath(chain, protocolId);
+        string memory deploymentPath = getDeploymentPath(protocolId);
         string memory json = vm.readFile(deploymentPath);
 
         factoryAddress = vm.parseJsonAddress(json, ".factoryAddress");

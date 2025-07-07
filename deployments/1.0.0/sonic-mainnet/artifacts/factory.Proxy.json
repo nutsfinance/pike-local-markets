@@ -1,5 +1,5 @@
 {
-  "address": "0xbDD3f527563b7D74d4F69c246D47a6ea00b0931E",
+  "address": "0x4C78Bfe588B67a7b5bEd756F1dD2D9e90DF41c92",
   "abi": [
     {
       "type": "constructor",
@@ -586,14 +586,13 @@
       "inputs": []
     }
   ],
-  "constructorArgs": [],
-  "linkedLibraries": {},
-  "deployTxnHash": "0x86e8f9a5958a777e821782e384281d5ee702a0d47e8207a4db19bba21e884c4f",
-  "deployTxnBlockNumber": "36995818",
-  "deployTimestamp": "1751546005",
-  "sourceName": "src/Factory.sol",
-  "contractName": "Factory",
-  "deployedOn": "contract.Factory",
-  "gasUsed": 2453713,
-  "gasCost": "56736666666"
+  "deployTxnHash": "",
+  "deployTxnBlockNumber": "",
+  "deployTimestamp": "",
+  "sourceName": "",
+  "contractName": "",
+  "deployedOn": "invoke.upgrade_proxy_implementation",
+  "gasUsed": 0,
+  "gasCost": "0",
+  "highlight": true
 }

@@ -20,25 +20,6 @@ contract UpgradeBeacon is Config {
         string jsonFile;
     }
 
-    // Read deployment addresses from JSON files
-    function readDeploymentAddress(
-        string memory chain,
-        string memory version,
-        string memory fileName
-    ) internal view returns (address) {
-        string memory path = string(
-            abi.encodePacked(
-                "./deployments/", version, "/", chain, "/", fileName, ".json"
-            )
-        );
-        if (!vm.exists(path)) {
-            console.log("Deployment file %s not found, skipping", path);
-            return address(0);
-        }
-        string memory json = vm.readFile(path);
-        return vm.parseJsonAddress(json, ".address");
-    }
-
     // Check and upgrade a single beacon with simulation support
     function checkAndUpgradeBeacon(
         BeaconUpgrade memory upgrade,
@@ -151,7 +132,7 @@ contract UpgradeBeacon is Config {
         );
 
         // Read Factory address from deployment data
-        (address factoryAddress,,,) = readDeploymentData(chain, protocolId);
+        (address factoryAddress,,,) = readDeploymentData(protocolId);
 
         setUp();
         vm.createSelectFork(vm.envString(rpcs[chainId]));
@@ -159,31 +140,40 @@ contract UpgradeBeacon is Config {
         factory = IFactory(factoryAddress);
         address admin = IOwnable(factoryAddress).owner();
         console.log("Admin address: %s", admin);
+        string memory baseDir = getBaseDir(dryRun);
+        string memory rePath =
+            string(abi.encodePacked(baseDir, "/artifacts/RiskEngineRouter.json"));
+        string memory ptPath =
+            string(abi.encodePacked(baseDir, "/artifacts/PTokenRouter.json"));
+        string memory oePath =
+            string(abi.encodePacked(baseDir, "/artifacts/OracleEngine.json"));
+        string memory tlPath =
+            string(abi.encodePacked(baseDir, "/artifacts/Timelock.json"));
 
         // Define beacons to check
         BeaconUpgrade[] memory upgrades = new BeaconUpgrade[](4);
         upgrades[0] = BeaconUpgrade({
             name: "RiskEngine",
             beacon: factory.riskEngineBeacon(),
-            newImplementation: readDeploymentAddress(chain, version, "RiskEngineRouter"),
+            newImplementation: getAddresses(rePath),
             jsonFile: "RiskEngineRouter"
         });
         upgrades[1] = BeaconUpgrade({
             name: "OracleEngine",
             beacon: factory.oracleEngineBeacon(),
-            newImplementation: readDeploymentAddress(chain, version, "OracleEngine"),
+            newImplementation: getAddresses(oePath),
             jsonFile: "OracleEngine"
         });
         upgrades[2] = BeaconUpgrade({
             name: "Timelock",
             beacon: factory.timelockBeacon(),
-            newImplementation: readDeploymentAddress(chain, version, "Timelock"),
+            newImplementation: getAddresses(tlPath),
             jsonFile: "Timelock"
         });
         upgrades[3] = BeaconUpgrade({
             name: "PToken",
             beacon: factory.pTokenBeacon(),
-            newImplementation: readDeploymentAddress(chain, version, "PTokenRouter"),
+            newImplementation: getAddresses(ptPath),
             jsonFile: "PTokenRouter"
         });
 

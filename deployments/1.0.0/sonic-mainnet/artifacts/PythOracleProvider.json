@@ -1,5 +1,5 @@
 {
-  "address": "0x9aB5C822D820bFb7F695a6c45030FA4c6e9D4F00",
+  "address": "0x249DBB982076c998956c118F990E77Bb20D42A2b",
   "abi": [
     {
       "type": "constructor",
@@ -351,13 +351,17 @@
       ]
     }
   ],
-  "deployTxnHash": "",
-  "deployTxnBlockNumber": "",
-  "deployTimestamp": "",
-  "sourceName": "",
-  "contractName": "",
-  "deployedOn": "invoke.upgrade_proxy_implementation",
-  "gasUsed": 0,
-  "gasCost": "0",
-  "highlight": true
+  "constructorArgs": [
+    "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1"
+  ],
+  "linkedLibraries": {},
+  "deployTxnHash": "0x28866d3e9a4aa1b42e1ae5244986591bca1ba8a3e4e0e6e2a4e5f87103072110",
+  "deployTxnBlockNumber": "37487740",
+  "deployTimestamp": "1751897642",
+  "sourceName": "src/oracles/PythOracleProvider.sol",
+  "contractName": "PythOracleProvider",
+  "deployedOn": "contract.PythOracleProvider",
+  "gasUsed": 1269600,
+  "gasCost": "97239613368"
 }

@@ -1,13 +1,13 @@
 {
-  "address": "0x731EDB76CB2D7Be2A0DB2116BF93f15A0f8772D6",
+  "address": "0x737a223fbA30Ac34467cA89eB684772B3d923eE5",
   "abi": [
     {
       "type": "constructor",
       "inputs": [
         {
-          "name": "_sequencerUptimeFeed",
+          "name": "_pyth",
           "type": "address",
-          "internalType": "contract AggregatorV3Interface"
+          "internalType": "address"
         },
         {
           "name": "_initialOwner",
@@ -26,42 +26,6 @@
           "name": "",
           "type": "string",
           "internalType": "string"
-        }
-      ],
-      "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "getAssetConfig",
-      "inputs": [
-        {
-          "name": "asset",
-          "type": "address",
-          "internalType": "address"
-        }
-      ],
-      "outputs": [
-        {
-          "name": "",
-          "type": "tuple",
-          "internalType": "struct IChainlinkOracleComposite.AssetConfig",
-          "components": [
-            {
-              "name": "feeds",
-              "type": "address[3]",
-              "internalType": "contract AggregatorV3Interface[3]"
-            },
-            {
-              "name": "invertRates",
-              "type": "bool[3]",
-              "internalType": "bool[3]"
-            },
-            {
-              "name": "maxStalePeriods",
-              "type": "uint256[3]",
-              "internalType": "uint256[3]"
-            }
-          ]
         }
       ],
       "stateMutability": "view"
@@ -133,23 +97,23 @@
     },
     {
       "type": "function",
-      "name": "renounceOwnership",
-      "inputs": [],
-      "outputs": [],
-      "stateMutability": "nonpayable"
-    },
-    {
-      "type": "function",
-      "name": "sequencerUptimeFeed",
+      "name": "pyth",
       "inputs": [],
       "outputs": [
         {
           "name": "",
           "type": "address",
-          "internalType": "contract AggregatorV3Interface"
+          "internalType": "contract IPyth"
         }
       ],
       "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "renounceOwnership",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
     },
     {
       "type": "function",
@@ -161,19 +125,19 @@
           "internalType": "address"
         },
         {
-          "name": "feeds",
-          "type": "address[3]",
-          "internalType": "contract AggregatorV3Interface[3]"
+          "name": "feed",
+          "type": "bytes32",
+          "internalType": "bytes32"
         },
         {
-          "name": "invertRates",
-          "type": "bool[3]",
-          "internalType": "bool[3]"
+          "name": "confidenceRatioMin",
+          "type": "uint256",
+          "internalType": "uint256"
         },
         {
-          "name": "maxStalePeriods",
-          "type": "uint256[3]",
-          "internalType": "uint256[3]"
+          "name": "maxStalePeriod",
+          "type": "uint256",
+          "internalType": "uint256"
         }
       ],
       "outputs": [],
@@ -217,20 +181,26 @@
         {
           "name": "asset",
           "type": "address",
-          "indexed": true,
+          "indexed": false,
           "internalType": "address"
         },
         {
-          "name": "feeds",
-          "type": "address[3]",
+          "name": "feed",
+          "type": "bytes32",
           "indexed": false,
-          "internalType": "contract AggregatorV3Interface[3]"
+          "internalType": "bytes32"
         },
         {
-          "name": "maxStalePeriods",
-          "type": "uint256[3]",
+          "name": "confidenceRatioMin",
+          "type": "uint256",
           "indexed": false,
-          "internalType": "uint256[3]"
+          "internalType": "uint256"
+        },
+        {
+          "name": "maxStalePeriod",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
         }
       ],
       "anonymous": false
@@ -314,17 +284,7 @@
     },
     {
       "type": "error",
-      "name": "GracePeriodNotOver",
-      "inputs": []
-    },
-    {
-      "type": "error",
       "name": "InvalidAsset",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "InvalidFeed",
       "inputs": []
     },
     {
@@ -334,12 +294,17 @@
     },
     {
       "type": "error",
-      "name": "InvalidPrice",
+      "name": "InvalidMaxStalePeriod",
       "inputs": []
     },
     {
       "type": "error",
-      "name": "InvalidStalePeriod",
+      "name": "InvalidMinConfRatio",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidPrice",
       "inputs": []
     },
     {
@@ -368,16 +333,6 @@
           "internalType": "address"
         }
       ]
-    },
-    {
-      "type": "error",
-      "name": "SequencerDown",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "StalePrice",
-      "inputs": []
     },
     {
       "type": "error",

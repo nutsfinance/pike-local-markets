@@ -1,13 +1,13 @@
 {
-  "address": "0xa65c5eF1e9c6c386f020fa1B1F5E84cEE8f6d2ED",
+  "address": "0x3D14E248431f788076D98bA76f19FB9d3D8f6B15",
   "abi": [
     {
       "type": "constructor",
       "inputs": [
         {
-          "name": "_pyth",
+          "name": "_sequencerUptimeFeed",
           "type": "address",
-          "internalType": "address"
+          "internalType": "contract AggregatorV3Interface"
         },
         {
           "name": "_initialOwner",
@@ -26,6 +26,42 @@
           "name": "",
           "type": "string",
           "internalType": "string"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getAssetConfig",
+      "inputs": [
+        {
+          "name": "asset",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple",
+          "internalType": "struct IChainlinkOracleComposite.AssetConfig",
+          "components": [
+            {
+              "name": "feeds",
+              "type": "address[3]",
+              "internalType": "contract AggregatorV3Interface[3]"
+            },
+            {
+              "name": "invertRates",
+              "type": "bool[3]",
+              "internalType": "bool[3]"
+            },
+            {
+              "name": "maxStalePeriods",
+              "type": "uint256[3]",
+              "internalType": "uint256[3]"
+            }
+          ]
         }
       ],
       "stateMutability": "view"
@@ -97,23 +133,23 @@
     },
     {
       "type": "function",
-      "name": "pyth",
+      "name": "renounceOwnership",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "sequencerUptimeFeed",
       "inputs": [],
       "outputs": [
         {
           "name": "",
           "type": "address",
-          "internalType": "contract IPyth"
+          "internalType": "contract AggregatorV3Interface"
         }
       ],
       "stateMutability": "view"
-    },
-    {
-      "type": "function",
-      "name": "renounceOwnership",
-      "inputs": [],
-      "outputs": [],
-      "stateMutability": "nonpayable"
     },
     {
       "type": "function",
@@ -125,19 +161,19 @@
           "internalType": "address"
         },
         {
-          "name": "feed",
-          "type": "bytes32",
-          "internalType": "bytes32"
+          "name": "feeds",
+          "type": "address[3]",
+          "internalType": "contract AggregatorV3Interface[3]"
         },
         {
-          "name": "confidenceRatioMin",
-          "type": "uint256",
-          "internalType": "uint256"
+          "name": "invertRates",
+          "type": "bool[3]",
+          "internalType": "bool[3]"
         },
         {
-          "name": "maxStalePeriod",
-          "type": "uint256",
-          "internalType": "uint256"
+          "name": "maxStalePeriods",
+          "type": "uint256[3]",
+          "internalType": "uint256[3]"
         }
       ],
       "outputs": [],
@@ -181,26 +217,20 @@
         {
           "name": "asset",
           "type": "address",
-          "indexed": false,
+          "indexed": true,
           "internalType": "address"
         },
         {
-          "name": "feed",
-          "type": "bytes32",
+          "name": "feeds",
+          "type": "address[3]",
           "indexed": false,
-          "internalType": "bytes32"
+          "internalType": "contract AggregatorV3Interface[3]"
         },
         {
-          "name": "confidenceRatioMin",
-          "type": "uint256",
+          "name": "maxStalePeriods",
+          "type": "uint256[3]",
           "indexed": false,
-          "internalType": "uint256"
-        },
-        {
-          "name": "maxStalePeriod",
-          "type": "uint256",
-          "indexed": false,
-          "internalType": "uint256"
+          "internalType": "uint256[3]"
         }
       ],
       "anonymous": false
@@ -284,7 +314,17 @@
     },
     {
       "type": "error",
+      "name": "GracePeriodNotOver",
+      "inputs": []
+    },
+    {
+      "type": "error",
       "name": "InvalidAsset",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidFeed",
       "inputs": []
     },
     {
@@ -294,17 +334,12 @@
     },
     {
       "type": "error",
-      "name": "InvalidMaxStalePeriod",
-      "inputs": []
-    },
-    {
-      "type": "error",
-      "name": "InvalidMinConfRatio",
-      "inputs": []
-    },
-    {
-      "type": "error",
       "name": "InvalidPrice",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidStalePeriod",
       "inputs": []
     },
     {
@@ -336,6 +371,16 @@
     },
     {
       "type": "error",
+      "name": "SequencerDown",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "StalePrice",
+      "inputs": []
+    },
+    {
+      "type": "error",
       "name": "UUPSUnauthorizedCallContext",
       "inputs": []
     },
@@ -351,17 +396,13 @@
       ]
     }
   ],
-  "constructorArgs": [
-    "0x2880aB155794e7179c9eE2e38200202908C17B43",
-    "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1"
-  ],
-  "linkedLibraries": {},
-  "deployTxnHash": "0x8edf43c4c391bbd72307668acde2a6d5493eee5b85d6d5289e6e69564e337edb",
-  "deployTxnBlockNumber": "36995874",
-  "deployTimestamp": "1751546030",
-  "sourceName": "src/oracles/PythOracleProvider.sol",
-  "contractName": "PythOracleProvider",
-  "deployedOn": "contract.PythOracleProvider",
-  "gasUsed": 1269600,
-  "gasCost": "50442379155"
+  "deployTxnHash": "",
+  "deployTxnBlockNumber": "",
+  "deployTimestamp": "",
+  "sourceName": "",
+  "contractName": "",
+  "deployedOn": "invoke.upgrade_proxy_implementation",
+  "gasUsed": 0,
+  "gasCost": "0",
+  "highlight": true
 }

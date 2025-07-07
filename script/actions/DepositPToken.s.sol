@@ -17,7 +17,7 @@ contract DepositPToken is Config {
         setUp();
         vm.createSelectFork(vm.envString(rpcs[chainId]));
 
-        string memory baseDir = getBaseDir(chain, false); // Always false to use main folder
+        string memory baseDir = getBaseDir(false); // Always false to use main folder
         string memory deploymentPath = string(
             abi.encodePacked(
                 baseDir, "/protocol-", vm.toString(protocolId), "/deploymentData.json"

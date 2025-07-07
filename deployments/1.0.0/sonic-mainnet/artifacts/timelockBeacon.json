@@ -1,5 +1,5 @@
 {
-  "address": "0x6CF1088253A25F0572cda5Ac5D8Bb5401C7C5dB2",
+  "address": "0xFca89f82A8ACF0a4876614578045e9e79e65647c",
   "abi": [
     {
       "type": "constructor",
@@ -143,16 +143,16 @@
     }
   ],
   "constructorArgs": [
-    "0x290ff47fb88e5a88a543dc4252e4f9dbeda70e49",
+    "0xe0E9844D35449dF4ae1e6EecBba952f95dEfd109",
     "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1"
   ],
   "linkedLibraries": {},
-  "deployTxnHash": "0xf3ed6b832fbd70311bba77f97cb93ed4e9d32a6ff73c29c65b8158757704e886",
-  "deployTxnBlockNumber": "36996238",
-  "deployTimestamp": "1751546188",
+  "deployTxnHash": "0x5d64c0267bc4b8de030f6c1d09493b00098e1360df3adbb71ac0aca846224b67",
+  "deployTxnBlockNumber": "37487956",
+  "deployTimestamp": "1751897733",
   "sourceName": "node_modules/@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol",
   "contractName": "UpgradeableBeacon",
-  "deployedOn": "contract.pTokenBeacon",
+  "deployedOn": "contract.timelockBeacon",
   "gasUsed": 305889,
-  "gasCost": "53766673333"
+  "gasCost": "50000000001"
 }

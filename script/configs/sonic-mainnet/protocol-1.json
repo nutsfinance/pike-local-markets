@@ -26,7 +26,7 @@
     "secondKinkMultiplier": "8000000000000000000",
     "firstKink": "0",
     "secondKink": "900000000000000000",
-    "mainProvider": "0x0000000000000000000000000000000000000000",
+    "mainProvider": "0x3D14E248431f788076D98bA76f19FB9d3D8f6B15",
     "fallbackProvider": "0x0000000000000000000000000000000000000000",
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
@@ -52,7 +52,7 @@
     "secondKinkMultiplier": "8500000000000000000",
     "firstKink": "0",
     "secondKink": "800000000000000000",
-    "mainProvider": "0x0000000000000000000000000000000000000000",
+    "mainProvider": "0x3D14E248431f788076D98bA76f19FB9d3D8f6B15",
     "fallbackProvider": "0x0000000000000000000000000000000000000000",
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
@@ -78,7 +78,7 @@
     "secondKinkMultiplier": "8500000000000000000",
     "firstKink": "0",
     "secondKink": "800000000000000000",
-    "mainProvider": "0x0000000000000000000000000000000000000000",
+    "mainProvider": "0x3D14E248431f788076D98bA76f19FB9d3D8f6B15",
     "fallbackProvider": "0x0000000000000000000000000000000000000000",
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
@@ -86,7 +86,7 @@
   "market-ws_wsts": {
     "name": "Pike Wrapped Self Pegging Asset wS stS",
     "symbol": "pwSPA-wS-stS",
-    "baseToken": "0x0000000000000000000000000000000000000000",
+    "baseToken": "0x36d3eBd8EE9aa00Cf1f17Ff1A1F4700e1FE2E45B",
     "decimals": 8,
     "initialExchangeRateMantissa": "200000000000000000000000000",
     "reserveFactorMantissa": "100000000000000000",
@@ -104,15 +104,15 @@
     "secondKinkMultiplier": "8500000000000000000",
     "firstKink": "0",
     "secondKink": "800000000000000000",
-    "mainProvider": "0x0000000000000000000000000000000000000000",
+    "mainProvider": "0x3D14E248431f788076D98bA76f19FB9d3D8f6B15",
     "fallbackProvider": "0x0000000000000000000000000000000000000000",
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
   },
-  "market-ws_wosh": {
+  "market-ws_wos": {
     "name": "Pike Wrapped Self Pegging Asset wS wOS",
     "symbol": "pwSPA-wS-wOS",
-    "baseToken": "0x0000000000000000000000000000000000000000",
+    "baseToken": "0x4B2F110d711CAD19b05E597e62b4E30C62534Ba1",
     "decimals": 8,
     "initialExchangeRateMantissa": "200000000000000000000000000",
     "reserveFactorMantissa": "100000000000000000",
@@ -130,7 +130,7 @@
     "secondKinkMultiplier": "8500000000000000000",
     "firstKink": "0",
     "secondKink": "800000000000000000",
-    "mainProvider": "0x0000000000000000000000000000000000000000",
+    "mainProvider": "0x3D14E248431f788076D98bA76f19FB9d3D8f6B15",
     "fallbackProvider": "0x0000000000000000000000000000000000000000",
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
@@ -138,11 +138,11 @@
   "emode-1": {
     "categoryId": 1,
     "ptokens": [
-      "0x0000000000000000000000000000000000000000",
-      "0x0000000000000000000000000000000000000000",
-      "0x0000000000000000000000000000000000000000",
-      "0x0000000000000000000000000000000000000000",
-      "0x0000000000000000000000000000000000000000"
+      "0x035f1F3DDffbC9e2C5F89F935A94374F6d3d4411",
+      "0x926163A6B668E1a0A8EDc4B73240826fE905fDE8",
+      "0x3e686cC07c4cAA86b459cE77D425380833Ae8E5A",
+      "0xc59e7570e7211E43b971858755F8885C6b41fF98",
+      "0xE8dDdD61e184692fEfC91574c1ae358D522C7c25"
     ],
     "collateralPermissions": [false, false, false, true, true],
     "borrowPermissions": [true, true, true, false, false],

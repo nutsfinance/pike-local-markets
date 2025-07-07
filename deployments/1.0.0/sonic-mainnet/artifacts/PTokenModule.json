@@ -1,5 +1,5 @@
 {
-  "address": "0xc764BcC1925f630E397B2FC5be4e74ed795E9a31",
+  "address": "0x573d80B138b23f090E755A816FCFfaB38DcDAe90",
   "abi": [
     {
       "type": "function",
@@ -1850,12 +1850,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x3da678f1caed06a74579013397fe4145a0480c78f56015efa4d3c90631c5ac0a",
-  "deployTxnBlockNumber": "36995860",
-  "deployTimestamp": "1751546024",
+  "deployTxnHash": "0x6b028d6cff439239ba8461e675c67100d47baea0a3698a70509c246f10bdce65",
+  "deployTxnBlockNumber": "37487723",
+  "deployTimestamp": "1751897636",
   "sourceName": "src/pike-market/modules/pToken/PTokenModule.sol",
   "contractName": "PTokenModule",
   "deployedOn": "contract.PTokenModule",
   "gasUsed": 4847231,
-  "gasCost": "51826482348"
+  "gasCost": "103996687900"
 }

@@ -41,7 +41,7 @@ contract PermissionGranter is Config {
 
         // Read deployment data
         (, address riskEngineAddress,, address timelockAddress) =
-            readDeploymentData(chain, protocolId);
+            readDeploymentData(protocolId);
 
         setUp();
         vm.createSelectFork(vm.envString(rpcs[chainId]));

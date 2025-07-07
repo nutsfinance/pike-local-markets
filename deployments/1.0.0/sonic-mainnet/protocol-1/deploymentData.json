@@ -1,16 +1,16 @@
 {
-  "deploymentTimestamp": 1751546692,
+  "deploymentTimestamp": 1751897870,
   "emergencyExecutor": "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1",
-  "factoryAddress": "0xA8b1c3946d0Cc29a04B35f54a431bFe8EE2e1FaA",
+  "factoryAddress": "0x4C78Bfe588B67a7b5bEd756F1dD2D9e90DF41c92",
   "initialGovernor": "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1",
   "isDryRun": false,
-  "market-psts": "0x103d05D213634f4387948bfDC0B2eB45efE61C3d",
-  "market-pwos": "0xE348336F1B00dBBb515e72d3a5d8da28B534C751",
-  "market-pws": "0x26320AA5B1123F53ECbDb1cBe69ed90c564b383a",
-  "market-pwssts": "0xdcfC8D66e5a17EBB38E224c2D73190628628641e",
-  "market-pwswos": "0x7FDCac57282C6070FbbC8D584908F0d59625f529",
-  "oracleEngine": "0x7330495fFcF91eDAd8DBF76ff53f69C743CcAD63",
+  "market-psts": "0x926163A6B668E1a0A8EDc4B73240826fE905fDE8",
+  "market-pwos": "0x3e686cC07c4cAA86b459cE77D425380833Ae8E5A",
+  "market-pws": "0x035f1F3DDffbC9e2C5F89F935A94374F6d3d4411",
+  "market-pwspa-ws-sts": "0xc59e7570e7211E43b971858755F8885C6b41fF98",
+  "market-pwspa-ws-wos": "0xE8dDdD61e184692fEfC91574c1ae358D522C7c25",
+  "oracleEngine": "0x7A2Fbf79F8000B4269F1933F8503D550d16E15bF",
   "protocolId": 1,
-  "riskEngine": "0xf45B3FF4C4434105Bb9081365D0DEB14E2f13c42",
-  "timelock": "0x05E3DC93d02bE1049f927f6B7879A1Fe1a21C748"
+  "riskEngine": "0xf9382918A1F02AB3523B4AD20A5d0b969E938667",
+  "timelock": "0xB69957B207A2a8ce610C9bFDa9A264c9cCd5734f"
 }

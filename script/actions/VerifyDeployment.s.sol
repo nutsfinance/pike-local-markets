@@ -43,7 +43,7 @@ contract VerifyDeployment is Config {
         MarketConfig[] memory configs = readMarketConfigs(chain, protocolId);
 
         // Load deployment data
-        string memory deploymentPath = getDeploymentPath(chain, protocolId);
+        string memory deploymentPath = getDeploymentPath(protocolId);
         string memory json = vm.readFile(deploymentPath);
         address riskEngineAddress = vm.parseJsonAddress(json, ".riskEngine");
         IRiskEngine re = IRiskEngine(riskEngineAddress);

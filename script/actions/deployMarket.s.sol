@@ -293,7 +293,7 @@ contract DeployMarket is Config {
             address riskEngineAddress,
             address oracleEngineAddress,
             address timelockAddress
-        ) = readDeploymentData(chain, protocolId);
+        ) = readDeploymentData(protocolId);
 
         setUp();
         vm.createSelectFork(vm.envString(rpcs[chainId]));

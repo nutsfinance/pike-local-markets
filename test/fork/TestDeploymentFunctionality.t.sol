@@ -34,7 +34,7 @@ contract TestProtocolFunctionality is Config, Test {
         // Step 3: Load deployed contracts from JSON
         string memory chain = vm.envString("CHAIN");
         uint256 protocolId = vm.envUint("PROTOCOL_ID");
-        string memory deploymentPath = getDeploymentPath(chain, protocolId);
+        string memory deploymentPath = getDeploymentPath(protocolId);
         string memory json = vm.readFile(deploymentPath);
         address riskEngineAddress = vm.parseJsonAddress(json, ".riskEngine");
         address wsPTokenAddress = vm.parseJsonAddress(json, ".market-pws");
