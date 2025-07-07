@@ -1,5 +1,5 @@
 [profile.default]
-solc = '0.8.28'
+solc = "0.8.28"
 evm_version = "cancun"
 src = "src"
 out = "out"
@@ -35,7 +35,8 @@ runs = 10000
 line_length = 90
 tab_width = 4
 bracket_spacing = false
-int_types = 'long'
-quote_style = 'double'
-number_underscore = 'thousands'
-multiline_func_header = 'attributes_first'
+int_types = "long"
+quote_style = "double"
+number_underscore = "thousands"
+multiline_func_header = "attributes_first"
+single_line_statement_blocks = "preserve"
