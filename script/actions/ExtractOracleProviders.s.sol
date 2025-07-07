@@ -6,15 +6,6 @@ import {console} from "forge-std/console.sol";
 import {Config} from "../Config.sol";
 
 contract ExtractOracleProviders is Script, Config {
-    function getAddresses(string memory path) internal view returns (address) {
-        try vm.readFile(path) returns (string memory json) {
-            return vm.parseJsonAddress(json, ".address");
-        } catch {
-            console.log("Warning: Failed to read address from %s", path);
-            return address(0);
-        }
-    }
-
     function run() external {
         string memory chain = vm.envString("CHAIN");
         bool dryRun = vm.envBool("DRY_RUN");
@@ -57,30 +48,5 @@ contract ExtractOracleProviders is Script, Config {
         // Write to oracle-providers.json
         string memory outputPath = string.concat(commonDir, "/oracle-providers.json");
         writeJsonFile(outputPath, jsonContent);
-    }
-
-    // Helper to extract substring
-    function substring(string memory str, uint256 start, uint256 length)
-        private
-        pure
-        returns (string memory)
-    {
-        bytes memory strBytes = bytes(str);
-        bytes memory result = new bytes(length);
-        for (uint256 i = 0; i < length; i++) {
-            result[i] = strBytes[start + i];
-        }
-        return string(result);
-    }
-
-    // Helper to find the first occurrence of a character
-    function findChar(string memory str, bytes1 char) private pure returns (uint256) {
-        bytes memory strBytes = bytes(str);
-        for (uint256 i = 0; i < strBytes.length; i++) {
-            if (strBytes[i] == char) {
-                return i;
-            }
-        }
-        return strBytes.length;
     }
 }
