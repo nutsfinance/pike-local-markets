@@ -63,10 +63,4 @@ contract ConfigureChainlinkProvider is Config {
         }
         return marketKeys;
     }
-
-    function getAddresses(string memory path) internal view returns (address) {
-        string memory json = vm.readFile(path);
-        bytes memory data = vm.parseJson(json, ".address");
-        return abi.decode(data, (address));
-    }
 }

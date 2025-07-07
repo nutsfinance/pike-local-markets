@@ -37,12 +37,6 @@ contract DeployProtocol is Config {
 
     constructor() Config() {}
 
-    function getAddresses(string memory path) internal view returns (address) {
-        string memory json = vm.readFile(path);
-        bytes memory data = vm.parseJson(json, ".address");
-        return abi.decode(data, (address));
-    }
-
     function readProtocolInfo() internal view returns (ProtocolInfo memory) {
         string memory configPath = vm.envString("CONFIG_PATH");
         string memory json = vm.readFile(configPath);

@@ -109,12 +109,9 @@ contract Config is Script, SafeScript {
     }
 
     function getAddresses(string memory path) internal view returns (address) {
-        try vm.readFile(path) returns (string memory json) {
-            return vm.parseJsonAddress(json, ".address");
-        } catch {
-            console.log("Warning: Failed to read address from %s", path);
-            return address(0);
-        }
+        string memory json = vm.readFile(path);
+        bytes memory data = vm.parseJson(json, ".address");
+        return abi.decode(data, (address));
     }
 
     // Helper to extract substring
