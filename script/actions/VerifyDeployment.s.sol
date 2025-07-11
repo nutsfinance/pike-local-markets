@@ -9,6 +9,12 @@ import {IDoubleJumpRateModel} from "@interfaces/IDoubleJumpRateModel.sol";
 import {Config} from "../Config.sol";
 
 contract VerifyDeployment is Config {
+    bytes32 implSlot = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
+    bytes32 uupsOwnerSlot =
+        0x9016d09d72d40fdae2fd8ceac6b6234c7706214fd39c1cd1e609a0528c199300;
+    bytes32 routerOwnerSlot =
+        0x74d6be38627e7912e34c50c5cbc5a4826c01ce9f17c41aaeea1b0611189c7000;
+
     struct MarketConfig {
         string name;
         string symbol;
@@ -34,21 +40,66 @@ contract VerifyDeployment is Config {
         address fallbackProvider;
     }
 
-    function run() public {
-        string memory chain = vm.envString("CHAIN");
-        uint256 chainId = vm.envUint("CHAIN_ID");
-        uint256 protocolId = vm.envUint("PROTOCOL_ID");
+    struct ImplAddrs {
+        address factory;
+        address riskEngineRouter;
+        address oracleEngine;
+        address ptokenBeacon;
+        address timelock;
+        address chainlinkOracleComposite;
+        address chainlinkOracleProvider;
+        address pythOracleProvider;
+        address ptokenRouter;
+    }
 
-        // Load market configurations
-        MarketConfig[] memory configs = readMarketConfigs(chain, protocolId);
+    struct ProxyAddrs {
+        address factoryAddress;
+        address riskEngineAddress;
+        address oracleEngineAddress;
+        address timelockAddress;
+        address ptokenRouterAddress;
+        address chainlinkCompositeProxy;
+        address chainlinkProviderProxy;
+        address pythProviderProxy;
+        address initialGovernor;
+    }
+
+    uint256 chainId;
+    uint256 protocolId;
+    bool dryRun;
+    string chain;
+    string json;
+
+    function run() public {
+        chain = vm.envString("CHAIN");
+        chainId = vm.envUint("CHAIN_ID");
+        protocolId = vm.envUint("PROTOCOL_ID");
+        dryRun = vm.envBool("DRY_RUN");
 
         // Load deployment data
-        string memory deploymentPath = getDeploymentPath(protocolId);
-        string memory json = vm.readFile(deploymentPath);
-        address riskEngineAddress = vm.parseJsonAddress(json, ".riskEngine");
-        IRiskEngine re = IRiskEngine(riskEngineAddress);
-        vm.createSelectFork(vm.envString(rpcs[chainId]));
+        json = vm.readFile(getDeploymentPath(protocolId));
+        string memory baseDir = string.concat(getBaseDir(dryRun), "/artifacts/");
+        ImplAddrs memory a = loadImplAddrs(baseDir);
+        ProxyAddrs memory p = loadProxyAddrs(json, baseDir);
 
+        vm.createSelectFork(vm.envString(rpcs[chainId]));
+        //verifyImplementation and owners
+        require(readImpl(p.factoryAddress) == a.factory, "factory mismatch");
+        require(readBeaconProxyImpl(p.riskEngineAddress) == a.riskEngineRouter, "risk engine mismatch");
+        require(readBeaconProxyImpl(p.oracleEngineAddress) == a.oracleEngine, "oracle engine mismatch");
+        require(readBeaconProxyImpl(p.timelockAddress) == a.timelock, "timelock mismatch");
+        require(readBeaconImpl(a.ptokenBeacon) == a.ptokenRouter, "ptokenRouter mismatch");
+        require(readImpl(p.chainlinkCompositeProxy) == a.chainlinkOracleComposite, "chainlinkOracleComposite mismatch");
+        require(readImpl(p.chainlinkProviderProxy) == a.chainlinkOracleProvider, "chainlinkOracleProvider mismatch");
+        require(readImpl(p.pythProviderProxy) == a.pythOracleProvider, "pythOracleProvider mismatch");
+        require(readUUPSOwner(p.factoryAddress) == p.initialGovernor, "factoryAddress initialGovernor mismatch");
+        require(readUUPSOwner(p.chainlinkCompositeProxy) == p.initialGovernor, "chainlinkCompositeProxy initialGovernor mismatch");
+        require(readUUPSOwner(p.chainlinkProviderProxy) == p.initialGovernor, "chainlinkProviderProxy initialGovernor mismatch");
+        require(readUUPSOwner(p.pythProviderProxy) == p.initialGovernor, "pythProviderProxy initialGovernor mismatch");
+
+        // Load market configurations
+        IRiskEngine re = IRiskEngine(p.riskEngineAddress);
+        MarketConfig[] memory configs = readMarketConfigs(chain, protocolId);
         // Verify each market
         for (uint256 i = 0; i < configs.length; i++) {
             string memory marketKey =
@@ -122,7 +173,95 @@ contract VerifyDeployment is Config {
         console.log("All markets passed test verification");
     }
 
-    function readMarketConfigs(string memory chain, uint256 protocolId)
+    function loadProxyAddrs(string memory _json, string memory baseDir)
+        internal
+        view
+        returns (ProxyAddrs memory p)
+    {
+        p.factoryAddress = vm.parseJsonAddress(_json, ".factoryAddress");
+        p.riskEngineAddress = vm.parseJsonAddress(_json, ".riskEngine");
+        p.oracleEngineAddress = vm.parseJsonAddress(_json, ".oracleEngine");
+        p.timelockAddress = vm.parseJsonAddress(_json, ".timelock");
+        p.initialGovernor = vm.parseJsonAddress(_json, ".initialGovernor");
+        p.chainlinkCompositeProxy = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "chainlinkCompositeProxy.json")),
+            ".address"
+        );
+        p.chainlinkProviderProxy = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "chainlinkProviderProxy.json")), ".address"
+        );
+        p.pythProviderProxy = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "pythProviderProxy.json")), ".address"
+        );
+    }
+
+    function loadImplAddrs(string memory baseDir)
+        internal
+        view
+        returns (ImplAddrs memory a)
+    {
+        a.factory = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "Factory.json")), ".address"
+        );
+        a.riskEngineRouter = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "RiskEngineRouter.json")), ".address"
+        );
+        a.oracleEngine = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "OracleEngine.json")), ".address"
+        );
+        a.ptokenBeacon = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "pTokenBeacon.json")), ".address"
+        );
+        a.ptokenRouter = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "PTokenRouter.json")), ".address"
+        );
+        a.timelock = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "Timelock.json")), ".address"
+        );
+        a.chainlinkOracleComposite = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "ChainlinkOracleComposite.json")),
+            ".address"
+        );
+        a.chainlinkOracleProvider = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "ChainlinkOracleProvider.json")),
+            ".address"
+        );
+        a.pythOracleProvider = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "PythOracleProvider.json")), ".address"
+        );
+    }
+
+    function readImpl(address proxy) internal view returns (address) {
+        return address(uint160(uint256(vm.load(proxy, implSlot))));
+    }
+
+    function readBeaconProxyImpl(address proxy) internal view returns (address) {
+        bytes memory code = address(proxy).code;
+        bytes32 result;
+        // offset to get immutable variable of deployed bytecode (beacon address) is 0x23 or bytes35
+        assembly {
+            result := mload(add(code, add(0x20, 0x23)))
+        }
+        return address(
+            uint160(
+                uint256(vm.load(address(uint160(uint256(result))), bytes32(uint256(1))))
+            )
+        );
+    }
+
+    function readBeaconImpl(address beacon) internal view returns (address) {
+        return address(uint160(uint256(vm.load(beacon, bytes32(uint256(1))))));
+    }
+
+    function readRouterOwner(address proxy) internal view returns (address) {
+        return address(uint160(uint256(vm.load(proxy, routerOwnerSlot))));
+    }
+
+    function readUUPSOwner(address proxy) internal view returns (address) {
+        return address(uint160(uint256(vm.load(proxy, uupsOwnerSlot))));
+    }
+
+    function readMarketConfigs(string memory _chain, uint256 _protocolId)
         internal
         view
         returns (MarketConfig[] memory)
@@ -132,15 +271,15 @@ contract VerifyDeployment is Config {
             abi.encodePacked(
                 root,
                 "/script/configs/",
-                chain,
+                _chain,
                 "/protocol-",
-                vm.toString(protocolId),
+                vm.toString(_protocolId),
                 ".json"
             )
         );
-        string memory json = vm.readFile(configPath);
+        string memory _json = vm.readFile(configPath);
 
-        string[] memory allKeys = vm.parseJsonKeys(json, ".");
+        string[] memory allKeys = vm.parseJsonKeys(_json, ".");
         uint256 marketCount = 0;
         for (uint256 i = 0; i < allKeys.length; i++) {
             if (startsWith(allKeys[i], "market-")) {
@@ -157,77 +296,77 @@ contract VerifyDeployment is Config {
                 string memory marketPath = string(abi.encodePacked(".", marketKey));
                 configs[configIndex] = MarketConfig({
                     name: vm.parseJsonString(
-                        json, string(abi.encodePacked(marketPath, ".name"))
+                        _json, string(abi.encodePacked(marketPath, ".name"))
                     ),
                     symbol: vm.parseJsonString(
-                        json, string(abi.encodePacked(marketPath, ".symbol"))
+                        _json, string(abi.encodePacked(marketPath, ".symbol"))
                     ),
                     baseToken: vm.parseJsonAddress(
-                        json, string(abi.encodePacked(marketPath, ".baseToken"))
+                        _json, string(abi.encodePacked(marketPath, ".baseToken"))
                     ),
                     decimals: uint8(
                         vm.parseJsonUint(
-                            json, string(abi.encodePacked(marketPath, ".decimals"))
+                            _json, string(abi.encodePacked(marketPath, ".decimals"))
                         )
                     ),
                     initialExchangeRateMantissa: vm.parseJsonUint(
-                        json,
+                        _json,
                         string(abi.encodePacked(marketPath, ".initialExchangeRateMantissa"))
                     ),
                     reserveFactorMantissa: vm.parseJsonUint(
-                        json, string(abi.encodePacked(marketPath, ".reserveFactorMantissa"))
+                        _json, string(abi.encodePacked(marketPath, ".reserveFactorMantissa"))
                     ),
                     protocolSeizeShareMantissa: vm.parseJsonUint(
-                        json,
+                        _json,
                         string(abi.encodePacked(marketPath, ".protocolSeizeShareMantissa"))
                     ),
                     borrowRateMaxMantissa: vm.parseJsonUint(
-                        json, string(abi.encodePacked(marketPath, ".borrowRateMaxMantissa"))
+                        _json, string(abi.encodePacked(marketPath, ".borrowRateMaxMantissa"))
                     ),
                     collateralFactorMantissa: vm.parseJsonUint(
-                        json,
+                        _json,
                         string(abi.encodePacked(marketPath, ".collateralFactorMantissa"))
                     ),
                     liquidationThresholdMantissa: vm.parseJsonUint(
-                        json,
+                        _json,
                         string(abi.encodePacked(marketPath, ".liquidationThresholdMantissa"))
                     ),
                     liquidationIncentiveMantissa: vm.parseJsonUint(
-                        json,
+                        _json,
                         string(abi.encodePacked(marketPath, ".liquidationIncentiveMantissa"))
                     ),
                     closeFactor: vm.parseJsonUint(
-                        json, string(abi.encodePacked(marketPath, ".closeFactor"))
+                        _json, string(abi.encodePacked(marketPath, ".closeFactor"))
                     ),
                     supplyCap: vm.parseJsonUint(
-                        json, string(abi.encodePacked(marketPath, ".supplyCap"))
+                        _json, string(abi.encodePacked(marketPath, ".supplyCap"))
                     ),
                     borrowCap: vm.parseJsonUint(
-                        json, string(abi.encodePacked(marketPath, ".borrowCap"))
+                        _json, string(abi.encodePacked(marketPath, ".borrowCap"))
                     ),
                     baseRate: vm.parseJsonUint(
-                        json, string(abi.encodePacked(marketPath, ".baseRate"))
+                        _json, string(abi.encodePacked(marketPath, ".baseRate"))
                     ),
                     initialMultiplier: vm.parseJsonUint(
-                        json, string(abi.encodePacked(marketPath, ".initialMultiplier"))
+                        _json, string(abi.encodePacked(marketPath, ".initialMultiplier"))
                     ),
                     firstKinkMultiplier: vm.parseJsonUint(
-                        json, string(abi.encodePacked(marketPath, ".firstKinkMultiplier"))
+                        _json, string(abi.encodePacked(marketPath, ".firstKinkMultiplier"))
                     ),
                     secondKinkMultiplier: vm.parseJsonUint(
-                        json, string(abi.encodePacked(marketPath, ".secondKinkMultiplier"))
+                        _json, string(abi.encodePacked(marketPath, ".secondKinkMultiplier"))
                     ),
                     firstKink: vm.parseJsonUint(
-                        json, string(abi.encodePacked(marketPath, ".firstKink"))
+                        _json, string(abi.encodePacked(marketPath, ".firstKink"))
                     ),
                     secondKink: vm.parseJsonUint(
-                        json, string(abi.encodePacked(marketPath, ".secondKink"))
+                        _json, string(abi.encodePacked(marketPath, ".secondKink"))
                     ),
                     mainProvider: vm.parseJsonAddress(
-                        json, string(abi.encodePacked(marketPath, ".mainProvider"))
+                        _json, string(abi.encodePacked(marketPath, ".mainProvider"))
                     ),
                     fallbackProvider: vm.parseJsonAddress(
-                        json, string(abi.encodePacked(marketPath, ".fallbackProvider"))
+                        _json, string(abi.encodePacked(marketPath, ".fallbackProvider"))
                     )
                 });
                 configIndex++;

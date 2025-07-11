@@ -181,7 +181,7 @@ contract DeployProtocol is Config {
 
         string memory baseDir = getBaseDir(false); // always use deployed address
         string memory path = string(
-            abi.encodePacked(baseDir, "/artifacts/factory.Proxy.json")
+            abi.encodePacked(baseDir, "/artifacts/factoryProxy.json")
         );
         console.log("Using deployment path: %s", path);
 

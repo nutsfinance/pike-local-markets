@@ -17,7 +17,7 @@ The deployment process follows a two-stage approach where the factory is deploye
 2. **Single Factory per Chain**:
 
    - Each chain has one factory contract managing all protocols and markets. This factory is deployed **once per chain** using the `cannon-deploy.sh` script.
-   - After Cannon deployment, the factory address is written to `deployments/<version>/<chain>/factory.Proxy.json`.
+   - After Cannon deployment, the factory address is written to `deployments/<version>/<chain>/factoryProxy.json`.
 
 3. **Configuration Files**:
    - Before running any deployment script, prepare a JSON config file in `script/configs/<chain>/protocol-<protocol-id>.json`.
@@ -76,7 +76,7 @@ Options:
    ```
 
 3. **Verify Deployment**:
-   - Check `deployments/<version>/<chain>/factory.Proxy.json` for the factory address.
+   - Check `deployments/<version>/<chain>/factoryProxy.json` for the factory address.
    - For dry runs, check `deployments/<version>/<chain>/dry-run/`.
 
 ### Important Notes
@@ -216,11 +216,11 @@ Configure E-Modes for an existing protocol.
 
 3. **Deployment Verification**:
    - Always check the logs and output files to verify successful deployments.
-   - For `cannon-deploy.sh`, verify factory address in `factory.Proxy.json`.
+   - For `cannon-deploy.sh`, verify factory address in `factoryProxy.json`.
    - For protocol deployments, check `deploymentData.json` and other output files.
 
 ## Troubleshooting
 
 - **Missing Config File**: Ensure the config file exists at `script/configs/<chain>/protocol-<protocol-id>.json`.
 - **Protocol ID Mismatch**: Check the factory’s `protocolCount` on-chain to confirm the next ID.
-- **Factory Not Found**: Verify `deployments/<version>/<chain>/factory.Proxy.json` exists from the Cannon deployment.
+- **Factory Not Found**: Verify `deployments/<version>/<chain>/factoryProxy.json` exists from the Cannon deployment.

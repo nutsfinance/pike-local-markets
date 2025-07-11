@@ -26,29 +26,29 @@ args = [
 from = "<%= settings.deployer %>"
 depends = ['var.config', 'var.owner']
 
-[clone.pythProvider]
-source = "pike-upgradeable-proxy:0.1.0@oz"
-options.implementation = "<%= contracts.PythOracleProvider.address %>"
-options.initialCallData = "<%= encodeFunctionData({abi: contracts.PythOracleProvider.abi, functionName: 'initialize'}) %>"
-options.owner = "<%= settings.pythProvider_owner %>"
-options.abi = "<%= JSON.stringify(contracts.PythOracleProvider.abi) %>"
-options.salt = "PythOracleProvider"
+[contract.pythProviderProxy]
+artifact = "ERC1967Proxy"
+args = [
+  "<%= contracts.PythOracleProvider.address %>",
+  "<%= encodeFunctionData({abi: contracts.PythOracleProvider.abi, functionName: 'initialize'}) %>"
+]
+from = "<%= settings.deployer %>"
 depends = ['contract.PythOracleProvider']
 
-[clone.chainlinkProvider]
-source = "pike-upgradeable-proxy:0.1.0@oz"
-options.implementation = "<%= contracts.ChainlinkOracleProvider.address %>"
-options.initialCallData = "<%= encodeFunctionData({abi: contracts.ChainlinkOracleProvider.abi, functionName: 'initialize'}) %>"
-options.owner = "<%= settings.chainlinkProvider_owner %>"
-options.abi = "<%= JSON.stringify(contracts.ChainlinkOracleProvider.abi) %>"
-options.salt = "ChainlinkOracleProvider"
+[contract.chainlinkProviderProxy]
+artifact = "ERC1967Proxy"
+args = [
+  "<%= contracts.ChainlinkOracleProvider.address %>",
+  "<%= encodeFunctionData({abi: contracts.ChainlinkOracleProvider.abi, functionName: 'initialize'}) %>"
+]
+from = "<%= settings.deployer %>"
 depends = ['contract.ChainlinkOracleProvider']
 
-[clone.chainlinkComposite]
-source = "pike-upgradeable-proxy:0.1.0@oz"
-options.implementation = "<%= contracts.ChainlinkOracleComposite.address %>"
-options.initialCallData = "<%= encodeFunctionData({abi: contracts.ChainlinkOracleComposite.abi, functionName: 'initialize'}) %>"
-options.owner = "<%= settings.chainlinkProvider_owner %>"
-options.abi = "<%= JSON.stringify(contracts.ChainlinkOracleComposite.abi) %>"
-options.salt = "ChainlinkOracleComposite"
+[contract.chainlinkCompositeProxy]
+artifact = "ERC1967Proxy"
+args = [
+  "<%= contracts.ChainlinkOracleComposite.address %>",
+  "<%= encodeFunctionData({abi: contracts.ChainlinkOracleComposite.abi, functionName: 'initialize'}) %>"
+]
+from = "<%= settings.deployer %>"
 depends = ['contract.ChainlinkOracleComposite']

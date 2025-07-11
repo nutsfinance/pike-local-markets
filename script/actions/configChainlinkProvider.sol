@@ -23,7 +23,7 @@ contract ConfigureChainlinkProvider is Config {
 
         string memory baseDir = getBaseDir(dryRun);
         string memory providerPath =
-            string(abi.encodePacked(baseDir, "/artifacts/chainlinkProvider.Proxy.json"));
+            string(abi.encodePacked(baseDir, "/artifacts/chainlinkProviderProxy.json"));
         address providerAddress = getAddresses(providerPath);
         IChainlinkOracleProvider provider = IChainlinkOracleProvider(providerAddress);
 

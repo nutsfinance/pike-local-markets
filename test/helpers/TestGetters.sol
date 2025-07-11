@@ -26,7 +26,7 @@ contract TestGetters is Test, TestState {
         if (getLocatState()) {
             return PTokenModule(_testState.pTokens[keccak256(abi.encodePacked(pToken))]);
         } else {
-            return PTokenModule(vm.getAddress(string.concat(pToken, ".Proxy")));
+            return PTokenModule(vm.getAddress(string.concat(pToken, "Proxy")));
         }
     }
 
@@ -40,7 +40,7 @@ contract TestGetters is Test, TestState {
                 _testState.pTokens[keccak256(abi.encodePacked(pToken))]
             );
         } else {
-            return IDoubleJumpRateModel(vm.getAddress(string.concat(pToken, ".Proxy")));
+            return IDoubleJumpRateModel(vm.getAddress(string.concat(pToken, "Proxy")));
         }
     }
 
@@ -48,7 +48,7 @@ contract TestGetters is Test, TestState {
         if (getLocatState()) {
             return RiskEngineModule(_testState.riskEngine);
         } else {
-            return RiskEngineModule(vm.getAddress("core.Proxy"));
+            return RiskEngineModule(vm.getAddress("coreProxy"));
         }
     }
 
@@ -56,7 +56,7 @@ contract TestGetters is Test, TestState {
         if (getLocatState()) {
             return Factory(_testState.factory);
         } else {
-            return Factory(vm.getAddress("factory.Proxy"));
+            return Factory(vm.getAddress("factoryProxy"));
         }
     }
 
@@ -64,7 +64,7 @@ contract TestGetters is Test, TestState {
         if (getLocatState()) {
             return Timelock(payable(_testState.timelock));
         } else {
-            return Timelock(payable(vm.getAddress("timelock.Proxy")));
+            return Timelock(payable(vm.getAddress("timelockProxy")));
         }
     }
 
@@ -72,7 +72,7 @@ contract TestGetters is Test, TestState {
         if (getLocatState()) {
             return IOwnable(address(getPToken(pToken))).owner();
         } else {
-            return IOwnable(vm.getAddress(string.concat(pToken, ".Proxy"))).owner();
+            return IOwnable(vm.getAddress(string.concat(pToken, "Proxy"))).owner();
         }
     }
 
@@ -80,7 +80,7 @@ contract TestGetters is Test, TestState {
         if (getLocatState()) {
             return IOwnable(address(getRiskEngine())).owner();
         } else {
-            return IOwnable(vm.getAddress("core.Proxy")).owner();
+            return IOwnable(vm.getAddress("coreProxy")).owner();
         }
     }
 

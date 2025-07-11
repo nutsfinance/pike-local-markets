@@ -20,7 +20,7 @@ contract ConfigurePythProvider is Config {
 
         string memory baseDir = getBaseDir(dryRun);
         string memory providerPath =
-            string(abi.encodePacked(baseDir, "/artifacts/pythProvider.Proxy.json"));
+            string(abi.encodePacked(baseDir, "/artifacts/pythProviderProxy.json"));
         address providerAddress = getAddresses(providerPath);
         IPythOracleProvider provider = IPythOracleProvider(providerAddress);
 

@@ -12,9 +12,9 @@ contract ExtractOracleProviders is Script, Config {
 
         // Define the JSON files to process
         string[] memory jsonFiles = new string[](3);
-        jsonFiles[0] = "chainlinkComposite.Proxy.json";
-        jsonFiles[1] = "chainlinkProvider.Proxy.json";
-        jsonFiles[2] = "pythProvider.Proxy.json";
+        jsonFiles[0] = "chainlinkCompositeProxy.json";
+        jsonFiles[1] = "chainlinkProviderProxy.json";
+        jsonFiles[2] = "pythProviderProxy.json";
 
         string memory baseDir = getBaseDir(dryRun);
 
@@ -26,7 +26,7 @@ contract ExtractOracleProviders is Script, Config {
         string[] memory keys = new string[](jsonFiles.length);
         for (uint256 i = 0; i < jsonFiles.length; i++) {
             string memory filePath = string.concat(baseDir, "/artifacts/", jsonFiles[i]);
-            // removing .Proxy.json
+            // removing Proxy.json
             string memory key = jsonFiles[i];
             uint256 dotIndex = findChar(key, bytes1("."));
             if (dotIndex < bytes(key).length) {
