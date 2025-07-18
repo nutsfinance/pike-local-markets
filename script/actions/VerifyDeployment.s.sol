@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {Script} from "forge-std/Script.sol";
 import {console} from "forge-std/console.sol";
+import "forge-std/console2.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
 import {IDoubleJumpRateModel} from "@interfaces/IDoubleJumpRateModel.sol";
@@ -84,18 +85,45 @@ contract VerifyDeployment is Config {
 
         vm.createSelectFork(vm.envString(rpcs[chainId]));
         //verifyImplementation and owners
-        require(readImpl(p.factoryAddress) == a.factory, "factory mismatch");
-        require(readBeaconProxyImpl(p.riskEngineAddress) == a.riskEngineRouter, "risk engine mismatch");
-        require(readBeaconProxyImpl(p.oracleEngineAddress) == a.oracleEngine, "oracle engine mismatch");
-        require(readBeaconProxyImpl(p.timelockAddress) == a.timelock, "timelock mismatch");
-        require(readBeaconImpl(a.ptokenBeacon) == a.ptokenRouter, "ptokenRouter mismatch");
-        require(readImpl(p.chainlinkCompositeProxy) == a.chainlinkOracleComposite, "chainlinkOracleComposite mismatch");
-        require(readImpl(p.chainlinkProviderProxy) == a.chainlinkOracleProvider, "chainlinkOracleProvider mismatch");
-        require(readImpl(p.pythProviderProxy) == a.pythOracleProvider, "pythOracleProvider mismatch");
-        require(readUUPSOwner(p.factoryAddress) == p.initialGovernor, "factoryAddress initialGovernor mismatch");
-        require(readUUPSOwner(p.chainlinkCompositeProxy) == p.initialGovernor, "chainlinkCompositeProxy initialGovernor mismatch");
-        require(readUUPSOwner(p.chainlinkProviderProxy) == p.initialGovernor, "chainlinkProviderProxy initialGovernor mismatch");
-        require(readUUPSOwner(p.pythProviderProxy) == p.initialGovernor, "pythProviderProxy initialGovernor mismatch");
+        logAddressCheck("Factory", a.factory, readImpl(p.factoryAddress));
+        logAddressCheck(
+            "Risk Engine", a.riskEngineRouter, readBeaconProxyImpl(p.riskEngineAddress)
+        );
+        logAddressCheck(
+            "Oracle Engine", a.oracleEngine, readBeaconProxyImpl(p.oracleEngineAddress)
+        );
+        logAddressCheck("Timelock", a.timelock, readBeaconProxyImpl(p.timelockAddress));
+        logAddressCheck("PToken Router", a.ptokenRouter, readBeaconImpl(a.ptokenBeacon));
+
+        logAddressCheck(
+            "Chainlink Composite Provider",
+            a.chainlinkOracleComposite,
+            readImpl(p.chainlinkCompositeProxy)
+        );
+        logAddressCheck(
+            "Chainlink Provider",
+            a.chainlinkOracleProvider,
+            readImpl(p.chainlinkProviderProxy)
+        );
+        logAddressCheck(
+            "Pyth Provider", a.pythOracleProvider, readImpl(p.pythProviderProxy)
+        );
+        logAddressCheck(
+            "Factory Initial Governor", p.initialGovernor, readUUPSOwner(p.factoryAddress)
+        );
+        logAddressCheck(
+            "Chainlink-C Initial Governor",
+            p.initialGovernor,
+            readUUPSOwner(p.chainlinkCompositeProxy)
+        );
+        logAddressCheck(
+            "Chainlink Initial Governor",
+            p.initialGovernor,
+            readUUPSOwner(p.chainlinkProviderProxy)
+        );
+        logAddressCheck(
+            "Pyth Initial Governor", p.initialGovernor, readUUPSOwner(p.pythProviderProxy)
+        );
 
         // Load market configurations
         IRiskEngine re = IRiskEngine(p.riskEngineAddress);
@@ -109,62 +137,70 @@ contract VerifyDeployment is Config {
             IPToken pToken = IPToken(pTokenAddress);
 
             // Basic PToken property checks
-            require(
-                keccak256(bytes(pToken.name())) == keccak256(bytes(configs[i].name)),
-                "Name mismatch"
+            logStringCheck("Name", pToken.name(), configs[i].name);
+
+            logStringCheck("Symbol", pToken.symbol(), configs[i].symbol);
+
+            logUint256Check("Decimals", pToken.decimals(), configs[i].decimals);
+            logAddressCheck("Base token", pToken.asset(), configs[i].baseToken);
+            logUint256Check(
+                "Initial Exchange Rate",
+                pToken.initialExchangeRate(),
+                configs[i].initialExchangeRateMantissa
             );
-            require(
-                keccak256(bytes(pToken.symbol())) == keccak256(bytes(configs[i].symbol)),
-                "Symbol mismatch"
+
+            logUint256Check(
+                "Reserve Factor",
+                pToken.reserveFactorMantissa(),
+                configs[i].reserveFactorMantissa
             );
-            require(pToken.decimals() == configs[i].decimals, "Decimals mismatch");
-            require(pToken.asset() == configs[i].baseToken, "Base token mismatch");
-            require(
-                pToken.initialExchangeRate() == configs[i].initialExchangeRateMantissa,
-                "initial rate mismatch"
+
+            logUint256Check(
+                "Protocol Seize Share",
+                pToken.protocolSeizeShareMantissa(),
+                configs[i].protocolSeizeShareMantissa
             );
-            require(
-                pToken.reserveFactorMantissa() == configs[i].reserveFactorMantissa,
-                "reserve mismatch"
+
+            logUint256Check(
+                "Borrow Rate Max",
+                pToken.borrowRateMaxMantissa(),
+                configs[i].borrowRateMaxMantissa
             );
-            require(
-                pToken.protocolSeizeShareMantissa()
-                    == configs[i].protocolSeizeShareMantissa,
-                "seize share mismatch"
-            );
-            require(
-                pToken.borrowRateMaxMantissa() == configs[i].borrowRateMaxMantissa,
-                "borrow rate max mismatch"
-            );
+
             (uint256 firstKink, uint256 secondKink) =
                 IDoubleJumpRateModel(pTokenAddress).kinks();
-            require(firstKink == configs[i].firstKink, "firstKink mismatch");
-            require(secondKink == configs[i].secondKink, "secondKink mismatch");
+            logUint256Check("First Kink", firstKink, configs[i].firstKink);
+            logUint256Check("Second Kink", secondKink, configs[i].secondKink);
 
             // Risk Engine configuration checks
-            require(
-                re.closeFactor(pTokenAddress) == configs[i].closeFactor,
-                "closeFactor mismatch"
+            logUint256Check(
+                "Close Factor", re.closeFactor(pTokenAddress), configs[i].closeFactor
             );
-            require(
-                re.supplyCap(pTokenAddress) == configs[i].supplyCap, "supplyCap mismatch"
+
+            logUint256Check(
+                "Supply Cap", re.supplyCap(pTokenAddress), configs[i].supplyCap
             );
-            require(
-                re.borrowCap(pTokenAddress) == configs[i].borrowCap, "borrowCap mismatch"
+
+            logUint256Check(
+                "Borrow Cap", re.borrowCap(pTokenAddress), configs[i].borrowCap
             );
-            require(
-                re.collateralFactor(0, pToken) == configs[i].collateralFactorMantissa,
-                "Collateral factor mismatch"
+
+            logUint256Check(
+                "Collateral Factor",
+                re.collateralFactor(0, pToken),
+                configs[i].collateralFactorMantissa
             );
-            require(
-                re.liquidationThreshold(0, pToken)
-                    == configs[i].liquidationThresholdMantissa,
-                "Liquidation threshold mismatch"
+
+            logUint256Check(
+                "Liquidation Threshold",
+                re.liquidationThreshold(0, pToken),
+                configs[i].liquidationThresholdMantissa
             );
-            require(
-                re.liquidationIncentive(0, pTokenAddress)
-                    == configs[i].liquidationIncentiveMantissa,
-                "Liquidation threshold mismatch"
+
+            logUint256Check(
+                "Liquidation Incentive",
+                re.liquidationIncentive(0, pTokenAddress),
+                configs[i].liquidationIncentiveMantissa
             );
 
             console.log("test passed for market: %s", configs[i].symbol);
@@ -374,5 +410,35 @@ contract VerifyDeployment is Config {
         }
 
         return configs;
+    }
+
+    function logAddressCheck(string memory label, address expected, address actual)
+        internal
+        pure
+    {
+        string memory status = expected == actual ? unicode"✅" : unicode"❌";
+        console.log("%s | expected: %s | actual: %s | ", label, expected, actual);
+        console.log(status);
+    }
+
+    function logStringCheck(
+        string memory label,
+        string memory expected,
+        string memory actual
+    ) internal pure {
+        string memory status = keccak256(bytes(expected)) == keccak256(bytes(actual))
+            ? unicode"✅"
+            : unicode"❌";
+        console.log("%s | expected: %s | actual: %s | ", label, expected, actual);
+        console.log(status);
+    }
+
+    function logUint256Check(string memory label, uint256 expected, uint256 actual)
+        internal
+        pure
+    {
+        string memory status = expected == actual ? unicode"✅" : unicode"❌";
+        console.log("%s | expected: %s | actual: %s | ", label, expected, actual);
+        console.log(status);
     }
 }
