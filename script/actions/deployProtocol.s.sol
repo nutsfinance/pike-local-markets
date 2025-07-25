@@ -88,10 +88,19 @@ contract DeployProtocol is Config {
         vm.serializeAddress(obj, "riskEngine", deployData.riskEngine);
         vm.serializeAddress(obj, "oracleEngine", deployData.oracleEngine);
         vm.serializeAddress(obj, "timelock", deployData.timelock);
-        vm.serializeAddress(obj, "initialGovernor", ADMIN);
-        vm.serializeAddress(obj, "emergencyExecutor", ADMIN);
         vm.serializeUint(obj, "deploymentTimestamp", block.timestamp);
         string memory jsonContent = vm.serializeBool(obj, "isDryRun", deployData.isDryRun);
+        vm.writeJson(jsonContent, outputPath);
+    }
+
+    function writeACData() internal {
+        string memory protocolDir = getProtocolOutputDir(deployData);
+        vm.createDir(protocolDir, true);
+        string memory outputPath =
+            string(abi.encodePacked(protocolDir, "/authorized-addresses.json"));
+        string memory obj = "acData";
+        vm.serializeAddress(obj, "initialGovernor", ADMIN);
+        string memory jsonContent = vm.serializeAddress(obj, "emergencyExecutor", ADMIN);
         vm.writeJson(jsonContent, outputPath);
     }
 
@@ -219,5 +228,6 @@ contract DeployProtocol is Config {
 
         console.log("Writing deployment data to JSON file...");
         writeDeploymentData();
+        writeACData();
     }
 }

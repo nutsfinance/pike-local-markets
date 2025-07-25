@@ -62,9 +62,9 @@ contract VerifyDeployment is Config {
         address chainlinkCompositeProxy;
         address chainlinkProviderProxy;
         address pythProviderProxy;
-        address initialGovernor;
     }
 
+    address initialGovernor;
     uint256 chainId;
     uint256 protocolId;
     bool dryRun;
@@ -82,6 +82,7 @@ contract VerifyDeployment is Config {
         string memory baseDir = string.concat(getBaseDir(dryRun), "/artifacts/");
         ImplAddrs memory a = loadImplAddrs(baseDir);
         ProxyAddrs memory p = loadProxyAddrs(json, baseDir);
+        initialGovernor = vm.parseJsonAddress(vm.readFile(getAuthAddressesPath(protocolId)), ".initialGovernor");
 
         vm.createSelectFork(vm.envString(rpcs[chainId]));
         //verifyImplementation and owners
@@ -109,20 +110,20 @@ contract VerifyDeployment is Config {
             "Pyth Provider", a.pythOracleProvider, readImpl(p.pythProviderProxy)
         );
         logAddressCheck(
-            "Factory Initial Governor", p.initialGovernor, readUUPSOwner(p.factoryAddress)
+            "Factory Initial Governor", initialGovernor, readUUPSOwner(p.factoryAddress)
         );
         logAddressCheck(
             "Chainlink-C Initial Governor",
-            p.initialGovernor,
+            initialGovernor,
             readUUPSOwner(p.chainlinkCompositeProxy)
         );
         logAddressCheck(
             "Chainlink Initial Governor",
-            p.initialGovernor,
+            initialGovernor,
             readUUPSOwner(p.chainlinkProviderProxy)
         );
         logAddressCheck(
-            "Pyth Initial Governor", p.initialGovernor, readUUPSOwner(p.pythProviderProxy)
+            "Pyth Initial Governor", initialGovernor, readUUPSOwner(p.pythProviderProxy)
         );
 
         // Load market configurations
@@ -218,7 +219,6 @@ contract VerifyDeployment is Config {
         p.riskEngineAddress = vm.parseJsonAddress(_json, ".riskEngine");
         p.oracleEngineAddress = vm.parseJsonAddress(_json, ".oracleEngine");
         p.timelockAddress = vm.parseJsonAddress(_json, ".timelock");
-        p.initialGovernor = vm.parseJsonAddress(_json, ".initialGovernor");
         p.chainlinkCompositeProxy = vm.parseJsonAddress(
             vm.readFile(string.concat(baseDir, "chainlinkCompositeProxy.json")),
             ".address"

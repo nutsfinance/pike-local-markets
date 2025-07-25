@@ -54,11 +54,7 @@ contract Config is Script, SafeScript {
         return true;
     }
 
-    function getBaseDir(bool isDryRun)
-        internal
-        view
-        returns (string memory)
-    {
+    function getBaseDir(bool isDryRun) internal view returns (string memory) {
         string memory root = vm.projectRoot();
         string memory chain = vm.envString("CHAIN");
         string memory version = vm.envString("VERSION");
@@ -76,6 +72,19 @@ contract Config is Script, SafeScript {
         return string(
             abi.encodePacked(
                 baseDir, "/protocol-", vm.toString(protocolId), "/deploymentData.json"
+            )
+        );
+    }
+
+    function getAuthAddressesPath(uint256 protocolId)
+        internal
+        view
+        returns (string memory)
+    {
+        string memory baseDir = getBaseDir(vm.envBool("DRY_RUN"));
+        return string(
+            abi.encodePacked(
+                baseDir, "/protocol-", vm.toString(protocolId), "/authorized-addresses.json"
             )
         );
     }
