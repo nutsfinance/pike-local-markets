@@ -6,9 +6,7 @@ import {Config} from "../Config.sol";
 
 contract ConfigurePythProvider is Config {
     function run() public payable {
-        string memory chain = vm.envString("CHAIN");
         uint256 chainId = vm.envUint("CHAIN_ID");
-        string memory version = vm.envString("VERSION");
         string memory configPath = vm.envString("CONFIG_PATH");
         bool dryRun = vm.envBool("DRY_RUN");
 

@@ -123,16 +123,16 @@ contract EMode is Config {
         });
     }
 
-    function isEModeConfigured(string memory chain, uint256 protocolId, uint8 categoryId)
+    function isEModeConfigured(uint256 protocolId, uint8 categoryId)
         internal
         view
         returns (bool)
     {
-        string memory emodePath = getEModeFilePath(chain, protocolId, categoryId);
+        string memory emodePath = getEModeFilePath(protocolId, categoryId);
         return vm.exists(emodePath);
     }
 
-    function getEModeFilePath(string memory chain, uint256 protocolId, uint8 categoryId)
+    function getEModeFilePath(uint256 protocolId, uint8 categoryId)
         internal
         view
         returns (string memory)
@@ -151,7 +151,6 @@ contract EMode is Config {
     }
 
     function writeEModeData(
-        string memory chain,
         uint256 protocolId,
         uint8 categoryId,
         address[] memory ptokens,
@@ -159,7 +158,7 @@ contract EMode is Config {
         bool[] memory borrowPermissions,
         IRiskEngine.BaseConfiguration memory riskConfig
     ) internal {
-        string memory emodePath = getEModeFilePath(chain, protocolId, categoryId);
+        string memory emodePath = getEModeFilePath(protocolId, categoryId);
         string memory obj =
             string(abi.encodePacked("emodeData_", vm.toString(categoryId)));
         vm.serializeUint(obj, "categoryId", categoryId);
@@ -199,10 +198,8 @@ contract EMode is Config {
     }
 
     function run() public payable {
-        string memory chain = vm.envString("CHAIN");
         uint256 chainId = vm.envUint("CHAIN_ID");
         uint256 protocolId = vm.envUint("PROTOCOL_ID");
-        string memory version = vm.envString("VERSION");
         bool dryRun = vm.envBool("DRY_RUN");
         address safeAddress = vm.envOr("SAFE_ADDRESS", address(0));
         bool useSafe = safeAddress != address(0);
@@ -230,12 +227,11 @@ contract EMode is Config {
             configureSafe(safeAddress, chainId);
         }
 
-        configureAllEModes(emodeConfigs, chain, protocolId, useSafe, dryRun);
+        configureAllEModes(emodeConfigs, protocolId, useSafe, dryRun);
     }
 
     function configureAllEModes(
         EModeConfig[] memory emodeConfigs,
-        string memory chain,
         uint256 protocolId,
         bool useSafe,
         bool dryRun
@@ -250,7 +246,7 @@ contract EMode is Config {
                     emodeConfigs[i].borrowPermissions[j]
                 );
             }
-            if (isEModeConfigured(chain, protocolId, emodeConfigs[i].categoryId)) {
+            if (isEModeConfigured(protocolId, emodeConfigs[i].categoryId)) {
                 console.log(
                     "EMode %s already configured, skipping", emodeConfigs[i].categoryId
                 );
@@ -269,7 +265,6 @@ contract EMode is Config {
 
             console.log("Writing EMode data for category %s", emodeConfigs[i].categoryId);
             writeEModeData(
-                chain,
                 protocolId,
                 emodeConfigs[i].categoryId,
                 emodeConfigs[i].ptokens,

@@ -6,7 +6,9 @@ import {console} from "forge-std/console.sol";
 import "forge-std/console2.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {IPToken} from "@interfaces/IPToken.sol";
+import {Factory} from "@factory/Factory.sol";
 import {IDoubleJumpRateModel} from "@interfaces/IDoubleJumpRateModel.sol";
+import {IRBAC} from "@modules/common/RBACModule.sol";
 import {Config} from "../Config.sol";
 
 contract VerifyDeployment is Config {
@@ -15,6 +17,7 @@ contract VerifyDeployment is Config {
         0x9016d09d72d40fdae2fd8ceac6b6234c7706214fd39c1cd1e609a0528c199300;
     bytes32 routerOwnerSlot =
         0x74d6be38627e7912e34c50c5cbc5a4826c01ce9f17c41aaeea1b0611189c7000;
+    bytes32 initializedSlot = 0xf0c57e16840df040f15088dc2f81fe391c3923bec73e23a9662efc9c229c6a00;
 
     struct MarketConfig {
         string name;
@@ -46,6 +49,9 @@ contract VerifyDeployment is Config {
         address riskEngineRouter;
         address oracleEngine;
         address ptokenBeacon;
+        address reBeacon;
+        address oracleEngineBeacon;
+        address timelockBeacon;
         address timelock;
         address chainlinkOracleComposite;
         address chainlinkOracleProvider;
@@ -87,13 +93,26 @@ contract VerifyDeployment is Config {
         vm.createSelectFork(vm.envString(rpcs[chainId]));
         //verifyImplementation and owners
         logAddressCheck("Factory", a.factory, readImpl(p.factoryAddress));
+        logBoolCheck("Factory Initialized", readInitialized(p.factoryAddress) > 0 && Factory(a.factory).proxiableUUID() == implSlot);
         logAddressCheck(
             "Risk Engine", a.riskEngineRouter, readBeaconProxyImpl(p.riskEngineAddress)
+        );
+        logBoolCheck("Risk Engine Initialized", readInitialized(p.riskEngineAddress)> 0);
+        logAddressCheck(
+            "Risk Engine Beacon", a.reBeacon, readProxyBeacon(p.riskEngineAddress)
         );
         logAddressCheck(
             "Oracle Engine", a.oracleEngine, readBeaconProxyImpl(p.oracleEngineAddress)
         );
+        logBoolCheck("Oracle Engine Initialized", readInitialized(p.oracleEngineAddress) > 0);
+        logAddressCheck(
+            "Oracle Engine Beacon", a.oracleEngineBeacon, readProxyBeacon(p.oracleEngineAddress)
+        );
         logAddressCheck("Timelock", a.timelock, readBeaconProxyImpl(p.timelockAddress));
+        logBoolCheck("Timelock Initialized", readInitialized(p.timelockAddress) > 0);
+        logAddressCheck(
+            "Timelock Beacon", a.timelockBeacon, readProxyBeacon(p.timelockAddress)
+        );
         logAddressCheck("PToken Router", a.ptokenRouter, readBeaconImpl(a.ptokenBeacon));
 
         logAddressCheck(
@@ -101,14 +120,20 @@ contract VerifyDeployment is Config {
             a.chainlinkOracleComposite,
             readImpl(p.chainlinkCompositeProxy)
         );
+        logBoolCheck("Chainlink-C Initialized", readInitialized(p.chainlinkCompositeProxy) > 0 && Factory(a.chainlinkOracleComposite).proxiableUUID() == implSlot);
+        
         logAddressCheck(
             "Chainlink Provider",
             a.chainlinkOracleProvider,
             readImpl(p.chainlinkProviderProxy)
         );
+        logBoolCheck("Chainlink Initialized", readInitialized(p.chainlinkProviderProxy) > 0 && Factory(a.chainlinkOracleProvider).proxiableUUID() == implSlot);
+
         logAddressCheck(
             "Pyth Provider", a.pythOracleProvider, readImpl(p.pythProviderProxy)
         );
+        logBoolCheck("Pyth Initialized", readInitialized(p.pythProviderProxy) > 0 && Factory(a.pythOracleProvider).proxiableUUID() == implSlot);
+
         logAddressCheck(
             "Factory Initial Governor", initialGovernor, readUUPSOwner(p.factoryAddress)
         );
@@ -126,6 +151,12 @@ contract VerifyDeployment is Config {
             "Pyth Initial Governor", initialGovernor, readUUPSOwner(p.pythProviderProxy)
         );
 
+        logBoolCheck("Timelock has CONFIGURATOR role", IRBAC(p.riskEngineAddress).hasPermission(bytes32("CONFIGURATOR"), p.timelockAddress));
+        logBoolCheck("Timelock has BORROW GUARDIAN role", IRBAC(p.riskEngineAddress).hasPermission(bytes32("BORROW_CAP_GUARDIAN"), p.timelockAddress));
+        logBoolCheck("Timelock has SUPPLY GUARDIAN role", IRBAC(p.riskEngineAddress).hasPermission(bytes32("SUPPLY_CAP_GUARDIAN"), p.timelockAddress));
+        logBoolCheck("Timelock has RESERVE_MANAGER role", IRBAC(p.riskEngineAddress).hasPermission(bytes32("RESERVE_MANAGER"), p.timelockAddress));
+        logBoolCheck("Timelock has RESERVE_WITHDRAWER role", IRBAC(p.riskEngineAddress).hasPermission(bytes32("RESERVE_WITHDRAWER"), p.timelockAddress));
+
         // Load market configurations
         IRiskEngine re = IRiskEngine(p.riskEngineAddress);
         MarketConfig[] memory configs = readMarketConfigs(chain, protocolId);
@@ -136,6 +167,7 @@ contract VerifyDeployment is Config {
             address pTokenAddress =
                 vm.parseJsonAddress(json, string(abi.encodePacked(".", marketKey)));
             IPToken pToken = IPToken(pTokenAddress);
+            logBoolCheck("Initialized", readInitialized(pTokenAddress) > 0);
 
             // Basic PToken property checks
             logStringCheck("Name", pToken.name(), configs[i].name);
@@ -248,6 +280,15 @@ contract VerifyDeployment is Config {
         a.ptokenBeacon = vm.parseJsonAddress(
             vm.readFile(string.concat(baseDir, "pTokenBeacon.json")), ".address"
         );
+        a.reBeacon = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "reBeacon.json")), ".address"
+        );
+        a.timelockBeacon = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "timelockBeacon.json")), ".address"
+        );
+        a.oracleEngineBeacon = vm.parseJsonAddress(
+            vm.readFile(string.concat(baseDir, "oracleEngineBeacon.json")), ".address"
+        );
         a.ptokenRouter = vm.parseJsonAddress(
             vm.readFile(string.concat(baseDir, "PTokenRouter.json")), ".address"
         );
@@ -267,8 +308,22 @@ contract VerifyDeployment is Config {
         );
     }
 
+    function readInitialized(address proxy) internal view returns (uint64) {
+        return uint64(uint256(vm.load(proxy, initializedSlot)));
+    }
+
     function readImpl(address proxy) internal view returns (address) {
         return address(uint160(uint256(vm.load(proxy, implSlot))));
+    }
+
+    function readProxyBeacon(address proxy) internal view returns (address) {
+        bytes memory code = address(proxy).code;
+        bytes32 result;
+        // offset to get immutable variable of deployed bytecode (beacon address) is 0x23 or bytes35
+        assembly {
+            result := mload(add(code, add(0x20, 0x23)))
+        }
+        return address(uint160(uint256(result)));
     }
 
     function readBeaconProxyImpl(address proxy) internal view returns (address) {
@@ -439,6 +494,15 @@ contract VerifyDeployment is Config {
     {
         string memory status = expected == actual ? unicode"✅" : unicode"❌";
         console.log("%s | expected: %s | actual: %s | ", label, expected, actual);
+        console.log(status);
+    }
+
+    function logBoolCheck(string memory label, bool actual)
+        internal
+        pure
+    {
+        string memory status = actual ? unicode"✅" : unicode"❌";
+        console.log("%s | expected: true | actual: %s | ", label, actual);
         console.log(status);
     }
 }

@@ -28,7 +28,6 @@ contract PermissionGranter is Config {
 
     function run() public payable {
         // Get parameters from environment variables
-        string memory chain = vm.envString("CHAIN");
         uint256 chainId = vm.envUint("CHAIN_ID");
         uint256 protocolId = vm.envUint("PROTOCOL_ID");
         string memory permissionName = vm.envString("PERMISSION");

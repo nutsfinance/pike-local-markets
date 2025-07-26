@@ -31,10 +31,10 @@
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
   },
-  "market-sts": {
-    "name": "Pike Beets Staked Sonic",
-    "symbol": "pstS",
-    "baseToken": "0xE5DA20F15420aD15DE0fa650600aFc998bbE3955",
+  "market-wos": {
+    "name": "Pike Wrapped OS",
+    "symbol": "pwOS",
+    "baseToken": "0x9F0dF7799f6FDAd409300080cfF680f5A23df4b1",
     "decimals": 8,
     "initialExchangeRateMantissa": "200000000000000000000000000",
     "reserveFactorMantissa": "100000000000000000",
@@ -57,9 +57,9 @@
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
   },
-  "market-ws_wsts": {
-    "name": "Pike Wrapped Self Pegging Asset wS stS",
-    "symbol": "pwSPA-wS-stS",
+  "market-ws_wos": {
+    "name": "Pike Wrapped Self Pegging Asset wS wOS",
+    "symbol": "pwSPA-wS-wOS",
     "baseToken": "0x0000000000000000000000000000000000000000",
     "decimals": 8,
     "initialExchangeRateMantissa": "200000000000000000000000000",

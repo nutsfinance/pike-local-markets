@@ -8,7 +8,6 @@ import {console} from "forge-std/console.sol";
 
 contract DepositPToken is Config {
     function run() public payable {
-        string memory chain = vm.envString("CHAIN");
         uint256 chainId = vm.envUint("CHAIN_ID");
         uint256 protocolId = vm.envUint("PROTOCOL_ID");
         string memory pTokenName = vm.envString("PTOKEN_NAME");

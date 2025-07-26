@@ -281,7 +281,6 @@ contract DeployMarket is Config {
         string memory chain = vm.envString("CHAIN");
         uint256 chainId = vm.envUint("CHAIN_ID");
         uint256 protocolId = vm.envUint("PROTOCOL_ID");
-        string memory version = vm.envString("VERSION");
         bool dryRun = vm.envBool("DRY_RUN");
         address safeAddress = vm.envOr("SAFE_ADDRESS", address(0));
         bool useSafe = safeAddress != address(0);
