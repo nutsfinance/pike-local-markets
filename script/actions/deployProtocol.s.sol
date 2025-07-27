@@ -81,7 +81,7 @@ contract DeployProtocol is Config {
         string memory protocolDir = getProtocolOutputDir(deployData);
         vm.createDir(protocolDir, true);
         string memory outputPath =
-            string(abi.encodePacked(protocolDir, "/deploymentData.json"));
+            string(abi.encodePacked(protocolDir, "/deployment-data.json"));
         string memory obj = "deployData";
         vm.serializeUint(obj, "protocolId", deployData.protocolId);
         vm.serializeAddress(obj, "factoryAddress", deployData.factoryAddress);

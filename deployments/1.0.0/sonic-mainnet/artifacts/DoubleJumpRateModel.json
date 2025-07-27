@@ -1,5 +1,5 @@
 {
-  "address": "0x45C9B794bf10fA6641145411d8814677e46cF3A2",
+  "address": "0x01179B50495745B63871605bC1fD06C02Ef956Ec",
   "abi": [
     {
       "type": "function",
@@ -288,12 +288,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0xae6705706ec38cc6ddbd6d8180a9fe4fd8a63a98dd9275e698b6f1e1c1f1bd5f",
-  "deployTxnBlockNumber": "37487664",
-  "deployTimestamp": "1751897615",
+  "deployTxnHash": "0x84ca1876a53b402c9d6d6de688c0acca03b6f359a2e2ca81181d20f057a96c87",
+  "deployTxnBlockNumber": "40428289",
+  "deployTimestamp": "1753609613",
   "sourceName": "src/pike-market/modules/interestRateModel/DoubleJumpRateModel.sol",
   "contractName": "DoubleJumpRateModel",
   "deployedOn": "contract.DoubleJumpRateModel",
   "gasUsed": 645735,
-  "gasCost": "94171073213"
+  "gasCost": "89957609469"
 }

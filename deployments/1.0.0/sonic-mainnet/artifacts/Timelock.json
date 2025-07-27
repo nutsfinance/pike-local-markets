@@ -1,5 +1,5 @@
 {
-  "address": "0xe0E9844D35449dF4ae1e6EecBba952f95dEfd109",
+  "address": "0x714f1BeF4Fe7dF5E2aDD177a170dCDF532B51250",
   "abi": [
     {
       "type": "constructor",
@@ -1158,12 +1158,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0xeb94c9db2cb1c7cdbcbd552328076fd9247638062bae699f9c365848d0a657b0",
-  "deployTxnBlockNumber": "37487789",
-  "deployTimestamp": "1751897660",
+  "deployTxnHash": "0xf88173e91d94fe23858624522ff8c26d2dcc206b3e0c9f6f50a801978b1c6ca6",
+  "deployTxnBlockNumber": "40428404",
+  "deployTimestamp": "1753609659",
   "sourceName": "src/governance/Timelock.sol",
   "contractName": "Timelock",
   "deployedOn": "contract.Timelock",
   "gasUsed": 2473671,
-  "gasCost": "72921002097"
+  "gasCost": "50000000001"
 }

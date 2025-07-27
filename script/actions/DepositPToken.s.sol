@@ -19,7 +19,7 @@ contract DepositPToken is Config {
         string memory baseDir = getBaseDir(false); // Always false to use main folder
         string memory deploymentPath = string(
             abi.encodePacked(
-                baseDir, "/protocol-", vm.toString(protocolId), "/deploymentData.json"
+                baseDir, "/protocol-", vm.toString(protocolId), "/deployment-data.json"
             )
         );
         string memory deploymentJson = vm.readFile(deploymentPath);

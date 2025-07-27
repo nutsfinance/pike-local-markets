@@ -1,5 +1,5 @@
 {
-  "address": "0x3D14E248431f788076D98bA76f19FB9d3D8f6B15",
+  "address": "0x474bB0Bb4D5515635957c50b2EE9F439EfaBeeE4",
   "abi": [
     {
       "type": "constructor",
@@ -63,21 +63,21 @@
     },
     {
       "type": "error",
-      "name": "FailedInnerCall",
+      "name": "FailedCall",
       "inputs": []
     }
   ],
   "constructorArgs": [
-    "0x5cF7D5595bCc3F8cc2E8084A796FA9f5919D0534",
-    "0x"
+    "0x37cC3a554C5EE4E76CAa70143A3e669b447011cA",
+    "0x8129fc1c"
   ],
   "linkedLibraries": {},
-  "deployTxnHash": "0x21b98556dcf857ac5aa10c741924191a3f3624bbf6dbe078c8af23832bbc2c25",
-  "deployTxnBlockNumber": "37487822",
-  "deployTimestamp": "1751897674",
+  "deployTxnHash": "0xfe160f79c27240550e0e3d389e2c79209cb32ef11e0795ec10737b903a90ea04",
+  "deployTxnBlockNumber": "40428429",
+  "deployTimestamp": "1753609670",
   "sourceName": "node_modules/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
   "contractName": "ERC1967Proxy",
-  "deployedOn": "deploy.InitialProxy",
-  "gasUsed": 132363,
+  "deployedOn": "contract.chainlinkProviderProxy",
+  "gasUsed": 180227,
   "gasCost": "50000000001"
 }

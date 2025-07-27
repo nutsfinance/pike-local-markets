@@ -1,5 +1,5 @@
 {
-  "address": "0xc039204f0754033baa90391e211359f681466c67",
+  "address": "0xa36cb0478c0c38dd02685cb00eb0060adc6bde7d",
   "abi": [
     {
       "name": "facets",
@@ -2557,9 +2557,9 @@
     }
   ],
   "deployedOn": "router.PTokenRouter",
-  "deployTxnHash": "0xab8b109fab2a2b8a3bcf29c054b079a1373ae6679e514de078e9412a7e65564d",
-  "deployTxnBlockNumber": "37487980",
-  "deployTimestamp": "1751897745",
+  "deployTxnHash": "0x05543b8cbaec0eff7403dc57c6eee33b74e11e4502ba2656f63e405428552d34",
+  "deployTxnBlockNumber": "40428488",
+  "deployTimestamp": "1753609699",
   "contractName": "PTokenRouter",
   "sourceName": "PTokenRouter.sol",
   "gasUsed": 3043381,

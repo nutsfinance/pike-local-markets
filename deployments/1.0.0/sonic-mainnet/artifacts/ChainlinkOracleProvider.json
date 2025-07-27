@@ -1,5 +1,5 @@
 {
-  "address": "0x608fdFaf77D6e36c782E63DFeF3f7c23fb2DAf80",
+  "address": "0x37cC3a554C5EE4E76CAa70143A3e669b447011cA",
   "abi": [
     {
       "type": "constructor",
@@ -360,12 +360,12 @@
     "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1"
   ],
   "linkedLibraries": {},
-  "deployTxnHash": "0x4916c24490a5dff09c0f94101a0c87f44ba44b4b4fba8f0a05ad5d1b0e59eb42",
-  "deployTxnBlockNumber": "37487648",
-  "deployTimestamp": "1751897609",
+  "deployTxnHash": "0x9e2d4ef415737ac42658a1a905094ab2322eaa65f14424417e171b524f55ebcd",
+  "deployTxnBlockNumber": "40428273",
+  "deployTimestamp": "1753609607",
   "sourceName": "src/oracles/ChainlinkOracleProvider.sol",
   "contractName": "ChainlinkOracleProvider",
   "deployedOn": "contract.ChainlinkOracleProvider",
   "gasUsed": 1311904,
-  "gasCost": "81078520599"
+  "gasCost": "64607179535"
 }

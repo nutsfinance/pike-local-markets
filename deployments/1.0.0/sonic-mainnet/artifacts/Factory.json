@@ -1,5 +1,5 @@
 {
-  "address": "0x09fFDE656e413ECD92c8A676De977384D49E3c82",
+  "address": "0x4EE3c166295F26992E5F2DA4f84129710a79dE1B",
   "abi": [
     {
       "type": "constructor",
@@ -588,12 +588,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x82f337e2fb6f34a170cdc109f40f8b7d96e6bfb2410eb1920d520de6665da16c",
-  "deployTxnBlockNumber": "37487681",
-  "deployTimestamp": "1751897621",
+  "deployTxnHash": "0xff57c2f5b87d6a83d3b4330fc6a8456467469cf59033a98ad5455a9edae347c1",
+  "deployTxnBlockNumber": "40428305",
+  "deployTimestamp": "1753609618",
   "sourceName": "src/Factory.sol",
   "contractName": "Factory",
   "deployedOn": "contract.Factory",
   "gasUsed": 2453713,
-  "gasCost": "94600825399"
+  "gasCost": "65750000000"
 }

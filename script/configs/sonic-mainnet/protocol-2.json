@@ -26,7 +26,7 @@
     "secondKinkMultiplier": "8000000000000000000",
     "firstKink": "0",
     "secondKink": "900000000000000000",
-    "mainProvider": "0x0000000000000000000000000000000000000000",
+    "mainProvider": "0x6884338526177432985843Dc8E15Afa9338587b9",
     "fallbackProvider": "0x0000000000000000000000000000000000000000",
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
@@ -52,7 +52,7 @@
     "secondKinkMultiplier": "8500000000000000000",
     "firstKink": "0",
     "secondKink": "800000000000000000",
-    "mainProvider": "0x0000000000000000000000000000000000000000",
+    "mainProvider": "0x6884338526177432985843Dc8E15Afa9338587b9",
     "fallbackProvider": "0x0000000000000000000000000000000000000000",
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
@@ -60,7 +60,7 @@
   "market-ws_wos": {
     "name": "Pike Wrapped Self Pegging Asset wS wOS",
     "symbol": "pwSPA-wS-wOS",
-    "baseToken": "0x0000000000000000000000000000000000000000",
+    "baseToken": "0x2f10d92FdB51663d1B7D6466cc1a57a26E4e5d3A",
     "decimals": 8,
     "initialExchangeRateMantissa": "200000000000000000000000000",
     "reserveFactorMantissa": "100000000000000000",
@@ -78,7 +78,7 @@
     "secondKinkMultiplier": "8500000000000000000",
     "firstKink": "0",
     "secondKink": "800000000000000000",
-    "mainProvider": "0x0000000000000000000000000000000000000000",
+    "mainProvider": "0x6884338526177432985843Dc8E15Afa9338587b9",
     "fallbackProvider": "0x0000000000000000000000000000000000000000",
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
@@ -86,9 +86,9 @@
   "emode-1": {
     "categoryId": 1,
     "ptokens": [
-      "0x0000000000000000000000000000000000000000",
-      "0x0000000000000000000000000000000000000000",
-      "0x0000000000000000000000000000000000000000"
+      "0x3A15feCA3F68aC8CcB5537354D17e79f38DC6Ce2",
+      "0xf3B852244e147F2CAd3d3e9e5dB68479717FEc55",
+      "0xfddA02A6d16c1f3c461D8862815636da97d0e1C6"
     ],
     "collateralPermissions": [false, false, true],
     "borrowPermissions": [true, true, false],

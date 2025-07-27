@@ -183,7 +183,7 @@ contract DeployMarket is Config {
 
         string memory deploymentPath = string(
             abi.encodePacked(
-                baseDir, "/protocol-", vm.toString(protocolId), "/deploymentData.json"
+                baseDir, "/protocol-", vm.toString(protocolId), "/deployment-data.json"
             )
         );
         if (!vm.exists(deploymentPath)) {
@@ -220,7 +220,7 @@ contract DeployMarket is Config {
 
         string memory deploymentPath = string(
             abi.encodePacked(
-                baseDir, "/protocol-", vm.toString(protocolId), "/deploymentData.json"
+                baseDir, "/protocol-", vm.toString(protocolId), "/deployment-data.json"
             )
         );
 

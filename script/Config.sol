@@ -71,7 +71,7 @@ contract Config is Script, SafeScript {
         string memory baseDir = getBaseDir(vm.envBool("DRY_RUN"));
         return string(
             abi.encodePacked(
-                baseDir, "/protocol-", vm.toString(protocolId), "/deploymentData.json"
+                baseDir, "/protocol-", vm.toString(protocolId), "/deployment-data.json"
             )
         );
     }
