@@ -352,6 +352,49 @@ contract LocalPToken is TestLocal {
         doLiquidate(lp);
     }
 
+    function test_LiquidationSuccessWithDoS() public {
+        address user1 = makeAddr("user1");
+        address depositor = makeAddr("depositor");
+        address liquidator = makeAddr("liquidator");
+
+        doDeposit(depositor, depositor, address(pUSDC), 2000e6);
+
+        doDepositAndEnter(user1, user1, address(pWETH), 1e18);
+        doBorrow(user1, user1, address(pUSDC), 1450e6);
+
+        // Liquidation threshold price for collateral:
+        // 1450 / 0.825 (liq threshold) = 1757.57 USD/WETH
+        mockOracle.setPrice(address(pWETH), 1757e6, 18);
+
+        LiquidationParams memory lp = LiquidationParams({
+            prankAddress: liquidator,
+            userToLiquidate: user1,
+            collateralPToken: address(pWETH),
+            borrowedPToken: address(pUSDC),
+            repayAmount: 725e6,
+            expectRevert: true,
+            error: abi.encodeWithSignature("LiquidateRiskEngineRejection(uint256)", 6)
+        });
+
+        // Borrower frontruns with a minimal repayment of 1 wei (1 USDC smallest unit)
+        doRepay(user1, user1, address(pUSDC), 1);
+        // liquidation fail without max close factor repayment
+        doLiquidate(lp);
+
+        lp = LiquidationParams({
+            prankAddress: liquidator,
+            userToLiquidate: user1,
+            collateralPToken: address(pWETH),
+            borrowedPToken: address(pUSDC),
+            repayAmount: type(uint256).max,
+            expectRevert: false,
+            error: abi.encodeWithSignature("LiquidateRiskEngineRejection(uint256)", 6)
+        });
+
+        // liquidation fail without max close factor repayment
+        doLiquidate(lp);
+    }
+
     function testLiquidate_FailIfRepayIsZero() public {
         address user1 = makeAddr("user1");
         address depositor = makeAddr("depositor");

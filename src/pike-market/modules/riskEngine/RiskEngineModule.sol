@@ -669,7 +669,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             /* The liquidator may not repay more than what is allowed by the closeFactor */
             uint256 maxClose = $.closeFactorMantissa[pTokenBorrowed].toExp()
                 .mul_ScalarTruncate(borrowBalance);
-            if (repayAmount > maxClose) {
+            if (repayAmount > maxClose && repayAmount != type(uint256).max) {
                 return RiskEngineError.Error.TOO_MUCH_REPAY;
             }
         }
