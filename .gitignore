@@ -29,3 +29,5 @@ deployments/*/*/dry-run/
 
 coverage
 lcov.info
+
+soljson-latest.js

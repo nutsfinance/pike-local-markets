@@ -6,7 +6,7 @@
     "configuratorShareMantissa": "200000000000000000"
   },
   "market-ws": {
-    "name": "pToken Wrapped Sonic",
+    "name": "Pike Wrapped Sonic",
     "symbol": "pwS",
     "baseToken": "0x98e6a95a4B225b60456FC5dEDde3E4b8B7655C6B",
     "decimals": 8,
@@ -32,23 +32,49 @@
     "pythFeed": "0x0"
   },
   "market-sts": {
-    "name": "pToken Beets Staked Sonic",
+    "name": "Pike Beets Staked Sonic",
     "symbol": "pstS",
     "baseToken": "0x6A074e2158e9C0f7A2e738f4919DC42316d153B0",
     "decimals": 8,
     "initialExchangeRateMantissa": "200000000000000000000000000",
-    "reserveFactorMantissa": "150000000000000000",
+    "reserveFactorMantissa": "100000000000000000",
     "protocolSeizeShareMantissa": "75000000000000000",
     "borrowRateMaxMantissa": "420000000000",
     "collateralFactorMantissa": "750000000000000000",
     "liquidationThresholdMantissa": "800000000000000000",
     "liquidationIncentiveMantissa": "1050000000000000000",
     "closeFactor": "500000000000000000",
-    "supplyCap": "196000000000000000000000",
-    "borrowCap": "176000000000000000000000",
+    "supplyCap": "200000000000000000000000",
+    "borrowCap": "180000000000000000000000",
     "baseRate": "0",
     "initialMultiplier": "0",
-    "firstKinkMultiplier": "6111110000000000",
+    "firstKinkMultiplier": "20000000000000000",
+    "secondKinkMultiplier": "8500000000000000000",
+    "firstKink": "0",
+    "secondKink": "800000000000000000",
+    "mainProvider": "0x09E49f1F2536ABe40A327155f5168eAD82df7F37",
+    "fallbackProvider": "0x0000000000000000000000000000000000000000",
+    "chainlinkFeed": "0x0000000000000000000000000000000000000000",
+    "pythFeed": "0x0"
+  },
+  "market-ws_wsts": {
+    "name": "Pike Wrapped Self Pegging Asset wS stS",
+    "symbol": "pwSPA-wS-stS",
+    "baseToken": "0x1e41CB4E5C8A9645A9494e533bd8CBD5e74eDA4A",
+    "decimals": 8,
+    "initialExchangeRateMantissa": "200000000000000000000000000",
+    "reserveFactorMantissa": "100000000000000000",
+    "protocolSeizeShareMantissa": "75000000000000000",
+    "borrowRateMaxMantissa": "420000000000",
+    "collateralFactorMantissa": "750000000000000000",
+    "liquidationThresholdMantissa": "800000000000000000",
+    "liquidationIncentiveMantissa": "1050000000000000000",
+    "closeFactor": "500000000000000000",
+    "supplyCap": "200000000000000000000000",
+    "borrowCap": "1000000000000000000",
+    "baseRate": "0",
+    "initialMultiplier": "0",
+    "firstKinkMultiplier": "20000000000000000",
     "secondKinkMultiplier": "8500000000000000000",
     "firstKink": "0",
     "secondKink": "800000000000000000",
@@ -60,14 +86,15 @@
   "emode-1": {
     "categoryId": 1,
     "ptokens": [
-      "0x87F5079dfC4491104950d9AA08781def897E2ddD",
-      "0xb22af5D2D10b4a4F1e1ffBCf444C9c3785A4a1ec"
+      "0x38a0C987Aa635A7189a9C9bcF2A017CB7F18BFB9",
+      "0x1419E3B4190728A5981cf54878a5AAEBeC1Cdd0E",
+      "0x47cE57329485c857CECDcE8df9949290a77BC294"
     ],
-    "collateralPermissions": [true, false],
-    "borrowPermissions": [false, true],
+    "collateralPermissions": [false, false, true],
+    "borrowPermissions": [true, true, false],
     "riskConfig": {
-      "collateralFactorMantissa": "950000000000000000",
-      "liquidationThresholdMantissa": "975000000000000000",
+      "collateralFactorMantissa": "900000000000000000",
+      "liquidationThresholdMantissa": "930000000000000000",
       "liquidationIncentiveMantissa": "1020000000000000000"
     }
   }

@@ -1,0 +1,299 @@
+{
+  "address": "0x2beC900851A17c2645f87A315CF3FF229902163D",
+  "abi": [
+    {
+      "type": "function",
+      "name": "baseRatePerSecond",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "configureInterestRateModel",
+      "inputs": [
+        {
+          "name": "baseRate",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "initialMultiplier",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "firstKinkMultiplier",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "secondKinkMultiplier",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "firstKink",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "secondKink",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "getBorrowRate",
+      "inputs": [
+        {
+          "name": "cash",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "borrows",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "reserves",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "function",
+      "name": "getSupplyRate",
+      "inputs": [
+        {
+          "name": "cash",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "borrows",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "reserves",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "reserveFactorMantissa",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "function",
+      "name": "getUtilization",
+      "inputs": [
+        {
+          "name": "cash",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "borrows",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "reserves",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "function",
+      "name": "kinks",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "multipliers",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "pure"
+    },
+    {
+      "type": "event",
+      "name": "NewInterestParams",
+      "inputs": [
+        {
+          "name": "baseRatePerSecond",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "multiplierPerSecond",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "firstJumpMultiplierPerSecond",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "secondJumpMultiplierPerSecond",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "firstKink",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "secondKink",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "InvalidKinkOrMultiplierOrder",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidMultiplierForNonZeroBaseRate",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidPermission",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NestedPermissionDenied",
+      "inputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "PermissionDenied",
+      "inputs": [
+        {
+          "name": "",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ZeroValue",
+      "inputs": []
+    }
+  ],
+  "constructorArgs": [],
+  "linkedLibraries": {},
+  "deployTxnHash": "0x84cda92c0f5191fc8f2f5053c1f85fb5e56f86ba31399074b312f7cd83345673",
+  "deployTxnBlockNumber": "58894741",
+  "deployTimestamp": "1755415509",
+  "sourceName": "src/pike-market/modules/interestRateModel/DoubleJumpRateModel.sol",
+  "contractName": "DoubleJumpRateModel",
+  "deployedOn": "contract.DoubleJumpRateModel",
+  "gasUsed": 645735,
+  "gasCost": "1000000001"
+}
