@@ -531,5 +531,6 @@ contract TestUtilities is TestDeploy {
                 "Borrow did subtract from total borrow of ptoken"
             );
         }
+        return true;
     }
 }
