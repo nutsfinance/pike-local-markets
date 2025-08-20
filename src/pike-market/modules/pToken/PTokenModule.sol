@@ -979,6 +979,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     function borrowFresh(address borrower, address onBehalfOf, uint256 borrowAmount)
         internal
     {
+        // borrow amount can not be zero
+        require(borrowAmount != 0, PTokenError.InvalidBorrowAmount());
+
         PTokenData storage $ = _getPTokenStorage();
         /* Fail if borrow not allowed */
         RiskEngineError.Error allowed =

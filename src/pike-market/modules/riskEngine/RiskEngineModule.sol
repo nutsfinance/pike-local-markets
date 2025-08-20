@@ -411,6 +411,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
 
         /* Delete pToken from the account’s list of assets if not borrowed */
         if (amountOwed == 0) {
+            // making sure the user has no borrow membership for this asset
+            delete marketToExit.borrowMembership[msg.sender];
+
             // load into memory for faster iteration
             IPToken[] memory userAssetList =
                 _getRiskEngineStorage().accountAssets[msg.sender];
