@@ -293,6 +293,19 @@ contract LocalPToken is TestLocal {
         );
     }
 
+    function testBorrow_FailIfZeroAmount() public {
+        address user1 = makeAddr("user1");
+        address depositor = makeAddr("depositor");
+
+        ///porivde liquidity
+        doDeposit(depositor, depositor, address(pWETH), 1e18);
+        doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
+        // "InvalidBorrwAmount()" selector
+        doBorrowRevert(
+            user1, user1, address(pWETH), 0, abi.encodePacked(bytes4(0x3894de64))
+        );
+    }
+
     function testLiquidate_FailIfNotListed() public {
         address user1 = makeAddr("user1");
         address depositor = makeAddr("depositor");

@@ -23,6 +23,7 @@ library PTokenError {
     error BorrowRiskEngineRejection(uint256 errorCode);
     error BorrowFreshnessCheck();
     error BorrowCashNotAvailable();
+    error InvalidBorrowAmount();
 
     error RepayBorrowRiskEngineRejection(uint256 errorCode);
     error RepayBorrowFreshnessCheck();
