@@ -46,8 +46,6 @@ library RiskEngineError {
 
     error InvalidCategory();
 
-    error PTokenNotAllowedToBorrow();
-
     error AlreadyInEMode();
 
     error DelegationStatusUnchanged();
