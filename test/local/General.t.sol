@@ -7,7 +7,6 @@ import {IPToken, IERC20} from "@interfaces/IPToken.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {TestLocal} from "@helpers/TestLocal.sol";
-
 import {MockOracle} from "@mocks/MockOracle.sol";
 
 contract LocalGeneral is TestLocal {
@@ -31,6 +30,10 @@ contract LocalGeneral is TestLocal {
         pWETH = getPToken("pWETH");
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     // D: Deposit
@@ -49,6 +52,7 @@ contract LocalGeneral is TestLocal {
         assertEq(liquidity, 84.5e18, "Invalid liquidity");
         // max liquidity to allow borrow for pUSDC is set to 74.5%
         assertEq(borrowLiquidity, 74.5e18, "Invalid liquidity to borrow");
+        doMint(user1, user1, address(pWETH), 1e8);
     }
 
     function testDBehalf() public {
@@ -66,7 +70,7 @@ contract LocalGeneral is TestLocal {
 
         doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
         // base rate per second 0
-        assertEq(pWETH.borrowRatePerSecond(), baseRatePerYear, "Invalid rate per second");
+        assertEq(pWETH.borrowRatePerSecond(), baseRate, "Invalid rate per second");
 
         (, uint256 estimatedLiquidityNeededToBorrow,) =
             re.getHypotheticalAccountLiquidity(user1, address(pWETH), 0, 0.745e18);
@@ -169,14 +173,22 @@ contract LocalGeneral is TestLocal {
         doDepositAndEnter(onBehalf, onBehalf, address(pUSDC), 2000e6);
         doBorrow(onBehalf, onBehalf, address(pWETH), 0.745e18);
         doRepay(onBehalf, onBehalf, address(pWETH), 0.745e18);
-        // "DelegateNotAllowed()" selector
+        uint256 withdrawBalance = pUSDC.balanceOfUnderlying(onBehalf);
+        uint256 expectedToken = pUSDC.previewWithdraw(withdrawBalance);
+        // "InsufficientAllowance(address,uint256,uint256)" selector
         doWithdrawUnderlyingRevert(
-            user1, onBehalf, address(pUSDC), 2000e6, abi.encodePacked(bytes4(0xf0f402cc))
+            user1,
+            onBehalf,
+            address(pUSDC),
+            withdrawBalance,
+            abi.encodePacked(
+                bytes4(0x192b9e4e),
+                abi.encode(address(user1), uint256(0), uint256(expectedToken))
+            )
         );
 
-        doDelegate(onBehalf, user1, pUSDC, true);
-
-        doWithdrawUnderlying(user1, onBehalf, address(pUSDC), 2000e6);
+        doAllow(onBehalf, user1, pUSDC, expectedToken);
+        doWithdrawUnderlying(user1, onBehalf, address(pUSDC), withdrawBalance);
     }
 
     function testDBRWBehalf() public {
@@ -190,14 +202,22 @@ contract LocalGeneral is TestLocal {
         doDepositAndEnter(onBehalf, onBehalf, address(pUSDC), 2000e6);
         doBorrow(onBehalf, onBehalf, address(pWETH), 0.745e18);
         doRepay(onBehalf, onBehalf, address(pWETH), 0.745e18);
-        // "DelegateNotAllowed()" selector
+        uint256 withdrawBalance = pUSDC.balanceOf(onBehalf);
+        // "InsufficientAllowance(address,uint256,uint256)" selector
         doWithdrawRevert(
-            user1, onBehalf, address(pUSDC), 2000e6, abi.encodePacked(bytes4(0xf0f402cc))
+            user1,
+            onBehalf,
+            address(pUSDC),
+            withdrawBalance,
+            abi.encodePacked(
+                bytes4(0x192b9e4e),
+                abi.encode(address(user1), uint256(0), uint256(withdrawBalance))
+            )
         );
 
-        doDelegate(onBehalf, user1, pUSDC, true);
+        doAllow(onBehalf, user1, pUSDC, withdrawBalance);
 
-        doWithdraw(user1, onBehalf, address(pUSDC), 2000e6);
+        doWithdraw(user1, onBehalf, address(pUSDC), withdrawBalance);
     }
 
     function testDBL() public {
@@ -243,17 +263,26 @@ contract LocalGeneral is TestLocal {
             50e6,
             abi.encodePacked(bytes4(0x8cd22d19))
         );
-        // not enough allowances "overflow/underflow" error
+        uint256 withdrawBalance = pUSDC.balanceOf(sender);
+        // "InsufficientAllowance(address,uint256,uint256)" selector
         doTransferRevert(
-            receiver, sender, receiver, address(pUSDC), 50e6, stdError.arithmeticError
+            receiver,
+            sender,
+            receiver,
+            address(pUSDC),
+            withdrawBalance,
+            abi.encodePacked(
+                bytes4(0x192b9e4e),
+                abi.encode(address(receiver), uint256(0), uint256(withdrawBalance))
+            )
         );
 
         // approve
         vm.prank(sender);
-        pUSDC.approve(receiver, 50e6);
-        assertEq(pUSDC.allowance(sender, receiver), 50e6);
+        pUSDC.approve(receiver, withdrawBalance);
+        assertEq(pUSDC.allowance(sender, receiver), withdrawBalance);
 
-        doTransfer(receiver, sender, receiver, address(pUSDC), 50e6);
+        doTransfer(receiver, sender, receiver, address(pUSDC), withdrawBalance);
     }
 
     function testDBT() public {

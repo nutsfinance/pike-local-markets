@@ -54,6 +54,10 @@ contract FuzzLiquidate is TestFuzz {
 
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     function testFuzz_liquidate(address[3] memory addresses, uint256[9] memory amounts)
@@ -107,17 +111,19 @@ contract FuzzLiquidate is TestFuzz {
         vm.assume((wethCash + wethTotalBorrows) / wethTotalSupply < 8);
 
         vm.prank(getAdmin());
-        re.setCollateralFactor(pWETH, wethCF, wethLF);
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(wethCF, wethLF, 108e16);
+        re.configureMarket(pWETH, config);
         mockOracle.setPrice(address(pWETH), wethPrice, 18);
         mockOracle.setPrice(address(pUSDC), usdcPrice, 6);
 
         setPTokenTotalSupply(address(pUSDC), usdcTotalSupply);
         setTotalBorrows(address(pUSDC), usdcTotalBorrows);
-        deal(address(pUSDC.underlying()), address(pUSDC), usdcCash);
+        deal(address(pUSDC.asset()), address(pUSDC), usdcCash);
 
         setPTokenTotalSupply(address(pWETH), wethTotalSupply);
         setTotalBorrows(address(pWETH), wethTotalBorrows);
-        deal(address(pWETH.underlying()), address(pWETH), wethCash);
+        deal(address(pWETH.asset()), address(pWETH), wethCash);
         if (borrower != onBehalfOf) {
             vm.prank(onBehalfOf);
             re.updateDelegate(borrower, true);

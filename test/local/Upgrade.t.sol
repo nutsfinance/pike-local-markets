@@ -11,7 +11,6 @@ import {PTokenModule} from "@modules/pToken/PTokenModule.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {TestLocal} from "@helpers/TestLocal.sol";
-
 import {MockOracle} from "@mocks/MockOracle.sol";
 
 contract LocalRBAC is TestLocal {
@@ -59,7 +58,7 @@ contract LocalRBAC is TestLocal {
 
         vm.startPrank(getAdmin());
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         IUpgrade(address(re)).upgradeTo(address(0));
 
         // "NotAContract(address)" selector

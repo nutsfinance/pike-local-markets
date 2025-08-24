@@ -7,7 +7,6 @@ import {IPToken, IERC20} from "@interfaces/IPToken.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {TestLocal} from "@helpers/TestLocal.sol";
-
 import {MockOracle} from "@mocks/MockOracle.sol";
 
 contract LocalAccrueInterest is TestLocal {
@@ -19,7 +18,7 @@ contract LocalAccrueInterest is TestLocal {
     IRiskEngine re;
 
     function setUp() public {
-        setDebug(true);
+        setDebug(false);
         setAdmin(0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266);
         init();
 
@@ -32,6 +31,10 @@ contract LocalAccrueInterest is TestLocal {
         pWETH = getPToken("pWETH");
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     function testDBwithInterestInNormalSlope() public {
@@ -153,6 +156,8 @@ contract LocalAccrueInterest is TestLocal {
         uint256 borrowCurrent = pWETH.borrowBalanceCurrent(user1);
         uint256 totalBorrowCurrent = pWETH.totalBorrowsCurrent();
         uint256 totalReserveCurrent = pWETH.totalReservesCurrent();
+        uint256 ownerReservesCurrent = pWETH.ownerReservesCurrent();
+        uint256 configuratorReservesCurrent = pWETH.configuratorReservesCurrent();
 
         uint256 currentSupplyRate = IInterestRateModel(address(pWETH)).getSupplyRate(
             pWETH.getCash(),
@@ -170,12 +175,22 @@ contract LocalAccrueInterest is TestLocal {
         uint256 borrowStored = pWETH.borrowBalanceStored(user1);
         uint256 totalBorrowStored = pWETH.totalBorrows();
         uint256 totalReserveStored = pWETH.totalReserves();
+        uint256 ownerReservesStored = pWETH.ownerReserves();
+        uint256 configuratorReservesStored = pWETH.configuratorReserves();
 
         assertEq(exchangeRateStored, exchangeRateCurrent, "unexpected exchange rate");
         assertEq(borrowStored, borrowCurrent, "unexpected borrow amount");
         assertEq(totalBorrowStored, totalBorrowCurrent, "unexpected total borrow amount");
         assertEq(
             totalReserveStored, totalReserveCurrent, "unexpected total reserve amount"
+        );
+        assertEq(
+            ownerReservesCurrent, ownerReservesStored, "unexpected total reserve amount"
+        );
+        assertEq(
+            configuratorReservesCurrent,
+            configuratorReservesStored,
+            "unexpected total reserve amount"
         );
         assertEq(currentBorrowRate, pWETH.borrowRatePerSecond(), "unexpected borrow rate");
         assertEq(currentSupplyRate, pWETH.supplyRatePerSecond(), "unexpected supply rate");

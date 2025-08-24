@@ -7,11 +7,16 @@ import {IPToken, IERC20} from "@interfaces/IPToken.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {TestLocal} from "@helpers/TestLocal.sol";
-
 import {MockOracle} from "@mocks/MockOracle.sol";
 import {ChainlinkOracleProvider} from "@oracles/ChainlinkOracleProvider.sol";
+import {IChainlinkOracleProvider} from "@oracles/interfaces/IChainlinkOracleProvider.sol";
+import {ChainlinkOracleComposite} from "@oracles/ChainlinkOracleComposite.sol";
+import {IChainlinkOracleComposite} from
+    "@oracles/interfaces/IChainlinkOracleComposite.sol";
 import {PythOracleProvider} from "@oracles/PythOracleProvider.sol";
+import {IPythOracleProvider} from "@oracles/interfaces/IPythOracleProvider.sol";
 import {OracleEngine} from "@oracles/OracleEngine.sol";
+import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
 import {MockChainlinkAggregator} from "@mocks/MockChainlinkAggregator.sol";
 import {MockPyth} from "@mocks/MockPyth.sol";
 import "@chainlink/contracts/shared/interfaces/AggregatorV3Interface.sol";
@@ -19,19 +24,23 @@ import "@chainlink/contracts/shared/interfaces/AggregatorV3Interface.sol";
 contract LocalOracle is TestLocal {
     IPToken pUSDC;
     IPToken pWETH;
+    IPToken pWSTETH;
     IRiskEngine re;
 
+    ChainlinkOracleComposite chainlinkOracleComposite;
     ChainlinkOracleProvider chainlinkOracleProvider;
     PythOracleProvider pythOracleProvider;
     OracleEngine oracleEngine;
     MockChainlinkAggregator sequencerUptimeFeed;
     MockChainlinkAggregator wethPriceFeed;
+    MockChainlinkAggregator wstethRateFeed;
     MockPyth pyth;
 
     uint256 startTimestamp = 1_726_655_826;
     uint256 gracePeriod = 3600;
 
     address weth;
+    address wsteth;
 
     function setUp() public {
         setDebug(false);
@@ -41,10 +50,14 @@ contract LocalOracle is TestLocal {
         // eth price = 2000$, usdc price = 1$
         deployPToken("pike-usdc", "pUSDC", 6, 1e6, 74.5e16, 84.5e16, deployMockToken);
         deployPToken("pike-weth", "pWETH", 18, 2000e6, 72.5e16, 82.5e16, deployMockToken);
+        deployPToken(
+            "pike-wsteth", "pWSTETH", 18, 2000e6, 72.5e16, 82.5e16, deployMockToken
+        );
 
         /// eth price = 2000$, usdc price = 1$
         pUSDC = getPToken("pUSDC");
         pWETH = getPToken("pWETH");
+        pWSTETH = getPToken("pWSTETH");
 
         re = getRiskEngine();
 
@@ -60,35 +73,56 @@ contract LocalOracle is TestLocal {
         wethPriceFeed = new MockChainlinkAggregator();
         wethPriceFeed.setRoundData(2000e8, block.timestamp, block.timestamp);
 
+        // deploy wsteth/weth rate feed
+        wstethRateFeed = new MockChainlinkAggregator();
+        wstethRateFeed.setRoundData(1.2e18, block.timestamp, block.timestamp);
+        wstethRateFeed.setDecimals(18);
+
         // deploy chainlink oracle provider
         address chainlinkOracleProviderImplementation = address(
-            new ChainlinkOracleProvider(AggregatorV3Interface(sequencerUptimeFeed))
+            new ChainlinkOracleProvider(
+                AggregatorV3Interface(sequencerUptimeFeed), getAdmin()
+            )
         );
-        bytes memory data =
-            abi.encodeCall(ChainlinkOracleProvider.initialize, (_testState.admin));
+        bytes memory data = abi.encodeCall(ChainlinkOracleProvider.initialize, ());
         ERC1967Proxy chainlinkOracleProviderProxy =
             new ERC1967Proxy(chainlinkOracleProviderImplementation, data);
 
         chainlinkOracleProvider =
             ChainlinkOracleProvider(address(chainlinkOracleProviderProxy));
 
+        // deploy chainlink composite oracle provider
+        address chainlinkOracleCompositeImplementation = address(
+            new ChainlinkOracleComposite(
+                AggregatorV3Interface(sequencerUptimeFeed), getAdmin()
+            )
+        );
+        bytes memory data2 = abi.encodeCall(ChainlinkOracleComposite.initialize, ());
+        ERC1967Proxy chainlinkOracleCompositeProxy =
+            new ERC1967Proxy(chainlinkOracleCompositeImplementation, data2);
+
+        chainlinkOracleComposite =
+            ChainlinkOracleComposite(address(chainlinkOracleCompositeProxy));
+
         // deploy pyth oracle provider
         pyth = new MockPyth();
         address pythOracleProviderImplementation =
-            address(new PythOracleProvider(address(pyth)));
-        data = abi.encodeCall(PythOracleProvider.initialize, (_testState.admin));
+            address(new PythOracleProvider(address(pyth), getAdmin()));
+        data = abi.encodeCall(PythOracleProvider.initialize, ());
         ERC1967Proxy pythOracleProviderProxy =
             new ERC1967Proxy(pythOracleProviderImplementation, data);
         pythOracleProvider = PythOracleProvider(address(pythOracleProviderProxy));
 
         // deploy oracle engine
         address oracleEngineImplementation = address(new OracleEngine());
-        data = abi.encodeCall(OracleEngine.initialize, (_testState.admin));
+        data =
+            abi.encodeCall(OracleEngine.initialize, (_testState.admin, _testState.admin));
         ERC1967Proxy oracleEngineProxy =
             new ERC1967Proxy(oracleEngineImplementation, data);
         oracleEngine = OracleEngine(address(oracleEngineProxy));
 
-        weth = pWETH.underlying();
+        weth = pWETH.asset();
+        wsteth = pWSTETH.asset();
     }
 
     function testChainlinkOracleProvider() public {
@@ -103,14 +137,14 @@ contract LocalOracle is TestLocal {
 
         // grace period not over
         sequencerUptimeFeed.setRoundData(0, block.timestamp, block.timestamp);
-        vm.expectRevert(ChainlinkOracleProvider.GracePeriodNotOver.selector);
+        vm.expectRevert(IChainlinkOracleProvider.GracePeriodNotOver.selector);
         wethPrice = chainlinkOracleProvider.getPrice(weth);
 
         // sequencer down
         sequencerUptimeFeed.setRoundData(
             1, block.timestamp - gracePeriod - 1, block.timestamp - gracePeriod - 1
         );
-        vm.expectRevert(ChainlinkOracleProvider.SequencerDown.selector);
+        vm.expectRevert(IChainlinkOracleProvider.SequencerDown.selector);
         wethPrice = chainlinkOracleProvider.getPrice(weth);
 
         // stale price
@@ -120,22 +154,93 @@ contract LocalOracle is TestLocal {
         wethPriceFeed.setRoundData(
             2000e8, block.timestamp - 2 hours, block.timestamp - 2 hours
         );
-        vm.expectRevert(ChainlinkOracleProvider.StalePrice.selector);
+        vm.expectRevert(IChainlinkOracleProvider.StalePrice.selector);
         wethPrice = chainlinkOracleProvider.getPrice(weth);
 
         // invalid asset
-        vm.expectRevert(ChainlinkOracleProvider.InvalidAsset.selector);
+        vm.expectRevert(IChainlinkOracleProvider.InvalidAsset.selector);
         chainlinkOracleProvider.setAssetConfig(address(0), wethPriceFeed, 1 hours);
 
         // invalid feed
-        vm.expectRevert(ChainlinkOracleProvider.InvalidFeed.selector);
+        vm.expectRevert(IChainlinkOracleProvider.InvalidFeed.selector);
         chainlinkOracleProvider.setAssetConfig(
             weth, AggregatorV3Interface(address(0)), 1 hours
         );
 
         // invalid stale period
-        vm.expectRevert(ChainlinkOracleProvider.InvalidStalePeriod.selector);
+        vm.expectRevert(IChainlinkOracleProvider.InvalidStalePeriod.selector);
         chainlinkOracleProvider.setAssetConfig(weth, wethPriceFeed, 0);
+    }
+
+    function testChainlinkOracleComposite() public {
+        vm.startPrank(_testState.admin);
+
+        AggregatorV3Interface[3] memory feeds;
+        bool[3] memory inverts;
+        uint256[3] memory stalePeriods;
+
+        feeds[0] = wstethRateFeed;
+        feeds[1] = wethPriceFeed;
+        stalePeriods[0] = 1 hours;
+        stalePeriods[1] = 1 hours;
+
+        // configure wsteth price
+        chainlinkOracleComposite.setAssetConfig(wsteth, feeds, inverts, stalePeriods);
+
+        chainlinkOracleComposite.getAssetConfig(wsteth);
+
+        // get wsteth price
+        uint256 wstethPrice = chainlinkOracleComposite.getPrice(wsteth);
+
+        assertEq(wstethPrice, 2000 * 1.2e18);
+
+        // invert both to get usd/wsteth
+        inverts[0] = true;
+        inverts[1] = true;
+        chainlinkOracleComposite.setAssetConfig(wsteth, feeds, inverts, stalePeriods);
+
+        wstethPrice = chainlinkOracleComposite.getPrice(wsteth);
+
+        assertEq(wstethPrice, uint256(1e36) / uint256(2000 * 12e17));
+
+        // grace period not over
+        sequencerUptimeFeed.setRoundData(0, block.timestamp, block.timestamp);
+        vm.expectRevert(IChainlinkOracleComposite.GracePeriodNotOver.selector);
+        wstethPrice = chainlinkOracleComposite.getPrice(wsteth);
+
+        // sequencer down
+        sequencerUptimeFeed.setRoundData(
+            1, block.timestamp - gracePeriod - 1, block.timestamp - gracePeriod - 1
+        );
+        vm.expectRevert(IChainlinkOracleComposite.SequencerDown.selector);
+        wstethPrice = chainlinkOracleComposite.getPrice(wsteth);
+
+        // stale price
+        sequencerUptimeFeed.setRoundData(
+            0, block.timestamp - gracePeriod - 1, block.timestamp - gracePeriod - 1
+        );
+        wstethRateFeed.setRoundData(
+            2000e8, block.timestamp - 2 hours, block.timestamp - 2 hours
+        );
+        vm.expectRevert(IChainlinkOracleComposite.StalePrice.selector);
+        wstethPrice = chainlinkOracleComposite.getPrice(wsteth);
+
+        // invalid asset
+        vm.expectRevert(IChainlinkOracleComposite.InvalidAsset.selector);
+        chainlinkOracleComposite.setAssetConfig(address(0), feeds, inverts, stalePeriods);
+
+        feeds[0] = AggregatorV3Interface(address(0));
+
+        // invalid feed
+        vm.expectRevert(IChainlinkOracleComposite.InvalidFeed.selector);
+        chainlinkOracleComposite.setAssetConfig(wsteth, feeds, inverts, stalePeriods);
+
+        feeds[0] = wstethRateFeed;
+        stalePeriods[0] = 0;
+
+        // invalid stale period
+        vm.expectRevert(IChainlinkOracleComposite.InvalidStalePeriod.selector);
+        chainlinkOracleComposite.setAssetConfig(wsteth, feeds, inverts, stalePeriods);
     }
 
     function testPythOracleProvider() public {
@@ -151,11 +256,11 @@ contract LocalOracle is TestLocal {
         assertEq(wethPrice, 2000e18);
 
         // invalid asset
-        vm.expectRevert(PythOracleProvider.InvalidAsset.selector);
+        vm.expectRevert(IPythOracleProvider.InvalidAsset.selector);
         pythOracleProvider.setAssetConfig(address(0), "weth", 0, 1 hours);
 
         // invalid stale period
-        vm.expectRevert(PythOracleProvider.InvalidMaxStalePeriod.selector);
+        vm.expectRevert(IPythOracleProvider.InvalidMaxStalePeriod.selector);
         pythOracleProvider.setAssetConfig(weth, "weth", 0, 0);
     }
 
@@ -168,7 +273,7 @@ contract LocalOracle is TestLocal {
         pyth.setData(2000e8, 10e8, -8);
 
         // get weth price
-        vm.expectRevert(PythOracleProvider.InvalidMinConfRatio.selector);
+        vm.expectRevert(IPythOracleProvider.InvalidMinConfRatio.selector);
         pythOracleProvider.getPrice(weth);
     }
 
@@ -181,6 +286,11 @@ contract LocalOracle is TestLocal {
         oracleEngine.setAssetConfig(
             weth, address(chainlinkOracleProvider), address(0), 0, 0
         );
+        // assert the set configs
+        IOracleEngine.AssetConfig memory config = oracleEngine.configs(address(weth));
+        assertEq(config.mainOracle, address(chainlinkOracleProvider));
+        assertEq(config.fallbackOracle, address(0));
+
         wethPriceFeed.setRoundData(2002e8, block.timestamp, block.timestamp);
 
         uint256 wethPrice = oracleEngine.getPrice(weth);
@@ -219,7 +329,7 @@ contract LocalOracle is TestLocal {
 
         // bounds not met
         pyth.setData(4001e8, 0, -8);
-        vm.expectRevert(OracleEngine.BoundValidationFailed.selector);
+        vm.expectRevert(IOracleEngine.BoundValidationFailed.selector);
         wethPrice = oracleEngine.getPrice(weth);
 
         // fallback fails
@@ -231,28 +341,28 @@ contract LocalOracle is TestLocal {
         wethPriceFeed.setRoundData(
             2002e8, block.timestamp - 2 hours, block.timestamp - 2 hours
         );
-        vm.expectRevert(OracleEngine.InvalidFallbackOraclePrice.selector);
+        vm.expectRevert(IOracleEngine.InvalidFallbackOraclePrice.selector);
         wethPrice = oracleEngine.getPrice(weth);
 
         // only main is configured and it fails
         oracleEngine.setAssetConfig(
             weth, address(chainlinkOracleProvider), address(0), 0, 0
         );
-        vm.expectRevert(OracleEngine.InvalidMainOraclePrice.selector);
+        vm.expectRevert(IOracleEngine.InvalidMainOraclePrice.selector);
         wethPrice = oracleEngine.getPrice(weth);
 
         // invalid bounds
-        vm.expectRevert(OracleEngine.InvalidBounds.selector);
+        vm.expectRevert(IOracleEngine.InvalidBounds.selector);
         oracleEngine.setAssetConfig(
             weth, address(chainlinkOracleProvider), address(0), 2, 1
         );
 
         // invalid main oracle
-        vm.expectRevert(OracleEngine.InvalidMainOracle.selector);
+        vm.expectRevert(IOracleEngine.InvalidMainOracle.selector);
         oracleEngine.setAssetConfig(weth, address(0), address(0), 0, 0);
 
         // invalid asset
-        vm.expectRevert(OracleEngine.InvalidAsset.selector);
+        vm.expectRevert(IOracleEngine.InvalidAsset.selector);
         oracleEngine.setAssetConfig(
             address(0), address(chainlinkOracleProvider), address(0), 0, 0
         );

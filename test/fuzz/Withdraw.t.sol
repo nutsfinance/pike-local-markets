@@ -39,6 +39,10 @@ contract FuzzWithdraw is TestFuzz {
         pWETH = getPToken("pWETH");
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     function testFuzz_withdrawUnderlying(
@@ -49,8 +53,7 @@ contract FuzzWithdraw is TestFuzz {
         onBehalfOf = addresses[1];
 
         /// bound usdc 10-1B$
-        underlyingToDeposit = bound(amounts[0], 10e6, 1e15);
-        underlyingToWithdraw = bound(amounts[1], 10e6, underlyingToDeposit);
+        underlyingToDeposit = bound(amounts[0], 20e6, 1e15);
         /// set cash, totalBorrows and totalSupply to get random exchangeRate
         cash = bound(amounts[4], 10e6, 1e15);
         totalBorrows = bound(amounts[3], 10e6, 1e15);
@@ -63,13 +66,17 @@ contract FuzzWithdraw is TestFuzz {
 
         setPTokenTotalSupply(address(pUSDC), pTokenTotalSupply);
         setTotalBorrows(address(pUSDC), totalBorrows);
-        deal(address(pUSDC.underlying()), address(pUSDC), cash);
+        deal(address(pUSDC.asset()), address(pUSDC), cash);
         if (withdrawer != onBehalfOf) {
             vm.prank(onBehalfOf);
-            re.updateDelegate(withdrawer, true);
+            pUSDC.approve(withdrawer, type(uint256).max);
         }
 
         doDepositAndEnter(withdrawer, onBehalfOf, address(pUSDC), underlyingToDeposit);
+
+        underlyingToWithdraw =
+            bound(amounts[1], 10e6, pUSDC.balanceOfUnderlying(onBehalfOf));
+
         doWithdrawUnderlying(withdrawer, onBehalfOf, address(pUSDC), underlyingToWithdraw);
     }
 
@@ -93,10 +100,10 @@ contract FuzzWithdraw is TestFuzz {
 
         setPTokenTotalSupply(address(pUSDC), pTokenTotalSupply);
         setTotalBorrows(address(pUSDC), totalBorrows);
-        deal(address(pUSDC.underlying()), address(pUSDC), cash);
+        deal(address(pUSDC.asset()), address(pUSDC), cash);
         if (withdrawer != onBehalfOf) {
             vm.prank(onBehalfOf);
-            re.updateDelegate(withdrawer, true);
+            pUSDC.approve(withdrawer, type(uint256).max);
         }
 
         doDepositAndEnter(withdrawer, onBehalfOf, address(pUSDC), underlyingToDeposit);

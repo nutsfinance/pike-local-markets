@@ -8,7 +8,6 @@ import {IPToken, IERC20} from "@interfaces/IPToken.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {TestLocal} from "@helpers/TestLocal.sol";
-
 import {MockOracle} from "@mocks/MockOracle.sol";
 
 contract LocalRiskEngine is TestLocal {
@@ -33,6 +32,10 @@ contract LocalRiskEngine is TestLocal {
         pWETH = getPToken("pWETH");
         re = getRiskEngine();
         mockOracle = MockOracle(re.oracle());
+
+        //inital mint
+        doInitialMint(pUSDC);
+        doInitialMint(pWETH);
     }
 
     function testPauseMint_Success() public {
@@ -127,7 +130,7 @@ contract LocalRiskEngine is TestLocal {
         re.exitMarket(address(pUSDC));
 
         assertEq(re.getAssetsIn(user1).length, 0, "assets are not empty");
-        assertEq(re.checkMembership(user1, pUSDC), false, "still in market");
+        assertEq(re.checkCollateralMembership(user1, pUSDC), false, "still in market");
         // "BorrowRiskEngineRejection(3)" selector
         doBorrowRevert(
             user1,
@@ -168,22 +171,43 @@ contract LocalRiskEngine is TestLocal {
 
     function testMint_FailIfCapReached() public {
         address user1 = makeAddr("user1");
-        uint256 mintAmount = 2000e6;
+        uint256 mintAmount = 2000e18;
 
         IPToken[] memory markets = new IPToken[](1);
-        markets[0] = pUSDC;
+        markets[0] = pWETH;
 
         uint256[] memory caps = new uint256[](1);
         caps[0] = mintAmount - 1;
 
+        changeList(address(pUSDC), false);
+
+        // max deposit 0 for unlisted
+        assertEq(0, pUSDC.maxDeposit(address(0)), "maxDeposit does not match unlisted");
+
+        // max deposit uint256 max by default
+        assertEq(
+            type(uint256).max,
+            pWETH.maxDeposit(address(0)),
+            "maxDeposit does not uint256 max"
+        );
+
         vm.prank(getAdmin());
         re.setMarketSupplyCaps(markets, caps);
+        uint256 cap = caps[0] - (5000 * pWETH.initialExchangeRate() / ONE_MANTISSA);
+        // applied cap - initial mint amount
+        assertEq(cap, pWETH.maxDeposit(address(0)), "maxDeposit does not match cap");
+        assertApproxEqRel(
+            cap,
+            pWETH.maxMint(address(0)) * pWETH.exchangeRateCurrent() / ONE_MANTISSA,
+            1e5,
+            "maxMint does not match cap"
+        );
 
         // "BorrowRiskEngineRejection(7)" selector
         doDepositRevert(
             user1,
             user1,
-            address(pUSDC),
+            address(pWETH),
             mintAmount,
             abi.encodePacked(bytes4(0x1d3413fb), uint256(7))
         );
@@ -200,7 +224,9 @@ contract LocalRiskEngine is TestLocal {
         vm.startPrank(getAdmin());
         pUSDC.setReserveFactor(1e18);
 
-        re.setCollateralFactor(pUSDC, 0, 0);
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(0, 0, 108e16);
+        re.configureMarket(pUSDC, config);
         re.setBorrowPaused(pUSDC, true);
 
         assertEq(re.isDeprecated(pUSDC), true, "not deprecated");
@@ -211,38 +237,69 @@ contract LocalRiskEngine is TestLocal {
 
         changeList(address(pUSDC), false);
 
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(0, 0, 108e16);
         // "MarketNotListed()" selector
-        vm.expectRevert(0x69609fc6);
-        re.setCollateralFactor(IPToken(pUSDC), 0, 0);
+        vm.expectRevert(bytes4(0x69609fc6));
+        re.configureMarket(IPToken(pUSDC), config);
+    }
+
+    function testSetCF_FailIfNotInRange() public {
+        vm.startPrank(getAdmin());
+
+        // "InvalidCloseFactor()" selector
+        vm.expectRevert(bytes4(0xee0bdbdf));
+        re.setCloseFactor(address(pUSDC), 2e18);
     }
 
     function testSetCF_FailIfInvalidCF() public {
         vm.startPrank(getAdmin());
 
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(1e18, 0, 108e16);
         // "InvalidCollateralFactor()" selector
-        vm.expectRevert(0xbc8b2b40);
-        re.setCollateralFactor(pUSDC, 1e18, 0);
+        vm.expectRevert(bytes4(0xbc8b2b40));
+        re.configureMarket(pUSDC, config);
 
+        config = IRiskEngine.BaseConfiguration(0, 1e18 + 1, 108e16);
         // "InvalidLiquidationThreshold()" selector
-        vm.expectRevert(0x3e51d2c0);
-        re.setCollateralFactor(pUSDC, 0, 1e18 + 1);
+        vm.expectRevert(bytes4(0x3e51d2c0));
+        re.configureMarket(pUSDC, config);
 
+        config = IRiskEngine.BaseConfiguration(0.8e18, 0.7e18, 108e16);
         // "InvalidLiquidationThreshold()" selector
-        vm.expectRevert(0x3e51d2c0);
-        re.setCollateralFactor(pUSDC, 0.8e18, 0.7e18);
+        vm.expectRevert(bytes4(0x3e51d2c0));
+        re.configureMarket(pUSDC, config);
+
+        config = IRiskEngine.BaseConfiguration(0.7e18, 0.8e18, 10e16);
+        // "InvalidIncentiveThreshold()" selector
+        vm.expectRevert(bytes4(0x37fbf6a6));
+        re.configureMarket(pUSDC, config);
+    }
+
+    function testSetOracle_FailIfAddressIsZero() public {
+        vm.prank(getAdmin());
+
+        // "ZeroAddress()" selector
+        vm.expectRevert(bytes4(0xd92e233d));
+        re.setOracle(address(0));
     }
 
     function testSupportMarket_FailIfAlreadyListedOrUnsupported() public {
         vm.startPrank(getAdmin());
 
+        // "ZeroAddress()" selector
+        vm.expectRevert(bytes4(0xd92e233d));
+        re.supportMarket(IPToken(address(0)));
+
         // "AlreadyListed()" selector
-        vm.expectRevert(0xa3d582ec);
+        vm.expectRevert(bytes4(0xa3d582ec));
         re.supportMarket(pUSDC);
 
         changeList(address(pUSDC), false);
 
         // "AlreadyListed()" selector
-        vm.expectRevert(0xa3d582ec);
+        vm.expectRevert(bytes4(0xa3d582ec));
         re.supportMarket(pUSDC);
     }
 
@@ -253,11 +310,11 @@ contract LocalRiskEngine is TestLocal {
         uint256[] memory caps = new uint256[](0);
 
         // "NoArrayParity()" selector
-        vm.expectRevert(0x266c51bb);
+        vm.expectRevert(bytes4(0x266c51bb));
         re.setMarketBorrowCaps(pTokens, caps);
 
         // "NoArrayParity()" selector
-        vm.expectRevert(0x266c51bb);
+        vm.expectRevert(bytes4(0x266c51bb));
         re.setMarketSupplyCaps(pTokens, caps);
     }
 
@@ -265,29 +322,12 @@ contract LocalRiskEngine is TestLocal {
         vm.startPrank(getAdmin());
 
         // "MarketNotListed()" selector
-        vm.expectRevert(0x69609fc6);
+        vm.expectRevert(bytes4(0x69609fc6));
         re.setMintPaused(IPToken(address(0)), true);
 
         // "MarketNotListed()" selector
-        vm.expectRevert(0x69609fc6);
+        vm.expectRevert(bytes4(0x69609fc6));
         re.setBorrowPaused(IPToken(address(0)), true);
-    }
-
-    function testExit_FailIfBorrowed() public {
-        address user1 = makeAddr("user1");
-        address depositor = makeAddr("depositor");
-
-        ///porivde liquidity
-        doDeposit(depositor, depositor, address(pWETH), 1e18);
-
-        doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
-
-        doBorrow(user1, user1, address(pWETH), 0.745e18);
-
-        vm.prank(user1);
-        // "NonZeroBorrowBalance()" selector
-        vm.expectRevert(0xe9b593c4);
-        re.exitMarket(address(pWETH));
     }
 
     function testExit_FailIfPriceZero() public {
@@ -328,13 +368,13 @@ contract LocalRiskEngine is TestLocal {
 
         vm.startPrank(user1);
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         re.updateDelegate(address(0), true);
 
         re.updateDelegate(user2, true);
 
         // "DelegationStatusUnchanged()" selector
-        vm.expectRevert(0xdb6c2c83);
+        vm.expectRevert(bytes4(0xdb6c2c83));
         re.updateDelegate(user2, true);
     }
 
@@ -385,7 +425,7 @@ contract LocalRiskEngine is TestLocal {
 
         vm.prank(address(1));
         // "SenderNotPToken()" selector
-        vm.expectRevert(0xe6c91dd9);
+        vm.expectRevert(bytes4(0xe6c91dd9));
         re.borrowAllowed(user1, user1, 0);
     }
 
@@ -445,7 +485,9 @@ contract LocalRiskEngine is TestLocal {
         // deprecate pUSDC
         vm.startPrank(getAdmin());
         pUSDC.setReserveFactor(1e18);
-        re.setCollateralFactor(pUSDC, 0, 0);
+        IRiskEngine.BaseConfiguration memory config =
+            IRiskEngine.BaseConfiguration(0, 0, 108e16);
+        re.configureMarket(pUSDC, config);
         re.setBorrowPaused(pUSDC, true);
         vm.stopPrank();
 
@@ -469,13 +511,16 @@ contract LocalRiskEngine is TestLocal {
 
         ///porivde liquidity
         doDeposit(depositor, depositor, address(pUSDC), 2000e6);
+        vm.prank(depositor);
+        re.exitMarket(address(pUSDC));
 
         doDepositAndEnter(user1, user1, address(pWETH), 1e18);
         doBorrow(user1, user1, address(pUSDC), 1450e6);
 
-        address mockRE = deployRiskEngine(closeFactor, liquidationIncentive);
+        address mockRE = deployRiskEngine();
         vm.prank(getAdmin());
-        pWETH.setRiskEngine(IRiskEngine(mockRE));
+        // change risk engine
+        setRiskEngineSlot(address(pWETH), mockRE);
 
         // 1450 / 0.825(weth liq threshold) = 1757.57 is liquidation threshold price for collateral
 

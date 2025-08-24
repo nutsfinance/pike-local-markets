@@ -7,7 +7,6 @@ import {IPToken, IERC20} from "@interfaces/IPToken.sol";
 import {IInterestRateModel} from "@interfaces/IInterestRateModel.sol";
 import {IRiskEngine} from "@interfaces/IRiskEngine.sol";
 import {TestLocal} from "@helpers/TestLocal.sol";
-
 import {MockOracle} from "@mocks/MockOracle.sol";
 
 contract LocalReserve is TestLocal {
@@ -38,12 +37,12 @@ contract LocalReserve is TestLocal {
         address user1 = makeAddr("user1");
         uint256 value = 1e18;
 
-        deal(pWETH.underlying(), user1, value);
+        deal(pWETH.asset(), user1, value);
 
         uint256 reserveBefore = pWETH.totalReserves();
 
         vm.startPrank(user1);
-        IERC20(pWETH.underlying()).approve(address(pWETH), value);
+        IERC20(pWETH.asset()).approve(address(pWETH), value);
         pWETH.addReserves(value);
 
         uint256 reserveAfter = pWETH.totalReserves();
@@ -55,16 +54,18 @@ contract LocalReserve is TestLocal {
         address user1 = makeAddr("user1");
         uint256 value = 1e18;
 
-        deal(pWETH.underlying(), user1, value);
+        deal(pWETH.asset(), user1, value);
 
         vm.startPrank(user1);
-        IERC20(pWETH.underlying()).approve(address(pWETH), value);
+        IERC20(pWETH.asset()).approve(address(pWETH), value);
         pWETH.addReserves(value);
 
         vm.startPrank(getAdmin());
         uint256 reserveBefore = pWETH.totalReserves();
 
-        pWETH.reduceReserves(value);
+        pWETH.reduceReservesEmergency(value);
+        pWETH.reduceReservesOwner(0);
+        pWETH.reduceReservesConfigurator(0);
 
         uint256 reserveAfter = pWETH.totalReserves();
 
@@ -75,20 +76,20 @@ contract LocalReserve is TestLocal {
         address user1 = makeAddr("user1");
         uint256 value = 1e18;
 
-        deal(pWETH.underlying(), user1, value);
+        deal(pWETH.asset(), user1, value);
 
         vm.startPrank(user1);
-        IERC20(pWETH.underlying()).transfer(address(pUSDC), value);
+        IERC20(pWETH.asset()).transfer(address(pUSDC), value);
 
         vm.startPrank(getAdmin());
 
-        uint256 balanceBefore = IERC20(pWETH.underlying()).balanceOf(address(pUSDC));
-        uint256 adminBalanceBefore = IERC20(pWETH.underlying()).balanceOf(getAdmin());
+        uint256 balanceBefore = IERC20(pWETH.asset()).balanceOf(address(pUSDC));
+        uint256 adminBalanceBefore = IERC20(pWETH.asset()).balanceOf(getAdmin());
 
-        pUSDC.sweepToken(IERC20(pWETH.underlying()));
+        pUSDC.sweepToken(IERC20(pWETH.asset()));
 
-        uint256 balanceAfter = IERC20(pWETH.underlying()).balanceOf(address(pUSDC));
-        uint256 adminBalanceAfter = IERC20(pWETH.underlying()).balanceOf(getAdmin());
+        uint256 balanceAfter = IERC20(pWETH.asset()).balanceOf(address(pUSDC));
+        uint256 adminBalanceAfter = IERC20(pWETH.asset()).balanceOf(getAdmin());
 
         assertEq(balanceBefore, balanceAfter + value);
         assertEq(adminBalanceAfter, adminBalanceBefore + value);
@@ -106,6 +107,13 @@ contract LocalReserve is TestLocal {
         assertEq(pWETH.protocolSeizeShareMantissa(), newSeizeShare);
     }
 
+    function testSetReserveShares_Fail() public {
+        // "InvalidReserveShare()" selector
+        vm.prank(getAdmin());
+        vm.expectRevert(bytes4(0x8415fb41));
+        re.setReserveShares(ONE_MANTISSA, ONE_MANTISSA);
+    }
+
     function testSetReserveFactor() public {
         // 10%
         uint256 newReserveFactor = 5e16;
@@ -121,25 +129,52 @@ contract LocalReserve is TestLocal {
     function testReserveFactor_FailIfOutOfBound() public {
         vm.prank(getAdmin());
         // "SetReserveFactorBoundsCheck()" selector
-        vm.expectRevert(0xe2e441e6);
+        vm.expectRevert(bytes4(0xe2e441e6));
         pUSDC.setReserveFactor(10e18);
     }
 
     function testReduceReserve_FailIfMoreThanBalance() public {
-        deal(address(pUSDC.underlying()), address(pUSDC), 1e18);
+        deal(address(pUSDC.asset()), address(pUSDC), 1e18);
 
         vm.prank(getAdmin());
         // "ReduceReservesCashNotAvailable()" selector
-        vm.expectRevert(0x3345e999);
-        pUSDC.reduceReserves(1e18 + 1);
+        vm.expectRevert(bytes4(0x3345e999));
+        pUSDC.reduceReservesEmergency(1e18 + 1);
     }
 
     function testReduceReserve_FailIfNotValid() public {
-        deal(address(pUSDC.underlying()), address(pUSDC), 1e18);
+        deal(address(pUSDC.asset()), address(pUSDC), 1e18);
 
         vm.prank(getAdmin());
         // "ReduceReservesCashValidation()" selector
-        vm.expectRevert(0xf1a5300a);
-        pUSDC.reduceReserves(1e18);
+        vm.expectRevert(bytes4(0xf1a5300a));
+        pUSDC.reduceReservesEmergency(1e18);
+    }
+
+    function testReduceReserve_FailIfNotPermitted() public {
+        deal(address(pUSDC.asset()), address(pUSDC), 1e18);
+
+        vm.startPrank(address(1));
+        // "PermissionDenied(bytes32,address)" selector
+        vm.expectRevert(
+            abi.encodePacked(
+                bytes4(0xc768858b), abi.encode(emergency_withdrawer, address(1))
+            )
+        );
+        pUSDC.reduceReservesEmergency(1e18);
+
+        // "PermissionDenied(bytes32,address)" selector
+        vm.expectRevert(
+            abi.encodePacked(
+                bytes4(0xc768858b), abi.encode(reserve_withdrawer_permission, address(1))
+            )
+        );
+        pUSDC.reduceReservesConfigurator(1e18);
+
+        // "PermissionDenied(bytes32,address)" selector
+        vm.expectRevert(
+            abi.encodePacked(bytes4(0xc768858b), abi.encode(owner_withdrawer, address(1)))
+        );
+        pUSDC.reduceReservesOwner(1e18);
     }
 }

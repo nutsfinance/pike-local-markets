@@ -1,8 +1,8 @@
 {
-  "name": "pike-local-markets",
+  "name": "pike-markets",
   "version": "0.1.0",
   "private": true,
-  "description": "Pike Local Lending Markets",
+  "description": "Pike Lending Markets",
   "homepage": "https://nuts.finance",
   "repository": "https://github.com/nutsfinance/pike-local-markets.git",
   "license": "MIT",
@@ -15,12 +15,12 @@
   "scripts": {
     "build": "forge build",
     "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
-    "deploy:mainnet": "npx cannon build script/cannon/mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io",
-    "deploy:mainnet:dryrun": "npx cannon build script/cannon/mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io --dry-run",
-    "deploy:testnet": "npx cannon build script/cannon/testnet.toml --rpc-url https://sepolia.base.org",
-    "deploy:testnet:dryrun": "npx cannon build script/cannon/testnet.toml --rpc-url https://sepolia.base.org --dry-run",
+    "deploy:mainnet": "npx cannon build script/cannon/base-mainnet/base-mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io",
+    "deploy:mainnet:dryrun": "npx cannon build script/cannon/base-mainnet/base-mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io --dry-run",
+    "deploy:testnet": "npx cannon build script/cannon/base-sepolia/base-sepolia.toml --rpc-url https://sepolia.base.org",
+    "deploy:testnet:dryrun": "npx cannon build script/cannon/base-sepolia/base-sepolia.toml --rpc-url https://sepolia.base.org --dry-run",
     "postinstall": "forge install",
-    "lint:check": "yarn lint:sol-logic && forge fmt --check",
+    "lint:check": "yarn lint:sol-logic && forge fmt src --check",
     "lint:fix": "yarn sort-package-json && forge fmt && yarn solhint 'src/**/*.sol' 'test/**/*.sol' --fix",
     "lint:sol-logic": "solhint -c .solhint.json 'src/**/*.sol'",
     "lint:sol-tests": "solhint -c .solhint.json 'test/**/*.sol'",
@@ -28,8 +28,8 @@
     "sort-package-json": "sort-package-json",
     "test": "forge test --match-contract Local -vv",
     "test:coverage": "forge coverage --match-contract Local -vv --no-match-coverage \"(script|test|node_modules)\"",
-    "test:coverage:output": "forge coverage --match-contract Local -vv --no-match-coverage \"(script|test|node_modules)\" --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage --ignore-errors inconsistent",
-    "test:fork": "forge build --ast && npx cannon test script/cannon/mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io --forge.match-contract Fork --forge.vv",
+    "test:coverage:output": "forge coverage --match-contract Local -vv --no-match-coverage \"(script|test|node_modules)\" --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage --ignore-errors inconsistent,category",
+    "test:fork": "forge build --ast && npx cannon test script/cannon/base-mainnet/base-mainnet.toml --rpc-url https://base-mainnet.public.blastapi.io --forge.match-contract Fork --forge.vv",
     "test:fuzz": "forge test --match-contract Fuzz -vv"
   },
   "dependencies": {
@@ -44,7 +44,7 @@
     "cannon-std": "git+https://github.com/usecannon/cannon-std.git#master",
     "forge-std": "git+https://github.com/foundry-rs/forge-std.git",
     "husky": "9.1.6",
-    "solhint": "5.0.3",
+    "solhint": "5.1.0",
     "solhint-plugin-prettier": "0.1.0",
     "sort-package-json": "2.10.0"
   }
