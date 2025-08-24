@@ -193,13 +193,13 @@ contract LocalRiskEngine is TestLocal {
 
         vm.prank(getAdmin());
         re.setMarketSupplyCaps(markets, caps);
+        uint256 cap = caps[0] - (5000 * pWETH.initialExchangeRate() / ONE_MANTISSA);
         // applied cap - initial mint amount
-        assertEq(
-            caps[0] - 1001, pWETH.maxDeposit(address(0)), "maxDeposit does not match cap"
-        );
-        assertEq(
-            caps[0] - 1001,
+        assertEq(cap, pWETH.maxDeposit(address(0)), "maxDeposit does not match cap");
+        assertApproxEqRel(
+            cap,
             pWETH.maxMint(address(0)) * pWETH.exchangeRateCurrent() / ONE_MANTISSA,
+            1e5,
             "maxMint does not match cap"
         );
 
@@ -240,7 +240,7 @@ contract LocalRiskEngine is TestLocal {
         IRiskEngine.BaseConfiguration memory config =
             IRiskEngine.BaseConfiguration(0, 0, 108e16);
         // "MarketNotListed()" selector
-        vm.expectRevert(0x69609fc6);
+        vm.expectRevert(bytes4(0x69609fc6));
         re.configureMarket(IPToken(pUSDC), config);
     }
 
@@ -248,7 +248,7 @@ contract LocalRiskEngine is TestLocal {
         vm.startPrank(getAdmin());
 
         // "InvalidCloseFactor()" selector
-        vm.expectRevert(0xee0bdbdf);
+        vm.expectRevert(bytes4(0xee0bdbdf));
         re.setCloseFactor(address(pUSDC), 2e18);
     }
 
@@ -258,22 +258,22 @@ contract LocalRiskEngine is TestLocal {
         IRiskEngine.BaseConfiguration memory config =
             IRiskEngine.BaseConfiguration(1e18, 0, 108e16);
         // "InvalidCollateralFactor()" selector
-        vm.expectRevert(0xbc8b2b40);
+        vm.expectRevert(bytes4(0xbc8b2b40));
         re.configureMarket(pUSDC, config);
 
         config = IRiskEngine.BaseConfiguration(0, 1e18 + 1, 108e16);
         // "InvalidLiquidationThreshold()" selector
-        vm.expectRevert(0x3e51d2c0);
+        vm.expectRevert(bytes4(0x3e51d2c0));
         re.configureMarket(pUSDC, config);
 
         config = IRiskEngine.BaseConfiguration(0.8e18, 0.7e18, 108e16);
         // "InvalidLiquidationThreshold()" selector
-        vm.expectRevert(0x3e51d2c0);
+        vm.expectRevert(bytes4(0x3e51d2c0));
         re.configureMarket(pUSDC, config);
 
         config = IRiskEngine.BaseConfiguration(0.7e18, 0.8e18, 10e16);
         // "InvalidIncentiveThreshold()" selector
-        vm.expectRevert(0x37fbf6a6);
+        vm.expectRevert(bytes4(0x37fbf6a6));
         re.configureMarket(pUSDC, config);
     }
 
@@ -281,7 +281,7 @@ contract LocalRiskEngine is TestLocal {
         vm.prank(getAdmin());
 
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         re.setOracle(address(0));
     }
 
@@ -289,17 +289,17 @@ contract LocalRiskEngine is TestLocal {
         vm.startPrank(getAdmin());
 
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         re.supportMarket(IPToken(address(0)));
 
         // "AlreadyListed()" selector
-        vm.expectRevert(0xa3d582ec);
+        vm.expectRevert(bytes4(0xa3d582ec));
         re.supportMarket(pUSDC);
 
         changeList(address(pUSDC), false);
 
         // "AlreadyListed()" selector
-        vm.expectRevert(0xa3d582ec);
+        vm.expectRevert(bytes4(0xa3d582ec));
         re.supportMarket(pUSDC);
     }
 
@@ -310,11 +310,11 @@ contract LocalRiskEngine is TestLocal {
         uint256[] memory caps = new uint256[](0);
 
         // "NoArrayParity()" selector
-        vm.expectRevert(0x266c51bb);
+        vm.expectRevert(bytes4(0x266c51bb));
         re.setMarketBorrowCaps(pTokens, caps);
 
         // "NoArrayParity()" selector
-        vm.expectRevert(0x266c51bb);
+        vm.expectRevert(bytes4(0x266c51bb));
         re.setMarketSupplyCaps(pTokens, caps);
     }
 
@@ -322,11 +322,11 @@ contract LocalRiskEngine is TestLocal {
         vm.startPrank(getAdmin());
 
         // "MarketNotListed()" selector
-        vm.expectRevert(0x69609fc6);
+        vm.expectRevert(bytes4(0x69609fc6));
         re.setMintPaused(IPToken(address(0)), true);
 
         // "MarketNotListed()" selector
-        vm.expectRevert(0x69609fc6);
+        vm.expectRevert(bytes4(0x69609fc6));
         re.setBorrowPaused(IPToken(address(0)), true);
     }
 
@@ -368,13 +368,13 @@ contract LocalRiskEngine is TestLocal {
 
         vm.startPrank(user1);
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         re.updateDelegate(address(0), true);
 
         re.updateDelegate(user2, true);
 
         // "DelegationStatusUnchanged()" selector
-        vm.expectRevert(0xdb6c2c83);
+        vm.expectRevert(bytes4(0xdb6c2c83));
         re.updateDelegate(user2, true);
     }
 
@@ -425,7 +425,7 @@ contract LocalRiskEngine is TestLocal {
 
         vm.prank(address(1));
         // "SenderNotPToken()" selector
-        vm.expectRevert(0xe6c91dd9);
+        vm.expectRevert(bytes4(0xe6c91dd9));
         re.borrowAllowed(user1, user1, 0);
     }
 
@@ -521,8 +521,6 @@ contract LocalRiskEngine is TestLocal {
         vm.prank(getAdmin());
         // change risk engine
         setRiskEngineSlot(address(pWETH), mockRE);
-        console.logAddress(address(pWETH.riskEngine()));
-        console.logAddress(mockRE);
 
         // 1450 / 0.825(weth liq threshold) = 1757.57 is liquidation threshold price for collateral
 

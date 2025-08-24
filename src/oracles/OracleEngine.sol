@@ -30,7 +30,7 @@ contract OracleEngine is IOracleEngine, AccessControlUpgradeable {
      * @notice Initialize the contract
      * @param owner Address of the owner
      */
-    function initialize(address owner, address configurator) public initializer {
+    function initialize(address owner, address configurator) external initializer {
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
         _grantRole(_CONFIGURATOR_PERMISSION, configurator);
     }
@@ -87,8 +87,8 @@ contract OracleEngine is IOracleEngine, AccessControlUpgradeable {
     /**
      * @inheritdoc IOracleEngine
      */
-    function configs(address pToken) external view returns (AssetConfig memory) {
-        return _getOracleEngineStorage().configs[pToken];
+    function configs(address asset) external view returns (AssetConfig memory) {
+        return _getOracleEngineStorage().configs[asset];
     }
 
     /**

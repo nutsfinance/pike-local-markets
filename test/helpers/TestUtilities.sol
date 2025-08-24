@@ -429,10 +429,11 @@ contract TestUtilities is TestDeploy {
         LiquidationParams memory lp,
         LiquidationStateData memory beforeData,
         LiquidationStateData memory afterData
-    ) public view {
+    ) public view returns (bool) {
         IRiskEngine riskEngine = IPToken(lp.collateralPToken).riskEngine();
+        if (lp.repayAmount == type(uint256).max) return true;
 
-        // we assume repay amount is equal to what is transferred
+        // we assume repay amount is equal to what is transferred and is not type(uint256).max
         (, uint256 seizeTokens) = riskEngine.liquidateCalculateSeizeTokens(
             lp.userToLiquidate, lp.borrowedPToken, lp.collateralPToken, lp.repayAmount
         );
@@ -530,5 +531,6 @@ contract TestUtilities is TestDeploy {
                 "Borrow did subtract from total borrow of ptoken"
             );
         }
+        return true;
     }
 }

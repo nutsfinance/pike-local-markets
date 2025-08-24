@@ -37,7 +37,7 @@ contract LocalPToken is TestLocal {
         mockOracle = MockOracle(re.oracle());
 
         //initail mint exceptioin case
-        doInitialMintRevert(pUSDC);
+        doInitialMintRevert(pWETH);
         //inital mint
         doInitialMint(pUSDC);
         doInitialMint(pWETH);
@@ -47,7 +47,7 @@ contract LocalPToken is TestLocal {
         vm.prank(getAdmin());
 
         // "AlreadyInitialized()" selector
-        vm.expectRevert(0x0dc149f0);
+        vm.expectRevert(bytes4(0x0dc149f0));
         PTokenModule(address(pUSDC)).initialize(
             address(0), IRiskEngine(address(0)), 0, 0, 0, 0, "", "", 0
         );
@@ -61,24 +61,43 @@ contract LocalPToken is TestLocal {
 
         vm.startPrank(getAdmin());
         // "ZeroValue()" selector
-        vm.expectRevert(0x7c946ed7);
+        vm.expectRevert(bytes4(0x7c946ed7));
         PTokenModule(pToken).initialize(
             address(0), IRiskEngine(address(0)), 0, 0, 0, 0, "", "", 0
         );
 
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         PTokenModule(pToken).initialize(
             address(0), IRiskEngine(address(0)), 1, 1, 1, 1, "", "", 0
         );
 
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         PTokenModule(pToken).initialize(
             address(1), IRiskEngine(address(0)), 1, 1, 1, 1, "", "", 0
         );
 
         vm.stopPrank();
+    }
+
+    function testAutoEnableCollateral() public {
+        vm.prank(getAdmin());
+
+        address user1 = makeAddr("user1");
+        address user2 = makeAddr("user2");
+
+        assert(!re.checkCollateralMembership(user1, pUSDC));
+        assert(!re.checkCollateralMembership(user2, pUSDC));
+
+        doDeposit(user1, user1, address(pUSDC), 2000e6);
+
+        // enable collateral with third party deposit
+        doDeposit(user1, user2, address(pUSDC), 2000e6);
+
+        /// should enable as collateral for iniital deposit
+        assert(re.checkCollateralMembership(user1, pUSDC));
+        assert(re.checkCollateralMembership(user2, pUSDC));
     }
 
     function testSetBorrowRateMax_Success() public {
@@ -94,7 +113,7 @@ contract LocalPToken is TestLocal {
         IERC20 underlying = IERC20(pUSDC.asset());
         vm.prank(getAdmin());
         // "SweepNotAllowed()" selector
-        vm.expectRevert(0x00b5509b);
+        vm.expectRevert(bytes4(0x00b5509b));
         pUSDC.sweepToken(underlying);
     }
 
@@ -102,37 +121,37 @@ contract LocalPToken is TestLocal {
         vm.startPrank(getAdmin());
 
         // "SetProtocolSeizeShareBoundsCheck()" selector
-        vm.expectRevert(0x5dc64e16);
+        vm.expectRevert(bytes4(0x5dc64e16));
         pUSDC.setProtocolSeizeShare(1e18);
     }
 
     function testTransfer_FailIfReceiverIsZero() public {
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.transfer(address(0), 0);
 
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.transferFrom(address(0), address(0), 0);
     }
 
     function testRedeem_FailIfReceiverIsZero() public {
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.redeem(0, address(0), address(0));
 
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.withdraw(0, address(0), address(0));
     }
 
     function testMintBehalfOf_FailIfAddressIsZero() public {
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.deposit(0, address(0));
 
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.mint(0, address(0));
     }
 
@@ -140,13 +159,13 @@ contract LocalPToken is TestLocal {
         address pToken = address(new PTokenModule());
 
         // "LiquidateAccrueCollateralInterestFailed()" selector
-        vm.expectRevert(0x181b94c8);
+        vm.expectRevert(bytes4(0x181b94c8));
         pUSDC.liquidateBorrow(address(0), 0, IPToken(pToken));
     }
 
     function testApprove_FailIfAddressZero() public {
         // "ZeroAddress()" selector
-        vm.expectRevert(0xd92e233d);
+        vm.expectRevert(bytes4(0xd92e233d));
         pUSDC.approve(address(0), 0);
     }
 
@@ -191,16 +210,20 @@ contract LocalPToken is TestLocal {
         address user1 = makeAddr("user1");
         address depositor = makeAddr("depositor");
         uint256 liquidity = 1e18;
+        uint256 exchangeRate = pWETH.initialExchangeRate();
 
         // no withdraw before deposit
         assertEq(
             pUSDC.maxWithdraw(user1), 0, "does not match max withdraw before deposit"
         );
-        assertEq(pWETH.convertToShares(liquidity), liquidity);
-        assertEq(pWETH.convertToAssets(liquidity), liquidity);
+        assertEq(pWETH.convertToShares(liquidity), liquidity * 1e18 / exchangeRate);
+        assertEq(pWETH.convertToAssets(liquidity), liquidity * exchangeRate / 1e18);
 
         ///porivde liquidity
         doDeposit(user1, depositor, address(pWETH), liquidity);
+
+        vm.prank(depositor);
+        re.exitMarket(address(pWETH));
 
         doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
 
@@ -219,7 +242,7 @@ contract LocalPToken is TestLocal {
 
         vm.prank(depositor);
         // "RedeemTransferOutNotPossible()" selector
-        vm.expectRevert(0x91240a1b);
+        vm.expectRevert(bytes4(0x91240a1b));
         pWETH.withdraw(2e18, depositor, depositor);
 
         mockOracle.setPrice(address(pWETH), 2500e6, 18);
@@ -267,6 +290,19 @@ contract LocalPToken is TestLocal {
             address(pWETH),
             0.745e18,
             abi.encodePacked(bytes4(0xbb0619b7), uint256(4))
+        );
+    }
+
+    function testBorrow_FailIfZeroAmount() public {
+        address user1 = makeAddr("user1");
+        address depositor = makeAddr("depositor");
+
+        ///porivde liquidity
+        doDeposit(depositor, depositor, address(pWETH), 1e18);
+        doDepositAndEnter(user1, user1, address(pUSDC), 2000e6);
+        // "InvalidBorrwAmount()" selector
+        doBorrowRevert(
+            user1, user1, address(pWETH), 0, abi.encodePacked(bytes4(0x3894de64))
         );
     }
 
@@ -326,6 +362,49 @@ contract LocalPToken is TestLocal {
             error: abi.encodePacked(bytes4(0x6f469884))
         });
 
+        doLiquidate(lp);
+    }
+
+    function test_LiquidationSuccessWithDoS() public {
+        address user1 = makeAddr("user1");
+        address depositor = makeAddr("depositor");
+        address liquidator = makeAddr("liquidator");
+
+        doDeposit(depositor, depositor, address(pUSDC), 2000e6);
+
+        doDepositAndEnter(user1, user1, address(pWETH), 1e18);
+        doBorrow(user1, user1, address(pUSDC), 1450e6);
+
+        // Liquidation threshold price for collateral:
+        // 1450 / 0.825 (liq threshold) = 1757.57 USD/WETH
+        mockOracle.setPrice(address(pWETH), 1757e6, 18);
+
+        LiquidationParams memory lp = LiquidationParams({
+            prankAddress: liquidator,
+            userToLiquidate: user1,
+            collateralPToken: address(pWETH),
+            borrowedPToken: address(pUSDC),
+            repayAmount: 725e6,
+            expectRevert: true,
+            error: abi.encodeWithSignature("LiquidateRiskEngineRejection(uint256)", 6)
+        });
+
+        // Borrower frontruns with a minimal repayment of 1 wei (1 USDC smallest unit)
+        doRepay(user1, user1, address(pUSDC), 1);
+        // liquidation fail without max close factor repayment
+        doLiquidate(lp);
+
+        lp = LiquidationParams({
+            prankAddress: liquidator,
+            userToLiquidate: user1,
+            collateralPToken: address(pWETH),
+            borrowedPToken: address(pUSDC),
+            repayAmount: type(uint256).max,
+            expectRevert: false,
+            error: abi.encodeWithSignature("LiquidateRiskEngineRejection(uint256)", 6)
+        });
+
+        // liquidation fail without max close factor repayment
         doLiquidate(lp);
     }
 

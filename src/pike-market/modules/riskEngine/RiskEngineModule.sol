@@ -411,6 +411,9 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
 
         /* Delete pToken from the account’s list of assets if not borrowed */
         if (amountOwed == 0) {
+            // making sure the user has no borrow membership for this asset
+            delete marketToExit.borrowMembership[msg.sender];
+
             // load into memory for faster iteration
             IPToken[] memory userAssetList =
                 _getRiskEngineStorage().accountAssets[msg.sender];
@@ -669,7 +672,7 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
             /* The liquidator may not repay more than what is allowed by the closeFactor */
             uint256 maxClose = $.closeFactorMantissa[pTokenBorrowed].toExp()
                 .mul_ScalarTruncate(borrowBalance);
-            if (repayAmount > maxClose) {
+            if (repayAmount > maxClose && repayAmount != type(uint256).max) {
                 return RiskEngineError.Error.TOO_MUCH_REPAY;
             }
         }
@@ -1012,6 +1015,48 @@ contract RiskEngineModule is IRiskEngine, RiskEngineStorage, OwnableMixin, RBACM
      */
     function borrowCap(address pToken) external view returns (uint256) {
         return _getRiskEngineStorage().borrowCaps[pToken];
+    }
+
+    /**
+     * @inheritdoc IRiskEngine
+     */
+    function emodeMarkets(uint8 categoryId)
+        external
+        view
+        returns (address[] memory collateralTokens, address[] memory borrowTokens)
+    {
+        RiskEngineData storage $ = _getRiskEngineStorage();
+        uint256 totalMarkets = $.allMarkets[0].length;
+
+        address[] memory tempCollateral = new address[](totalMarkets);
+        address[] memory tempBorrow = new address[](totalMarkets);
+        uint256 collateralCount = 0;
+        uint256 borrowCount = 0;
+
+        address pToken;
+        for (uint256 i = 0; i < totalMarkets; i++) {
+            pToken = address($.allMarkets[0][i]);
+
+            // Check collateral category
+            if ($.collateralCategory[categoryId][pToken]) {
+                tempCollateral[collateralCount++] = pToken;
+            }
+
+            // Check borrow category
+            if ($.borrowCategory[categoryId][pToken]) {
+                tempBorrow[borrowCount++] = pToken;
+            }
+        }
+
+        collateralTokens = new address[](collateralCount);
+        borrowTokens = new address[](borrowCount);
+
+        for (uint256 i = 0; i < collateralCount; i++) {
+            collateralTokens[i] = tempCollateral[i];
+        }
+        for (uint256 i = 0; i < borrowCount; i++) {
+            borrowTokens[i] = tempBorrow[i];
+        }
     }
 
     /**

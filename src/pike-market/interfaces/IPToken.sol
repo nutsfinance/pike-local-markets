@@ -82,9 +82,16 @@ interface IPToken is IERC4626 {
     event ReservesAdded(address benefactor, uint256 addAmount, uint256 newTotalReserves);
 
     /**
-     * @notice Event emitted when the reserves are reduced
+     * @notice Event emitted when the reserves are reduced by protocol owner or governor
      */
     event ReservesReduced(address admin, uint256 reduceAmount, uint256 newTotalReserves);
+
+    /**
+     * @notice Event emitted when the reserves are reduced by emergency guardian
+     */
+    event EmergencyWithdrawn(
+        address caller, uint256 reduceAmount, uint256 newTotalReserves
+    );
 
     /**
      * @notice Sender supplies assets into the market and receives pTokens in exchange
@@ -200,8 +207,8 @@ interface IPToken is IERC4626 {
     function setReserveFactor(uint256 newReserveFactorMantissa) external;
 
     /**
-     * @notice accrues interest and sets a new maximum borow rate for pToken
-     * @dev Admin function to accrue interest and set a new maximum borow rate
+     * @notice accrues interest and sets a new maximum borrow rate for pToken
+     * @dev Admin function to accrue interest and set a new maximum borrow rate
      */
     function setBorrowRateMax(uint256 newBorrowRateMaxMantissa) external;
 
@@ -319,6 +326,13 @@ interface IPToken is IERC4626 {
      * @return Calculated exchange rate scaled by 1e18
      */
     function exchangeRateStored() external view returns (uint256);
+
+    /**
+     * @notice Returns the initial exchange rate used for minting pTokens,
+     *  calculated as 0.02 * 10^(18 + underlyingDecimals - pTokenDecimals)
+     * @return The initial exchange rate of the pToken
+     */
+    function initialExchangeRate() external view returns (uint256);
 
     /**
      * @notice Get cash balance of this pToken in the underlying asset

@@ -58,21 +58,20 @@ contract Factory is
          * @dev mapping protocol id -> index -> pToken
          */
         mapping(uint256 => mapping(uint256 => address)) markets;
-        bytes32[8] permissions;
+        bytes32[7] permissions;
     }
 
     bytes32 internal constant _CONFIGURATOR_PERMISSION = "CONFIGURATOR";
     bytes32 internal constant _PROTOCOL_OWNER_PERMISSION = "PROTOCOL_OWNER";
     bytes32 internal constant _OWNER_WITHDRAWER_PERMISSION = "OWNER_WITHDRAWER";
-    bytes32 internal constant _PAUSE_GUARDIAN_PERMISSION = "PAUSE_GUARDIAN";
     bytes32 internal constant _BORROW_CAP_GUARDIAN_PERMISSION = "BORROW_CAP_GUARDIAN";
     bytes32 internal constant _SUPPLY_CAP_GUARDIAN_PERMISSION = "SUPPLY_CAP_GUARDIAN";
     bytes32 internal constant _RESERVE_MANAGER_PERMISSION = "RESERVE_MANAGER";
     bytes32 internal constant _RESERVE_WITHDRAWER_PERMISSION = "RESERVE_WITHDRAWER";
 
-    /// keccak256(abi.encode(uint256(keccak256("pike.facotry")) - 1)) & ~bytes32(uint256(0xff))
+    /// keccak256(abi.encode(uint256(keccak256("pike.factory")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 internal constant _FACTORY_STORAGE =
-        0xac42ae8baafcf09ffeb99e08f7111e43bf0a7cdbccbc7a91974415e2c3c2d700;
+        0x2123ddb3bc0e3ddb579620b217a9df111470695d13bf4198d6177cfc5622e800;
 
     constructor() {
         _disableInitializers();
@@ -87,7 +86,7 @@ contract Factory is
         address _oracleEngineBeacon,
         address _pTokenBeacon,
         address _timelockBeacon
-    ) public initializer {
+    ) external initializer {
         __ReentrancyGuard_init();
         __Ownable_init(_initialOwner);
         FactoryStorage storage $ = _getFactoryStorage();
@@ -100,7 +99,6 @@ contract Factory is
             _PROTOCOL_OWNER_PERMISSION,
             _OWNER_WITHDRAWER_PERMISSION,
             _CONFIGURATOR_PERMISSION,
-            _PAUSE_GUARDIAN_PERMISSION,
             _BORROW_CAP_GUARDIAN_PERMISSION,
             _SUPPLY_CAP_GUARDIAN_PERMISSION,
             _RESERVE_MANAGER_PERMISSION,
@@ -113,6 +111,7 @@ contract Factory is
      */
     function deployProtocol(
         address initialGovernor,
+        address emergencyExecutor,
         uint256 ownerShareMantissa,
         uint256 configuratorShareMantissa
     )
@@ -129,9 +128,10 @@ contract Factory is
         address[] memory proposers = new address[](1);
         address[] memory executors = new address[](1);
         proposers[0] = initialGovernor;
-        executors[0] = initialGovernor;
+        executors[0] = address(0); // open to execute
         bytes memory timelockInit = abi.encodeCall(
-            Timelock.initialize, (initialGovernor, 0, proposers, executors)
+            Timelock.initialize,
+            (address(0), owner(), emergencyExecutor, 1 days, proposers, executors)
         );
         governorTimelock =
             payable(address(new BeaconProxy($.timelockBeacon, timelockInit)));
@@ -170,6 +170,7 @@ contract Factory is
         ProtocolInfo storage protocolInfo = $.protocolRegistry[++$.protocolCount];
         protocolInfo.protocolId = $.protocolCount;
         protocolInfo.initialGovernor = initialGovernor;
+        protocolInfo.emergencyExecutor = emergencyExecutor;
         protocolInfo.riskEngine = riskEngine;
         protocolInfo.oracleEngine = oracleEngine;
         protocolInfo.timelock = governorTimelock;
@@ -179,22 +180,24 @@ contract Factory is
             protocolInfo.protocolId,
             riskEngine,
             governorTimelock,
-            protocolInfo.initialGovernor
+            oracleEngine,
+            protocolInfo.initialGovernor,
+            protocolInfo.emergencyExecutor
         );
     }
 
     /**
      * @inheritdoc IFactory
      */
-    function deployPToken(PTokenSetup memory setupParams)
+    function deployMarket(PTokenSetup memory setupParams)
         external
         nonReentrant
         returns (address pToken)
     {
         FactoryStorage storage $ = _getFactoryStorage();
         ProtocolInfo memory protocolInfo = $.protocolRegistry[setupParams.protocolId];
-        if (msg.sender != protocolInfo.timelock) {
-            revert InvalidTimelock();
+        if (!IRBAC(protocolInfo.riskEngine).hasPermission($.permissions[2], msg.sender)) {
+            revert UnauthorizedMarketDeployment();
         }
 
         bytes memory pTokenInit =

@@ -46,6 +46,8 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @param riskEngine_ The address of the RiskEngine
      * @param initialExchangeRateMantissa_ The initial exchange rate, scaled by 1e18
      * @param reserveFactorMantissa_ percentage of borrow interests that goes to protocol, scaled by 1e18
+     * @param protocolSeizeShareMantissa_ The share of seized collateral that goes to protocol reserves, scaled by 1e18
+     * @param borrowRateMaxMantissa_ The maximum borrow interest rate for the market, scaled by 1e18
      * @param name_ ERC20 name of this token
      * @param symbol_ ERC20 symbol of this token
      * @param decimals_ ERC20 decimal precision of this token
@@ -153,6 +155,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
 
         // store new reserve
         $.totalReserves = _reduceReserves(reduceAmount, $.totalReserves);
+        emit EmergencyWithdrawn(msg.sender, reduceAmount, $.totalReserves);
     }
 
     /**
@@ -166,6 +169,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         // store new reserve
         $.ownerReserves = _reduceReserves(reduceAmount, $.ownerReserves);
         $.totalReserves -= reduceAmount;
+        emit ReservesReduced(msg.sender, reduceAmount, $.ownerReserves);
     }
 
     /**
@@ -179,6 +183,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         // store new reserve
         $.configuratorReserves = _reduceReserves(reduceAmount, $.configuratorReserves);
         $.totalReserves -= reduceAmount;
+        emit ReservesReduced(msg.sender, reduceAmount, $.configuratorReserves);
     }
 
     /**
@@ -198,7 +203,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @notice Transfer `amount` tokens from `msg.sender` to `dst`
      * @param dst The address of the destination account
      * @param amount The number of tokens to transfer
-     * @return success True if the transfer succeeded, reverts otherwise
+     * @return True if the transfer succeeded, reverts otherwise
      */
     function transfer(address dst, uint256 amount)
         external
@@ -215,7 +220,7 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
      * @param src The address of the source account
      * @param dst The address of the destination account
      * @param amount The number of tokens to transfer
-     * @return success True if the transfer succeeded, reverts otherwise
+     * @return True if the transfer succeeded, reverts otherwise
      */
     function transferFrom(address src, address dst, uint256 amount)
         external
@@ -601,6 +606,13 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     /**
      * @inheritdoc IPToken
      */
+    function initialExchangeRate() external view returns (uint256) {
+        return _getPTokenStorage().initialExchangeRateMantissa;
+    }
+
+    /**
+     * @inheritdoc IPToken
+     */
     function borrowBalanceStored(address account) external view returns (uint256) {
         return borrowBalanceStoredInternal(account);
     }
@@ -850,6 +862,10 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
 
         require(mintTokens != 0, PTokenError.ZeroTokensMinted());
 
+        if ($.accountTokens[onBehalfOf] == 0) {
+            $.riskEngine.mintVerify(onBehalfOf);
+        }
+
         /*
          * We calculate the new total supply of pTokens and onBehalfOf token balance, checking for overflow:
          *  totalSupplyNew = totalSupply + mintTokens
@@ -857,10 +873,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
          * And write them into storage
          */
         $.accountTokens[onBehalfOf] = $.accountTokens[onBehalfOf] + mintTokens;
-
-        if (minter == onBehalfOf && $.accountTokens[minter] == 0) {
-            $.riskEngine.mintVerify(minter);
-        }
 
         /* We emit a Mint event, and a Transfer event */
         emit Deposit(minter, onBehalfOf, actualMintAmount, mintTokens);
@@ -967,6 +979,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     function borrowFresh(address borrower, address onBehalfOf, uint256 borrowAmount)
         internal
     {
+        // borrow amount can not be zero
+        require(borrowAmount != 0, PTokenError.InvalidBorrowAmount());
+
         PTokenData storage $ = _getPTokenStorage();
         /* Fail if borrow not allowed */
         RiskEngineError.Error allowed =
@@ -1130,11 +1145,11 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         /* Fail if repayAmount = 0 */
         require(repayAmount != 0, PTokenError.LiquidateCloseAmountIsZero());
 
-        /* Fail if repayAmount = type(uint256).max */
-        require(
-            repayAmount != type(uint256).max, PTokenError.LiquidateCloseAmountIsUintMax()
-        );
-
+        /* Max Close if repayAmount = type(uint256).max */
+        if (repayAmount == type(uint256).max) {
+            repayAmount = _getPTokenStorage().riskEngine.closeFactor(address(this)).toExp(
+            ).mul_ScalarTruncate(borrowBalanceStoredInternal(borrower));
+        }
         /* Fail if repayBorrow fails */
         uint256 actualRepayAmount = repayBorrowFresh(liquidator, borrower, repayAmount);
 
@@ -1441,8 +1456,6 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
 
         // doTransferOut reverts if anything goes wrong, since we can't be sure if side effects occurred.
         doTransferOut(msg.sender, reduceAmount);
-
-        emit ReservesReduced(msg.sender, reduceAmount, newReserve);
     }
 
     function _setRiskEngine(IRiskEngine newRiskEngine) internal {

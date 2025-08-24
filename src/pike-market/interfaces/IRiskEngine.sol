@@ -220,7 +220,7 @@ interface IRiskEngine {
      * Borrowing that brings total borrows to or above borrow cap will revert.
      * @dev borrowCapGuardian function to set the borrow caps.
      * A borrow cap of type(uint256).max corresponds to unlimited borrowing.
-     * @param pTokens The addresses of the markets (tokens) to change the borrow caps for
+     * @param pTokens The addresses of the markets (ptokens) to change the borrow caps for
      * @param newBorrowCaps The new borrow cap values in underlying to be set.
      * A value of type(uint256).max corresponds to unlimited borrowing.
      */
@@ -234,7 +234,7 @@ interface IRiskEngine {
      * Supplying that brings total supply to or above supply cap will revert.
      * @dev supplyCapGuardian function to set the supply caps.
      * A supply cap of type(uint256).max corresponds to unlimited supplying.
-     * @param pTokens The addresses of the markets (tokens) to change the supply caps for
+     * @param pTokens The addresses of the markets (ptokens) to change the supply caps for
      * @param newSupplyCaps The new supply cap values in underlying to be set.
      * A value of type(uint256).max corresponds to unlimited supplying.
      */
@@ -530,4 +530,18 @@ interface IRiskEngine {
      * @return the borrow cap for the pToken
      */
     function borrowCap(address pToken) external view returns (uint256);
+
+    /**
+     * @notice Retrieves the list of supported markets in a specific eMode category.
+     *  Separates the markets into those supported as collateral and those supported as borrowable assets.
+     * @dev Iterates through all markets, checking their eligibility as collateral or borrowable assets
+     *  based on the specified eMode category.
+     * @param categoryId The ID of the eMode category.
+     * @return collateralTokens An array of token addresses supported as collateral in eMode.
+     * @return borrowTokens An array of token addresses supported as borrowable assets in specified eMode.
+     */
+    function emodeMarkets(uint8 categoryId)
+        external
+        view
+        returns (address[] memory collateralTokens, address[] memory borrowTokens);
 }

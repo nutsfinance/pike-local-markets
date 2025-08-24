@@ -63,8 +63,8 @@ contract TestDeploy is TestSetters, CannonDeploy {
     uint256 borrowRateMax = 5e12;
     uint8 pTokenDecimals = 18;
 
-    uint256 baseRatePerYear = 0;
-    uint256 multiplierPerYear = 0;
+    uint256 baseRate = 0;
+    uint256 initialMultiplier = 0;
     uint256 jumpMultiplierPerYear1 = 6.111111e16;
     uint256 jumpMultiplierPerYear2 = 6e18;
     uint256 kink1 = 5e16;
@@ -119,6 +119,7 @@ contract TestDeploy is TestSetters, CannonDeploy {
         address underlying = deployUnderlying(name_, symbol_, underlyingDecimals);
 
         IRiskEngine re = IRiskEngine(getRiskEngine());
+        initialExchangeRate = 2 * (10 ** (8 + underlyingDecimals));
 
         PTokenInitialization memory initData = PTokenInitialization({
             underlying: underlying,
@@ -172,8 +173,8 @@ contract TestDeploy is TestSetters, CannonDeploy {
 
         DoubleJumpRateModel interestRateModule = DoubleJumpRateModel(_pToken);
         interestRateModule.configureInterestRateModel(
-            baseRatePerYear,
-            multiplierPerYear,
+            baseRate,
+            initialMultiplier,
             jumpMultiplierPerYear1,
             jumpMultiplierPerYear2,
             kink1,
@@ -212,7 +213,8 @@ contract TestDeploy is TestSetters, CannonDeploy {
             keccak256(abi.encodePacked(IPToken(_pToken).symbol())),
             keccak256(abi.encodePacked(initData.symbol))
         );
-        assertEq(IPToken(_pToken).borrowIndex(), initData.initialExchangeRate);
+        assertEq(IPToken(_pToken).borrowIndex(), 1e18);
+        assertEq(IPToken(_pToken).initialExchangeRate(), initialExchangeRate);
 
         return _pToken;
     }

@@ -20,7 +20,7 @@
     "deploy:testnet": "npx cannon build script/cannon/base-sepolia/base-sepolia.toml --rpc-url https://sepolia.base.org",
     "deploy:testnet:dryrun": "npx cannon build script/cannon/base-sepolia/base-sepolia.toml --rpc-url https://sepolia.base.org --dry-run",
     "postinstall": "forge install",
-    "lint:check": "yarn lint:sol-logic && forge fmt --check",
+    "lint:check": "yarn lint:sol-logic && forge fmt src --check",
     "lint:fix": "yarn sort-package-json && forge fmt && yarn solhint 'src/**/*.sol' 'test/**/*.sol' --fix",
     "lint:sol-logic": "solhint -c .solhint.json 'src/**/*.sol'",
     "lint:sol-tests": "solhint -c .solhint.json 'test/**/*.sol'",
@@ -44,7 +44,7 @@
     "cannon-std": "git+https://github.com/usecannon/cannon-std.git#master",
     "forge-std": "git+https://github.com/foundry-rs/forge-std.git",
     "husky": "9.1.6",
-    "solhint": "5.0.3",
+    "solhint": "5.1.0",
     "solhint-plugin-prettier": "0.1.0",
     "sort-package-json": "2.10.0"
   }

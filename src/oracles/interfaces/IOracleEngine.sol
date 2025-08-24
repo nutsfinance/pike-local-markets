@@ -98,7 +98,7 @@ interface IOracleEngine {
 
     /**
      * @notice Get the configs of a asset
-     * @param pToken The address of the pToken
+     * @param asset The address of the  underlying asset
      */
-    function configs(address pToken) external view returns (AssetConfig memory);
+    function configs(address asset) external view returns (AssetConfig memory);
 }
