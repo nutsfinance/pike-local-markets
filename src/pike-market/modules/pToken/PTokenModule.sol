@@ -979,6 +979,9 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
     function borrowFresh(address borrower, address onBehalfOf, uint256 borrowAmount)
         internal
     {
+        // borrow amount can not be zero
+        require(borrowAmount != 0, PTokenError.InvalidBorrowAmount());
+
         PTokenData storage $ = _getPTokenStorage();
         /* Fail if borrow not allowed */
         RiskEngineError.Error allowed =
@@ -1142,11 +1145,11 @@ contract PTokenModule is IPToken, PTokenStorage, OwnableMixin, RBACStorage {
         /* Fail if repayAmount = 0 */
         require(repayAmount != 0, PTokenError.LiquidateCloseAmountIsZero());
 
-        /* Fail if repayAmount = type(uint256).max */
-        require(
-            repayAmount != type(uint256).max, PTokenError.LiquidateCloseAmountIsUintMax()
-        );
-
+        /* Max Close if repayAmount = type(uint256).max */
+        if (repayAmount == type(uint256).max) {
+            repayAmount = _getPTokenStorage().riskEngine.closeFactor(address(this)).toExp(
+            ).mul_ScalarTruncate(borrowBalanceStoredInternal(borrower));
+        }
         /* Fail if repayBorrow fails */
         uint256 actualRepayAmount = repayBorrowFresh(liquidator, borrower, repayAmount);
 
