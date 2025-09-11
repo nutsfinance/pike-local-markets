@@ -1,0 +1,15 @@
+{
+  "ChainlinkOracleComposite": "0x796a67B41A778a2D18AfEF325159F4A1F98A39c7",
+  "ChainlinkOracleProvider": "0x24D32bd8c674297f5eD199EDa5e57e674d4C0ea3",
+  "Factory": "0xe8F5164fA1B59587003744E3b96738a4248530B1",
+  "OracleEngine": "0x65D6c833e36B5C47f194A68C4bA138b4019D17a0",
+  "PTokenRouter": "0x4528d16cda23bd84fb32d76cfDf9D3821ee402b3",
+  "PythOracleProvider": "0xa15cb6eb3A97bdBA225d4d971FB21b80321e77b5",
+  "RiskEngineRouter": "0x714EfA22AEaf6B6a64c1B9d7b1dF2eBaC748A497",
+  "Timelock": "0xa008cB665F7dc3024F58B59d69cc0b003b7caf02",
+  "oracleEngineBeacon": "0xc632294b3f30983A28aCa54Da4E068CB94b1143B",
+  "pTokenBeacon": "0xA1bAE24CDa4ec504501899827D484678932bf5D6",
+  "reBeacon": "0x1a42bb9b5a6E02A9Fd63b8a5fbe22Ba0cba7392b",
+  "timelockBeacon": "0xc94D288611269727D7af825AE318FDA3DD7B04E1"
+}
+

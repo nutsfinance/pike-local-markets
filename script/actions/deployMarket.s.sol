@@ -183,7 +183,7 @@ contract DeployMarket is Config {
 
         string memory deploymentPath = string(
             abi.encodePacked(
-                baseDir, "/protocol-", vm.toString(protocolId), "/deploymentData.json"
+                baseDir, "/protocol-", vm.toString(protocolId), "/deployment-data.json"
             )
         );
         if (!vm.exists(deploymentPath)) {
@@ -220,7 +220,7 @@ contract DeployMarket is Config {
 
         string memory deploymentPath = string(
             abi.encodePacked(
-                baseDir, "/protocol-", vm.toString(protocolId), "/deploymentData.json"
+                baseDir, "/protocol-", vm.toString(protocolId), "/deployment-data.json"
             )
         );
 
@@ -281,7 +281,6 @@ contract DeployMarket is Config {
         string memory chain = vm.envString("CHAIN");
         uint256 chainId = vm.envUint("CHAIN_ID");
         uint256 protocolId = vm.envUint("PROTOCOL_ID");
-        string memory version = vm.envString("VERSION");
         bool dryRun = vm.envBool("DRY_RUN");
         address safeAddress = vm.envOr("SAFE_ADDRESS", address(0));
         bool useSafe = safeAddress != address(0);
@@ -293,7 +292,7 @@ contract DeployMarket is Config {
             address riskEngineAddress,
             address oracleEngineAddress,
             address timelockAddress
-        ) = readDeploymentData(chain, protocolId);
+        ) = readDeploymentData(protocolId);
 
         setUp();
         vm.createSelectFork(vm.envString(rpcs[chainId]));

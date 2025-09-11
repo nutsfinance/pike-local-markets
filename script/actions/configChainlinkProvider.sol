@@ -9,9 +9,7 @@ import {Config} from "../Config.sol";
 
 contract ConfigureChainlinkProvider is Config {
     function run() public payable {
-        string memory chain = vm.envString("CHAIN");
         uint256 chainId = vm.envUint("CHAIN_ID");
-        string memory version = vm.envString("VERSION");
         string memory configPath = vm.envString("CONFIG_PATH");
         bool dryRun = vm.envBool("DRY_RUN");
 
@@ -21,9 +19,9 @@ contract ConfigureChainlinkProvider is Config {
         string memory json = vm.readFile(configPath);
         string[] memory marketKeys = getMarketKeys(json);
 
-        string memory baseDir = getBaseDir(chain, dryRun);
+        string memory baseDir = getBaseDir(dryRun);
         string memory providerPath =
-            string(abi.encodePacked(baseDir, "/chainlinkProvider.Proxy.json"));
+            string(abi.encodePacked(baseDir, "/artifacts/chainlinkProviderProxy.json"));
         address providerAddress = getAddresses(providerPath);
         IChainlinkOracleProvider provider = IChainlinkOracleProvider(providerAddress);
 
@@ -62,11 +60,5 @@ contract ConfigureChainlinkProvider is Config {
             }
         }
         return marketKeys;
-    }
-
-    function getAddresses(string memory path) internal view returns (address) {
-        string memory json = vm.readFile(path);
-        bytes memory data = vm.parseJson(json, ".address");
-        return abi.decode(data, (address));
     }
 }

@@ -39,11 +39,11 @@ args = [
 ]
 from = "<%= settings.deployer %>"
 
-[clone.factory]
-source = "pike-upgradeable-proxy:0.1.0@oz"
-options.implementation = "<%= contracts.Factory.address %>"
-options.initialCallData = "<%= encodeFunctionData({abi: contracts.Factory.abi, functionName: 'initialize', args: [settings.core_owner, contracts.reBeacon.address, contracts.oracleEngineBeacon.address, contracts.pTokenBeacon.address, contracts.timelockBeacon.address]}) %>"
-options.owner = "<%= settings.deployer %>"
-options.abi = "<%= JSON.stringify(contracts.Factory.abi) %>"
-options.salt = "Factory"
+[contract.factoryProxy]
+artifact = "ERC1967Proxy"
+args = [
+  "<%= contracts.Factory.address %>",
+  "<%= encodeFunctionData({abi: contracts.Factory.abi, functionName: 'initialize', args: [settings.core_owner, contracts.reBeacon.address, contracts.oracleEngineBeacon.address, contracts.pTokenBeacon.address, contracts.timelockBeacon.address]}) %>"
+]
+from = "<%= settings.deployer %>"
 depends = ['contract.Factory','contract.oracleEngineBeacon', 'contract.reBeacon', 'contract.pTokenBeacon', 'contract.timelockBeacon']

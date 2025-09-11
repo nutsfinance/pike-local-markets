@@ -8,7 +8,7 @@ This folder contains all deployment-related files for the Pike Protocol across d
 deployments/
   └──  <version>/
       └── <chain>/
-          ├── factory.Proxy.json
+          ├── factoryProxy.json
           ├── OracleEngine.json
           ├── PTokenRouter.json
           ├── RiskEngineRouter.json
@@ -20,7 +20,7 @@ deployments/
 
 ## Key Deployment Files
 
-### 1. **Factory Address** (`factory.Proxy.json`)
+### 1. **Factory Address** (`factoryProxy.json`)
 
 - Stores the address of the deployed factory contract on a given chain.
 - This factory is responsible for managing all Pike Protocol deployments on that chain.
@@ -39,7 +39,7 @@ deployments/
 
 ABIs for core protocol contracts are stored in `deployments/<version>/<chain>/`. These include:
 
-- **`factory.Proxy.json`** – ABI for the Factory contract.
+- **`factoryProxy.json`** – ABI for the Factory contract.
 - **`OracleEngine.json`** – ABI for the Oracle Engine, which provides price feeds.
 - **`PTokenRouter.json`** – ABI for the PToken Router, which is for pTokens.
 - **`RiskEngineRouter.json`** – ABI for the Risk Engine Router, which enforces risk parameters.

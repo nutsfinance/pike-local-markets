@@ -1,0 +1,83 @@
+{
+  "address": "0x3A9217E0EDd6530C0808e191a410Df6Cc6b11DE6",
+  "abi": [
+    {
+      "type": "constructor",
+      "inputs": [
+        {
+          "name": "implementation",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "_data",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "fallback",
+      "stateMutability": "payable"
+    },
+    {
+      "type": "event",
+      "name": "Upgraded",
+      "inputs": [
+        {
+          "name": "implementation",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "AddressEmptyCode",
+      "inputs": [
+        {
+          "name": "target",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ERC1967InvalidImplementation",
+      "inputs": [
+        {
+          "name": "implementation",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ERC1967NonPayable",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "FailedCall",
+      "inputs": []
+    }
+  ],
+  "constructorArgs": [
+    "0x4EE3c166295F26992E5F2DA4f84129710a79dE1B",
+    "0x1459457a000000000000000000000000e80bbcab9e20fc193ef768b68d69f363a7f9a2a1000000000000000000000000495114876016b1ab84c1363a4b760281b6c9b7f1000000000000000000000000b953df02f2e6fbd9a6d45c5c87b6e2d63fd6d04f0000000000000000000000005f0a1585f128f3a4913bff4cd1836f26b465f79d000000000000000000000000be7b3ecbccb66d68f9a560979e5efe5a7575124f"
+  ],
+  "linkedLibraries": {},
+  "deployTxnHash": "0x1ac693e627f331b32ba380bca5d4f58d37c6bb9d503dae312475ffa33a0778a5",
+  "deployTxnBlockNumber": "40428557",
+  "deployTimestamp": "1753609728",
+  "sourceName": "node_modules/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
+  "contractName": "ERC1967Proxy",
+  "deployedOn": "contract.factoryProxy",
+  "gasUsed": 449360,
+  "gasCost": "64387213706"
+}

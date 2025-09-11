@@ -21,7 +21,7 @@
     "deploy:testnet:dryrun": "npx cannon build script/cannon/base-sepolia/base-sepolia.toml --rpc-url https://sepolia.base.org --dry-run",
     "postinstall": "forge install",
     "lint:check": "yarn lint:sol-logic && forge fmt src --check",
-    "lint:fix": "yarn sort-package-json && forge fmt && yarn solhint 'src/**/*.sol' 'test/**/*.sol' --fix",
+    "lint:fix": "yarn sort-package-json && forge fmt src && yarn solhint 'src/**/*.sol' 'test/**/*.sol' --fix",
     "lint:sol-logic": "solhint -c .solhint.json 'src/**/*.sol'",
     "lint:sol-tests": "solhint -c .solhint.json 'test/**/*.sol'",
     "prepare": "husky",

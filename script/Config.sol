@@ -54,32 +54,42 @@ contract Config is Script, SafeScript {
         return true;
     }
 
-    function getBaseDir(string memory chain, bool isDryRun)
-        internal
-        view
-        returns (string memory)
-    {
+    function getBaseDir(bool isDryRun) internal view returns (string memory) {
         string memory root = vm.projectRoot();
+        string memory chain = vm.envString("CHAIN");
         string memory version = vm.envString("VERSION");
         return isDryRun
             ? string(abi.encodePacked(root, "/deployments/", version, "/", chain, "/dry-run"))
             : string(abi.encodePacked(root, "/deployments/", version, "/", chain));
     }
 
-    function getDeploymentPath(string memory chain, uint256 protocolId)
+    function getDeploymentPath(uint256 protocolId)
         internal
         view
         returns (string memory)
     {
-        string memory baseDir = getBaseDir(chain, vm.envBool("DRY_RUN"));
+        string memory baseDir = getBaseDir(vm.envBool("DRY_RUN"));
         return string(
             abi.encodePacked(
-                baseDir, "/protocol-", vm.toString(protocolId), "/deploymentData.json"
+                baseDir, "/protocol-", vm.toString(protocolId), "/deployment-data.json"
             )
         );
     }
 
-    function readDeploymentData(string memory chain, uint256 protocolId)
+    function getAuthAddressesPath(uint256 protocolId)
+        internal
+        view
+        returns (string memory)
+    {
+        string memory baseDir = getBaseDir(vm.envBool("DRY_RUN"));
+        return string(
+            abi.encodePacked(
+                baseDir, "/protocol-", vm.toString(protocolId), "/authorized-addresses.json"
+            )
+        );
+    }
+
+    function readDeploymentData(uint256 protocolId)
         internal
         view
         returns (
@@ -89,7 +99,7 @@ contract Config is Script, SafeScript {
             address timelockAddress
         )
     {
-        string memory deploymentPath = getDeploymentPath(chain, protocolId);
+        string memory deploymentPath = getDeploymentPath(protocolId);
         string memory json = vm.readFile(deploymentPath);
 
         factoryAddress = vm.parseJsonAddress(json, ".factoryAddress");
@@ -106,5 +116,34 @@ contract Config is Script, SafeScript {
         console.log("Writing JSON to %s: %s", filePath, json);
         vm.writeFile(filePath, json);
         console.log("Created file at %s", filePath);
+    }
+
+    function getAddresses(string memory path) internal view returns (address) {
+        string memory json = vm.readFile(path);
+        bytes memory data = vm.parseJson(json, ".address");
+        return abi.decode(data, (address));
+    }
+
+    // Helper to extract substring
+    function substring(string memory str, uint256 start, uint256 length)
+        internal
+        pure
+        returns (string memory)
+    {
+        bytes memory strBytes = bytes(str);
+        bytes memory result = new bytes(length);
+        for (uint256 i = 0; i < length; i++) {
+            result[i] = strBytes[start + i];
+        }
+        return string(result);
+    }
+
+    // Helper to find the first occurrence of a character
+    function findChar(string memory str, bytes1 char) internal pure returns (uint256) {
+        bytes memory strBytes = bytes(str);
+        for (uint256 i = 0; i < strBytes.length; i++) {
+            if (strBytes[i] == char) return i;
+        }
+        return strBytes.length;
     }
 }

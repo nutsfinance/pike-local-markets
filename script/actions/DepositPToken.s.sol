@@ -8,7 +8,6 @@ import {console} from "forge-std/console.sol";
 
 contract DepositPToken is Config {
     function run() public payable {
-        string memory chain = vm.envString("CHAIN");
         uint256 chainId = vm.envUint("CHAIN_ID");
         uint256 protocolId = vm.envUint("PROTOCOL_ID");
         string memory pTokenName = vm.envString("PTOKEN_NAME");
@@ -17,10 +16,10 @@ contract DepositPToken is Config {
         setUp();
         vm.createSelectFork(vm.envString(rpcs[chainId]));
 
-        string memory baseDir = getBaseDir(chain, false); // Always false to use main folder
+        string memory baseDir = getBaseDir(false); // Always false to use main folder
         string memory deploymentPath = string(
             abi.encodePacked(
-                baseDir, "/protocol-", vm.toString(protocolId), "/deploymentData.json"
+                baseDir, "/protocol-", vm.toString(protocolId), "/deployment-data.json"
             )
         );
         string memory deploymentJson = vm.readFile(deploymentPath);

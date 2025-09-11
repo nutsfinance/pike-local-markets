@@ -37,12 +37,6 @@ contract DeployProtocol is Config {
 
     constructor() Config() {}
 
-    function getAddresses(string memory path) internal view returns (address) {
-        string memory json = vm.readFile(path);
-        bytes memory data = vm.parseJson(json, ".address");
-        return abi.decode(data, (address));
-    }
-
     function readProtocolInfo() internal view returns (ProtocolInfo memory) {
         string memory configPath = vm.envString("CONFIG_PATH");
         string memory json = vm.readFile(configPath);
@@ -87,17 +81,26 @@ contract DeployProtocol is Config {
         string memory protocolDir = getProtocolOutputDir(deployData);
         vm.createDir(protocolDir, true);
         string memory outputPath =
-            string(abi.encodePacked(protocolDir, "/deploymentData.json"));
+            string(abi.encodePacked(protocolDir, "/deployment-data.json"));
         string memory obj = "deployData";
         vm.serializeUint(obj, "protocolId", deployData.protocolId);
         vm.serializeAddress(obj, "factoryAddress", deployData.factoryAddress);
         vm.serializeAddress(obj, "riskEngine", deployData.riskEngine);
         vm.serializeAddress(obj, "oracleEngine", deployData.oracleEngine);
         vm.serializeAddress(obj, "timelock", deployData.timelock);
-        vm.serializeAddress(obj, "initialGovernor", ADMIN);
-        vm.serializeAddress(obj, "emergencyExecutor", ADMIN);
         vm.serializeUint(obj, "deploymentTimestamp", block.timestamp);
         string memory jsonContent = vm.serializeBool(obj, "isDryRun", deployData.isDryRun);
+        vm.writeJson(jsonContent, outputPath);
+    }
+
+    function writeACData() internal {
+        string memory protocolDir = getProtocolOutputDir(deployData);
+        vm.createDir(protocolDir, true);
+        string memory outputPath =
+            string(abi.encodePacked(protocolDir, "/authorized-addresses.json"));
+        string memory obj = "acData";
+        vm.serializeAddress(obj, "initialGovernor", ADMIN);
+        string memory jsonContent = vm.serializeAddress(obj, "emergencyExecutor", ADMIN);
         vm.writeJson(jsonContent, outputPath);
     }
 
@@ -185,8 +188,9 @@ contract DeployProtocol is Config {
         address safeAddress = vm.envOr("SAFE_ADDRESS", address(0));
         bool useSafe = safeAddress != address(0);
 
+        string memory baseDir = getBaseDir(false); // always use deployed address
         string memory path = string(
-            abi.encodePacked("./deployments/", version, "/", chain, "/factory.Proxy.json")
+            abi.encodePacked(baseDir, "/artifacts/factoryProxy.json")
         );
         console.log("Using deployment path: %s", path);
 
@@ -224,5 +228,6 @@ contract DeployProtocol is Config {
 
         console.log("Writing deployment data to JSON file...");
         writeDeploymentData();
+        writeACData();
     }
 }
