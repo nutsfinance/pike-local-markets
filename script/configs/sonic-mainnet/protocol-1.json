@@ -26,7 +26,7 @@
     "secondKinkMultiplier": "8000000000000000000",
     "firstKink": "0",
     "secondKink": "900000000000000000",
-    "mainProvider": "0x6884338526177432985843Dc8E15Afa9338587b9",
+    "mainProvider": "0x5d2A29bdcA1Ca2872F22A59aA4569598a87EFf42",
     "fallbackProvider": "0x0000000000000000000000000000000000000000",
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
@@ -52,7 +52,7 @@
     "secondKinkMultiplier": "8500000000000000000",
     "firstKink": "0",
     "secondKink": "800000000000000000",
-    "mainProvider": "0x6884338526177432985843Dc8E15Afa9338587b9",
+    "mainProvider": "0x5d2A29bdcA1Ca2872F22A59aA4569598a87EFf42",
     "fallbackProvider": "0x0000000000000000000000000000000000000000",
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
@@ -60,7 +60,7 @@
   "market-ws_wsts": {
     "name": "Pike Wrapped Self Pegging Asset wS stS",
     "symbol": "pwSPA-wS-stS",
-    "baseToken": "0x79b6887AAe7759fF90e782A6d17cafea2c860487",
+    "baseToken": "0xd775315136167b50c1B819978A3919925e01E4b3",
     "decimals": 8,
     "initialExchangeRateMantissa": "200000000000000000000000000",
     "reserveFactorMantissa": "100000000000000000",
@@ -71,14 +71,14 @@
     "liquidationIncentiveMantissa": "1050000000000000000",
     "closeFactor": "500000000000000000",
     "supplyCap": "200000000000000000000000",
-    "borrowCap": "1000000000000000000",
+    "borrowCap": "180000000000000000000000",
     "baseRate": "0",
     "initialMultiplier": "0",
     "firstKinkMultiplier": "20000000000000000",
     "secondKinkMultiplier": "8500000000000000000",
     "firstKink": "0",
     "secondKink": "800000000000000000",
-    "mainProvider": "0x6884338526177432985843Dc8E15Afa9338587b9",
+    "mainProvider": "0x5d2A29bdcA1Ca2872F22A59aA4569598a87EFf42",
     "fallbackProvider": "0x0000000000000000000000000000000000000000",
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
@@ -86,9 +86,9 @@
   "emode-1": {
     "categoryId": 1,
     "ptokens": [
-      "0xd043137f67e5718117DAb396a8c431FEaa980229",
-      "0x990f39c677BB69dcdfa5fCc5672e65a1c37626BE",
-      "0x4F143651AAaaf239c8aE38a4b2B7f14e017b7761"
+      "0x9A2d3d3B45496049290EA8C2Fa57aE8DB888bB99",
+      "0xDcE5e506086E510d0f30Be0A37e5CdfbD305d725",
+      "0xbb2b89a15c50df1b997155284CC135A1FE8C01Ee"
     ],
     "collateralPermissions": [false, false, true],
     "borrowPermissions": [true, true, false],
