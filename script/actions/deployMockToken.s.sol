@@ -24,11 +24,29 @@ contract DeployMockTokenScript is Config {
         string memory saltStr = vm.envString("SALT");
         bytes32 salt = keccak256(abi.encodePacked(saltStr));
 
-        vm.startBroadcast(deployerPrivateKey);
-
         bytes memory bytecode = abi.encodePacked(
             type(MockToken).creationCode, abi.encode(name, symbol, uint8(decimals))
         );
+
+        // compute expected address
+        bytes32 bytecodeHash = keccak256(bytecode);
+        address expectedAddr = address(
+            uint160(
+                uint256(
+                    keccak256(
+                        abi.encodePacked(
+                            bytes1(0xff), address(DEPLOYER), salt, bytecodeHash
+                        )
+                    )
+                )
+            )
+        );
+
+        // pre-deploy validation
+        require(expectedAddr.code.length == 0, "Token already deployed at this address");
+        console.log("Expected deployment address:", expectedAddr);
+
+        vm.startBroadcast(deployerPrivateKey);
 
         address deployedAddr;
 
@@ -44,7 +62,9 @@ contract DeployMockTokenScript is Config {
 
         vm.stopBroadcast();
 
-        console.log("MockToken deployed at:", deployedAddr);
+        // verify it matches expected
+        require(deployedAddr == expectedAddr, "Deployed address mismatch");
+        console.log("MockToken verified and deployed at:", deployedAddr);
 
         string memory dirPath = string(abi.encodePacked(baseDir, "/mocks/"));
         vm.createDir(dirPath, true);
