@@ -13,8 +13,8 @@ SAFE_ADDRESS=""
 EXTRA_ENV=""
 
 # Chain configurations
-declare -a MAINNET_CHAINS=("base-mainnet" "arb-mainnet" "op-mainnet" "sonic-mainnet")
-declare -a MAINNET_CHAIN_IDS=(8453 42161 10 146)
+declare -a MAINNET_CHAINS=("eth-mainnet" "base-mainnet" "arb-mainnet" "op-mainnet" "sonic-mainnet")
+declare -a MAINNET_CHAIN_IDS=(1 8453 42161 10 146)
 declare -a TESTNET_CHAINS=("base-sepolia" "arb-sepolia" "op-sepolia" "monad-testnet" "bera-bepolia" "sonic-testnet" "unichain-sepolia")
 declare -a TESTNET_CHAIN_IDS=(84532 421614 11155420 10143 80069 57054 1301)
 

@@ -18,6 +18,7 @@ contract Config is Script, SafeScript {
     mapping(uint256 => string) rpcs;
 
     constructor() {
+        rpcs[1] = "MAINNET";
         rpcs[8453] = "BASE_RPC";
         rpcs[84_532] = "BASE_SEPOLIA_RPC";
         rpcs[42_161] = "ARB_RPC";

@@ -9,8 +9,8 @@ UPGRADE=false      # New flag for upgrade mode
 
 # Chain configurations
 # Format: [network]-[chain]
-MAINNET_CHAINS=("base-mainnet" "arb-mainnet" "op-mainnet" "sonic-mainnet")
-MAINNET_CHAIN_IDS=(8453 42161 10 146)
+MAINNET_CHAINS=("eth-mainnet" "base-mainnet" "arb-mainnet" "op-mainnet" "sonic-mainnet")
+MAINNET_CHAIN_IDS=(1 8453 42161 10 146)
 
 TESTNET_CHAINS=("base-sepolia" "arb-sepolia" "op-sepolia" "monad-testnet" "bera-bepolia" "sonic-testnet" "unichain-sepolia")
 TESTNET_CHAIN_IDS=(84532 421614 11155420 10143 80069 57054 1301)
@@ -304,7 +304,7 @@ for chain in "${CHAINS[@]}"; do
         if [[ "$DRY_RUN" == "true" ]]; then
             deploy_path="./deployments/$VERSION/$chain/dry-run/artifacts"
             mkdir -p "$(dirname "$deploy_path")"
-            cmd="$cmd --dry-run -w $deploy_path"
+            cmd="$cmd --dry-run --impersonate-all -w $deploy_path"
         else
             deploy_path="./deployments/$VERSION/$chain/artifacts"
             cmd="$cmd --private-key $PRIVATE_KEY -w $deploy_path"
