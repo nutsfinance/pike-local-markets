@@ -5,11 +5,26 @@ import "forge-std/Script.sol";
 import "@mocks/MockToken.sol";
 import {Config, console} from "../Config.sol";
 
+interface ICreateX {
+    function deployCreate2(bytes32 salt, bytes memory initCode)
+        external
+        payable
+        returns (address newContract);
+
+    function computeCreate2Address(bytes32 salt, bytes32 initCodeHash)
+        external
+        view
+        returns (address computedAddress);
+}
+
 /**
  * @notice Deploys MockToken deterministically across chains using CREATE2.
  */
 contract DeployMockTokenScript is Config {
     function run() external {
+        address CREATE_X = 0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed;
+        ICreateX createx = ICreateX(CREATE_X);
+
         setUp();
 
         uint256 chainId = vm.envUint("CHAIN_ID");
@@ -28,43 +43,15 @@ contract DeployMockTokenScript is Config {
             type(MockToken).creationCode, abi.encode(name, symbol, uint8(decimals))
         );
 
-        // compute expected address
-        bytes32 bytecodeHash = keccak256(bytecode);
-        address expectedAddr = address(
-            uint160(
-                uint256(
-                    keccak256(
-                        abi.encodePacked(
-                            bytes1(0xff), address(DEPLOYER), salt, bytecodeHash
-                        )
-                    )
-                )
-            )
-        );
-
-        // pre-deploy validation
-        require(expectedAddr.code.length == 0, "Token already deployed at this address");
-        console.log("Expected deployment address:", expectedAddr);
-
         vm.startBroadcast(deployerPrivateKey);
 
-        address deployedAddr;
-
-        assembly {
-            let encoded_data := add(bytecode, 0x20)
-            let encoded_size := mload(bytecode)
-            deployedAddr := create2(0, encoded_data, encoded_size, salt)
-
-            if iszero(extcodesize(deployedAddr)) {
-                revert(0, 0)
-            }
-        }
+        address deployedAddr = createx.deployCreate2(salt, bytecode);
 
         vm.stopBroadcast();
 
         // verify it matches expected
-        require(deployedAddr == expectedAddr, "Deployed address mismatch");
-        console.log("MockToken verified and deployed at:", deployedAddr);
+        console.log("MockToken deployed at:", deployedAddr);
+        // require(deployedAddr == expectedAddr, "Deployed address mismatch");
 
         string memory dirPath = string(abi.encodePacked(baseDir, "/mocks/"));
         vm.createDir(dirPath, true);
