@@ -1,0 +1,7 @@
+{
+  "name": "USD Coin",
+  "symbol": "USDC",
+  "decimals": 6,
+  "salt": "PIKE_MOCK_USDC_V1",
+  "deployedAddress": "0xb48bcF35acD74E69BBDeF17cdBEa9DE9983e786b"
+}
