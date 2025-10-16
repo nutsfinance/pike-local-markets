@@ -15,30 +15,44 @@ roles_reserveWithdrawerRole = "0x524553455256455f5749544844524157455200000000000
 [contract.InitialModuleBeacon]
 artifact = "InitialModuleBeacon"
 from = "<%= settings.deployer %>"
+create2=true
+salt="InitialModuleBeacon"
 
 [contract.DoubleJumpRateModel]
 artifact = "DoubleJumpRateModel"
 from = "<%= settings.deployer %>"
+create2=true
+salt="DoubleJumpRateModel"
 
 [contract.RBACModule]
 artifact = "RBACModule"
 from = "<%= settings.deployer %>"
+create2=true
+salt="RBACModule"
 
 [contract.PTokenModule]
 artifact = "PTokenModule"
 from = "<%= settings.deployer %>"
+create2=true
+salt="PTokenModule"
 
 [contract.RiskEngineModule]
 artifact = "RiskEngineModule"
 from = "<%= settings.deployer %>"
+create2=true
+salt="RiskEngineModule"
 
 [contract.OracleEngine]
 artifact = "OracleEngine"
 from = "<%= settings.deployer %>"
+create2=true
+salt="OracleEngine"
 
 [contract.Timelock]
 artifact = "Timelock"
 from = "<%= settings.deployer %>"
+create2=true
+salt="Timelock"
 
 #PToken
 [router.PTokenRouter]
@@ -49,6 +63,8 @@ contracts = [
     "PTokenModule",
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="PTokenRouter"
 
 #RiskEngine
 [router.RiskEngineRouter]
@@ -58,3 +74,5 @@ contracts = [
     "RiskEngineModule",
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="RiskEngineRouter"

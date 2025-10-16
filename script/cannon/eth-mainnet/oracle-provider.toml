@@ -1,11 +1,13 @@
-# [contract.PythOracleProvider]
-# artifact = "PythOracleProvider"
-# args = [
-#   "<%= settings.pythFeed %>",
-#   "<%= settings.pythProvider_owner %>"
-# ]
-# from = "<%= settings.deployer %>"
-# depends = ['var.config', 'var.owner']
+[contract.PythOracleProvider]
+artifact = "PythOracleProvider"
+args = [
+  "<%= settings.pythFeed %>",
+  "<%= settings.pythProvider_owner %>"
+]
+from = "<%= settings.deployer %>"
+create2=true
+salt="PythOracleProvider"
+depends = ['var.config', 'var.owner']
 
 
 [contract.ChainlinkOracleProvider]
@@ -15,6 +17,8 @@ args = [
   "<%= settings.chainlinkProvider_owner %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="ChainlinkOracleProvider"
 depends = ['var.config', 'var.owner']
 
 [contract.ChainlinkOracleComposite]
@@ -24,16 +28,20 @@ args = [
   "<%= settings.chainlinkProvider_owner %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="ChainlinkOracleComposite"
 depends = ['var.config', 'var.owner']
 
-# [contract.pythProviderProxy]
-# artifact = "ERC1967Proxy"
-# args = [
-#   "<%= contracts.PythOracleProvider.address %>",
-#   "<%= encodeFunctionData({abi: contracts.PythOracleProvider.abi, functionName: 'initialize'}) %>"
-# ]
-# from = "<%= settings.deployer %>"
-# depends = ['contract.PythOracleProvider']
+[contract.pythProviderProxy]
+artifact = "ERC1967Proxy"
+args = [
+  "<%= contracts.PythOracleProvider.address %>",
+  "<%= encodeFunctionData({abi: contracts.PythOracleProvider.abi, functionName: 'initialize'}) %>"
+]
+from = "<%= settings.deployer %>"
+create2=true
+salt="pythProviderProxy"
+depends = ['contract.PythOracleProvider']
 
 [contract.chainlinkProviderProxy]
 artifact = "ERC1967Proxy"
@@ -42,6 +50,8 @@ args = [
   "<%= encodeFunctionData({abi: contracts.ChainlinkOracleProvider.abi, functionName: 'initialize'}) %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="chainlinkProviderProxy"
 depends = ['contract.ChainlinkOracleProvider']
 
 [contract.chainlinkCompositeProxy]
@@ -51,4 +61,6 @@ args = [
   "<%= encodeFunctionData({abi: contracts.ChainlinkOracleComposite.abi, functionName: 'initialize'}) %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="chainlinkCompositeProxy"
 depends = ['contract.ChainlinkOracleComposite']

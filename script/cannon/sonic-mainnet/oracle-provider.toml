@@ -5,6 +5,8 @@ args = [
   "<%= settings.pythProvider_owner %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="PythOracleProvider"
 depends = ['var.config', 'var.owner']
 
 
@@ -15,6 +17,8 @@ args = [
   "<%= settings.chainlinkProvider_owner %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="ChainlinkOracleProvider"
 depends = ['var.config', 'var.owner']
 
 [contract.ChainlinkOracleComposite]
@@ -24,6 +28,8 @@ args = [
   "<%= settings.chainlinkProvider_owner %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="ChainlinkOracleComposite"
 depends = ['var.config', 'var.owner']
 
 [contract.pythProviderProxy]
@@ -33,6 +39,8 @@ args = [
   "<%= encodeFunctionData({abi: contracts.PythOracleProvider.abi, functionName: 'initialize'}) %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="pythProviderProxy"
 depends = ['contract.PythOracleProvider']
 
 [contract.chainlinkProviderProxy]
@@ -42,6 +50,8 @@ args = [
   "<%= encodeFunctionData({abi: contracts.ChainlinkOracleProvider.abi, functionName: 'initialize'}) %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="chainlinkProviderProxy"
 depends = ['contract.ChainlinkOracleProvider']
 
 [contract.chainlinkCompositeProxy]
@@ -51,4 +61,6 @@ args = [
   "<%= encodeFunctionData({abi: contracts.ChainlinkOracleComposite.abi, functionName: 'initialize'}) %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="chainlinkCompositeProxy"
 depends = ['contract.ChainlinkOracleComposite']

@@ -6,6 +6,8 @@ include = [
 [contract.Factory]
 artifact = "Factory"
 from = "<%= settings.deployer %>"
+create2=true
+salt="Factory"
 
 [contract.reBeacon]
 artifact = "UpgradeableBeacon"
@@ -14,6 +16,8 @@ args = [
   "<%= settings.core_owner %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="reBeacon"
 
 [contract.pTokenBeacon]
 artifact = "UpgradeableBeacon"
@@ -22,6 +26,8 @@ args = [
   "<%= settings.core_owner %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="pTokenBeacon"
 
 [contract.timelockBeacon]
 artifact = "UpgradeableBeacon"
@@ -30,6 +36,8 @@ args = [
   "<%= settings.core_owner %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="timelockBeacon"
 
 [contract.oracleEngineBeacon]
 artifact = "UpgradeableBeacon"
@@ -38,6 +46,8 @@ args = [
   "<%= settings.core_owner %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="oracleEngineBeacon"
 
 [contract.factoryProxy]
 artifact = "ERC1967Proxy"
@@ -47,3 +57,5 @@ args = [
 ]
 from = "<%= settings.deployer %>"
 depends = ['contract.Factory','contract.oracleEngineBeacon', 'contract.reBeacon', 'contract.pTokenBeacon', 'contract.timelockBeacon']
+create2=true
+salt="factoryProxy"

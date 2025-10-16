@@ -8,7 +8,7 @@
   "market-mock-usdc": {
     "name": "Pike USDC",
     "symbol": "pUSDC",
-    "baseToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    "baseToken": "0xb48bcF35acD74E69BBDeF17cdBEa9DE9983e786b",
     "decimals": 8,
     "initialExchangeRateMantissa": "200000000000000",
     "reserveFactorMantissa": "100000000000000000",
@@ -34,7 +34,7 @@
   "market-mock-usdt": {
     "name": "Pike USDT",
     "symbol": "pUSDT",
-    "baseToken": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    "baseToken": "0xfB9BD0Cde61c6aEDa32e8f4fA866dF87b2583d98",
     "decimals": 8,
     "initialExchangeRateMantissa": "200000000000000",
     "reserveFactorMantissa": "100000000000000000",
