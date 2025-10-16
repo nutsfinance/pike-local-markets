@@ -588,12 +588,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x846dda4c1a8fb8fd59259ab35df56697aef3e8823d494c66b41c4f5cd8b9206e",
-  "deployTxnBlockNumber": "23590143",
-  "deployTimestamp": "1760616669",
+  "deployTxnHash": "0xd7e981265342ea0682d36dcde2db9f8cc7e1fa43e0d3a0be4ce36e5cd537462f",
+  "deployTxnBlockNumber": "23590439",
+  "deployTimestamp": "1760620295",
   "sourceName": "src/Factory.sol",
   "contractName": "Factory",
   "deployedOn": "contract.Factory",
   "gasUsed": 2458774,
-  "gasCost": "1225336499"
+  "gasCost": "176372390"
 }

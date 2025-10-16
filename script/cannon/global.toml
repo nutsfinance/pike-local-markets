@@ -22,6 +22,7 @@ salt="InitialModuleBeacon"
 artifact = "DoubleJumpRateModel"
 from = "<%= settings.deployer %>"
 create2=true
+ifExists = "continue"
 salt="DoubleJumpRateModel"
 
 [contract.RBACModule]

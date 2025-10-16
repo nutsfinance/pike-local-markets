@@ -360,12 +360,12 @@
     "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1"
   ],
   "linkedLibraries": {},
-  "deployTxnHash": "0xf61fa696eb9e0ac4b043f378d0898cfac8dfa814723c5704e1afb6535f2d9be2",
-  "deployTxnBlockNumber": "23590141",
-  "deployTimestamp": "1760616668",
+  "deployTxnHash": "",
+  "deployTxnBlockNumber": "",
+  "deployTimestamp": "1760620271",
   "sourceName": "src/oracles/ChainlinkOracleProvider.sol",
   "contractName": "ChainlinkOracleProvider",
   "deployedOn": "contract.ChainlinkOracleProvider",
-  "gasUsed": 1314899,
-  "gasCost": "1290685443"
+  "gasUsed": 0,
+  "gasCost": "0"
 }

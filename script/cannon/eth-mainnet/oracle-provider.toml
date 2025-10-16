@@ -19,6 +19,7 @@ args = [
 from = "<%= settings.deployer %>"
 create2=true
 salt="ChainlinkOracleProvider"
+ifExists = "continue"
 depends = ['var.config', 'var.owner']
 
 [contract.ChainlinkOracleComposite]
@@ -30,6 +31,7 @@ args = [
 from = "<%= settings.deployer %>"
 create2=true
 salt="ChainlinkOracleComposite"
+ifExists = "continue"
 depends = ['var.config', 'var.owner']
 
 [contract.pythProviderProxy]

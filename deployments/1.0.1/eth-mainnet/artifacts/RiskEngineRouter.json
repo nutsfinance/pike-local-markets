@@ -2132,11 +2132,11 @@
     }
   ],
   "deployedOn": "router.RiskEngineRouter",
-  "deployTxnHash": "0x0df54284e92d3cbf050114b975678c3417044cc838f67fa45f70926997005e7a",
-  "deployTxnBlockNumber": "23590157",
-  "deployTimestamp": "1760616696",
+  "deployTxnHash": "0x940bd88478b2fa10bf6b8edcd7261e2ff75c1448266fe4558dfdd9f1fe36d52e",
+  "deployTxnBlockNumber": "23590456",
+  "deployTimestamp": "1760620499",
   "contractName": "RiskEngineRouter",
   "sourceName": "RiskEngineRouter.sol",
   "gasUsed": 2530254,
-  "gasCost": "1040096292"
+  "gasCost": "177773303"
 }

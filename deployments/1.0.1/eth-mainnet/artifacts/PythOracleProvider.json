@@ -1,5 +1,5 @@
 {
-  "address": "0x5aAbF670e5f79BC8A2D0163c0EC6cC996941267b",
+  "address": "0x856e8734aEd26765e1364bf69699a35855a77153",
   "abi": [
     {
       "type": "constructor",
@@ -352,16 +352,16 @@
     }
   ],
   "constructorArgs": [
-    "0x2880aB155794e7179c9eE2e38200202908C17B43",
+    "0x4305FB66699C3B2702D4d05CF36551390A4c69C6",
     "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1"
   ],
   "linkedLibraries": {},
-  "deployTxnHash": "0x85aafd5bc7f962381415eb6facd428f67e104957bd53ac58eab23a38065fae0c",
-  "deployTxnBlockNumber": "23590147",
-  "deployTimestamp": "1760616674",
+  "deployTxnHash": "0x1c0fce026340fd749f8f24ca39f3f4c09335165b6f3a0c244c0d9db2178da0e6",
+  "deployTxnBlockNumber": "23590443",
+  "deployTimestamp": "1760620343",
   "sourceName": "src/oracles/PythOracleProvider.sol",
   "contractName": "PythOracleProvider",
   "deployedOn": "contract.PythOracleProvider",
-  "gasUsed": 1272518,
-  "gasCost": "1139777624"
+  "gasUsed": 1272530,
+  "gasCost": "196697312"
 }

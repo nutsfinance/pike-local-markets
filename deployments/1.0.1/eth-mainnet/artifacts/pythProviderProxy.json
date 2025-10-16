@@ -1,5 +1,5 @@
 {
-  "address": "0x8Ed1c53B03128c76F497fCB94B0EA151C1Cf2d07",
+  "address": "0xC17163F4b8c1C5A01b55784Fa3a7e83689e9E5c6",
   "abi": [
     {
       "type": "constructor",
@@ -68,16 +68,16 @@
     }
   ],
   "constructorArgs": [
-    "0x5aAbF670e5f79BC8A2D0163c0EC6cC996941267b",
+    "0x856e8734aEd26765e1364bf69699a35855a77153",
     "0x8129fc1c"
   ],
   "linkedLibraries": {},
-  "deployTxnHash": "0xe19fc641c71ec9687fbc45f240708710be2b8e882440140bc2459f4525197297",
-  "deployTxnBlockNumber": "23590154",
-  "deployTimestamp": "1760616681",
+  "deployTxnHash": "0x5c7bd7c717aff787e3180ec8113d932166e827ae058578b66e821d89545bcdf9",
+  "deployTxnBlockNumber": "23590452",
+  "deployTimestamp": "1760620451",
   "sourceName": "node_modules/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
   "contractName": "ERC1967Proxy",
   "deployedOn": "contract.pythProviderProxy",
   "gasUsed": 181208,
-  "gasCost": "1058532284"
+  "gasCost": "176312170"
 }

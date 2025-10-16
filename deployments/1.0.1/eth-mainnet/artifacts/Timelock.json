@@ -1158,12 +1158,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0xd3a16616e486d9c1949d6ef882b0bf4f05dc5d38650fd7ddf1d6889cecb5f488",
-  "deployTxnBlockNumber": "23590150",
-  "deployTimestamp": "1760616678",
+  "deployTxnHash": "0x2fc04475699c9e3e8464b59930aaf59356ca35f46ee8c7fb791bd4c1ffaa8032",
+  "deployTxnBlockNumber": "23590446",
+  "deployTimestamp": "1760620379",
   "sourceName": "src/governance/Timelock.sol",
   "contractName": "Timelock",
   "deployedOn": "contract.Timelock",
   "gasUsed": 2478758,
-  "gasCost": "1097889660"
+  "gasCost": "186537809"
 }

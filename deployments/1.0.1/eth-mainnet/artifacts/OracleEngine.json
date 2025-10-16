@@ -454,12 +454,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x6dd9bd038007f8971bb31b666199c51daa1be33c1b91ba645a0e4abbe25cfeba",
-  "deployTxnBlockNumber": "23590145",
-  "deployTimestamp": "1760616671",
+  "deployTxnHash": "0x974bd4b48bda332cfdb4867965874621ddf45f7139e2c5dcf924830d8a389b87",
+  "deployTxnBlockNumber": "23590441",
+  "deployTimestamp": "1760620319",
   "sourceName": "src/oracles/OracleEngine.sol",
   "contractName": "OracleEngine",
   "deployedOn": "contract.OracleEngine",
   "gasUsed": 1058928,
-  "gasCost": "1175876969"
+  "gasCost": "180530101"
 }

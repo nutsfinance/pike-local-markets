@@ -147,12 +147,12 @@
     "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1"
   ],
   "linkedLibraries": {},
-  "deployTxnHash": "0xd2ac56b1c488e47cec8c97e34f56c41dca6c4398cfbccb0ab08b94bf34b6649a",
-  "deployTxnBlockNumber": "23590159",
-  "deployTimestamp": "1760616697",
+  "deployTxnHash": "0x08ffae760e4fdc8a9c93e7519fdb670130f60cfe3ea338281de106b7c6d2fdfe",
+  "deployTxnBlockNumber": "23590460",
+  "deployTimestamp": "1760620559",
   "sourceName": "node_modules/@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol",
   "contractName": "UpgradeableBeacon",
   "deployedOn": "contract.reBeacon",
   "gasUsed": 307013,
-  "gasCost": "1031252705"
+  "gasCost": "196792435"
 }

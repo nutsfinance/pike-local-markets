@@ -147,12 +147,12 @@
     "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1"
   ],
   "linkedLibraries": {},
-  "deployTxnHash": "0x7d07a0863b4889354a6e79a8e83029b218488b661b483b17f8c93561897ca99c",
-  "deployTxnBlockNumber": "23590155",
-  "deployTimestamp": "1760616683",
+  "deployTxnHash": "0x069935310c171991c3f56ba298307521a1f41e34fd7d81e12195280d3b85bc1e",
+  "deployTxnBlockNumber": "23590453",
+  "deployTimestamp": "1760620463",
   "sourceName": "node_modules/@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol",
   "contractName": "UpgradeableBeacon",
   "deployedOn": "contract.timelockBeacon",
   "gasUsed": 307013,
-  "gasCost": "1051274674"
+  "gasCost": "183967989"
 }

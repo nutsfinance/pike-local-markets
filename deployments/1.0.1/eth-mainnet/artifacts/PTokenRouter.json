@@ -2557,11 +2557,11 @@
     }
   ],
   "deployedOn": "router.PTokenRouter",
-  "deployTxnHash": "0x2b4b9a6b09ebc45ecd47516bc16f0a5d9b06679f6a1832b566cce8754a387113",
-  "deployTxnBlockNumber": "23590156",
-  "deployTimestamp": "1760616692",
+  "deployTxnHash": "0xd9a50c25a25aa32dbe799d418ae1a4a8a5dcf199f02c02509cabb225ae0c8c3f",
+  "deployTxnBlockNumber": "23590455",
+  "deployTimestamp": "1760620487",
   "contractName": "PTokenRouter",
   "sourceName": "PTokenRouter.sol",
   "gasUsed": 3053582,
-  "gasCost": "1044952796"
+  "gasCost": "177730823"
 }

@@ -288,12 +288,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0xb27137f1ab6d1288342e8e9b626e2b42ba422b47bbfcc4401ecce12cf877b2b6",
-  "deployTxnBlockNumber": "23590142",
-  "deployTimestamp": "1760616669",
+  "deployTxnHash": "",
+  "deployTxnBlockNumber": "",
+  "deployTimestamp": "1760620271",
   "sourceName": "src/pike-market/modules/interestRateModel/DoubleJumpRateModel.sol",
   "contractName": "DoubleJumpRateModel",
   "deployedOn": "contract.DoubleJumpRateModel",
-  "gasUsed": 647386,
-  "gasCost": "1256473221"
+  "gasUsed": 0,
+  "gasCost": "0"
 }

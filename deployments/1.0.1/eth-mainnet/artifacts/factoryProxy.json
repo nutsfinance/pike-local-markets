@@ -72,12 +72,12 @@
     "0x1459457a000000000000000000000000e80bbcab9e20fc193ef768b68d69f363a7f9a2a10000000000000000000000009a5f2faee8684359fce874343e04ad7436a41af3000000000000000000000000bba09bd37b1d90940d214c1a61fc5183a3a8b166000000000000000000000000eb10af6e8ebcf6e462ebbe7cbe564ba18b6b45ca0000000000000000000000003159ad394c4f86004a16130bcb8c1020cdb25fa6"
   ],
   "linkedLibraries": {},
-  "deployTxnHash": "0x5b9abe2cbaf04b376d6caf12e4a78ceeefe31f61d2fe3202fbd4674c1bbf2336",
-  "deployTxnBlockNumber": "23590160",
-  "deployTimestamp": "1760616698",
+  "deployTxnHash": "0xc59069c7045ee95d2ee943e40fa2572717cc4378ed582b850c20efc69d5484da",
+  "deployTxnBlockNumber": "23590461",
+  "deployTimestamp": "1760620571",
   "sourceName": "node_modules/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
   "contractName": "ERC1967Proxy",
   "deployedOn": "contract.factoryProxy",
   "gasUsed": 450424,
-  "gasCost": "1027399423"
+  "gasCost": "197407066"
 }

@@ -295,12 +295,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0x709b6559a0e065e0f6a6b0e347359bb853c1a0eb574b1681931d42d6917fedbc",
-  "deployTxnBlockNumber": "23590148",
-  "deployTimestamp": "1760616676",
+  "deployTxnHash": "0x8727cbac5357c94701e82e13fd7ead944e7fb14f5d89351eca08efb4a3c706b5",
+  "deployTxnBlockNumber": "23590444",
+  "deployTimestamp": "1760620355",
   "sourceName": "src/pike-market/modules/common/RBACModule.sol",
   "contractName": "RBACModule",
   "deployedOn": "contract.RBACModule",
   "gasUsed": 583960,
-  "gasCost": "1123293587"
+  "gasCost": "188456756"
 }

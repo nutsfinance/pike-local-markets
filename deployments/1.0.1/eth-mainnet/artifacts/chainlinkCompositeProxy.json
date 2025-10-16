@@ -72,12 +72,12 @@
     "0x8129fc1c"
   ],
   "linkedLibraries": {},
-  "deployTxnHash": "0x7ae5f4a90fbe40dce4525fe36905727dd04ba8b4924712a4e155904843b21b55",
-  "deployTxnBlockNumber": "23590151",
-  "deployTimestamp": "1760616678",
+  "deployTxnHash": "0x01b733d4fb9608f8abfb72821e9c903e31818e8823acf2c6d4ff45a9162555bf",
+  "deployTxnBlockNumber": "23590448",
+  "deployTimestamp": "1760620403",
   "sourceName": "node_modules/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
   "contractName": "ERC1967Proxy",
   "deployedOn": "contract.chainlinkCompositeProxy",
   "gasUsed": 181230,
-  "gasCost": "1087001481"
+  "gasCost": "175468060"
 }

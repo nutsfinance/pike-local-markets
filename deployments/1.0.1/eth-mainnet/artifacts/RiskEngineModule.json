@@ -1662,12 +1662,12 @@
   ],
   "constructorArgs": [],
   "linkedLibraries": {},
-  "deployTxnHash": "0xba9affcdd5de70d1c69a887a302ad8eb6199b9576a73f6a9d6271d2ba5a7aa15",
-  "deployTxnBlockNumber": "23590149",
-  "deployTimestamp": "1760616677",
+  "deployTxnHash": "0x757581bbe0477b2bb083166707101ef30e22062347ec483fe83e918d475d6f3f",
+  "deployTxnBlockNumber": "23590445",
+  "deployTimestamp": "1760620367",
   "sourceName": "src/pike-market/modules/riskEngine/RiskEngineModule.sol",
   "contractName": "RiskEngineModule",
   "deployedOn": "contract.RiskEngineModule",
   "gasUsed": 5224715,
-  "gasCost": "1108281881"
+  "gasCost": "185267498"
 }
