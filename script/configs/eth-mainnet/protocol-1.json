@@ -26,7 +26,7 @@
     "secondKinkMultiplier": "8000000000000000000",
     "firstKink": "0",
     "secondKink": "900000000000000000",
-    "mainProvider": "0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6",
+    "mainProvider": "0x28EB88bf9F0F410A58Ddbb9a805e004006ad82F7",
     "fallbackProvider": "0x0000000000000000000000000000000000000000",
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
@@ -52,7 +52,7 @@
     "secondKinkMultiplier": "8500000000000000000",
     "firstKink": "0",
     "secondKink": "800000000000000000",
-    "mainProvider": "0x3E7d1eAB13ad0104d2750B8863b489D65364e32D",
+    "mainProvider": "0x28EB88bf9F0F410A58Ddbb9a805e004006ad82F7",
     "fallbackProvider": "0x0000000000000000000000000000000000000000",
     "chainlinkFeed": "0x0000000000000000000000000000000000000000",
     "pythFeed": "0x0"
