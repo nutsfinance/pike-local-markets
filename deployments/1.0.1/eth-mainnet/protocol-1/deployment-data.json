@@ -1,0 +1,11 @@
+{
+  "deploymentTimestamp": 1760622875,
+  "factoryAddress": "0xcBa3d3A0935eeA5AEB23BbF3144bA8b343d28fC3",
+  "isDryRun": false,
+  "market-pusdc": "0xeE3e365dC1eCF9F93e4B570bEE75C78b8D8854E1",
+  "market-pusdt": "0x7aDc31D609D55ccBb1Cc8CE057aeA1d03CBe2555",
+  "oracleEngine": "0xf6a21D0c243e99C19934949d52bec335201271A2",
+  "protocolId": 1,
+  "riskEngine": "0x0487Fdaa8A20E96B81Cde96f69b0089ba86F7282",
+  "timelock": "0xC41D9fF8b0A2440b2eF961324177EB583E5D9139"
+}
