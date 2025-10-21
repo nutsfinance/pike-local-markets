@@ -1,0 +1,255 @@
+{
+  "marketMetadata": {
+    "protocol": "Pike",
+    "marketName": "Ethereum USD Market",
+    "description": "High Yield USD-denom looping",
+    "targetLendingYield": "6-8%",
+    "targetRiskProfile": "medium/high",
+    "targetChain": "ethereum",
+    "chainId": 1,
+    "configVersion": "1.0.0",
+    "protocolVersion": "1.0.1",
+    "submissionTimestamp": 1761039843,
+    "deploymentTimestamp": 0
+  },
+  "addressBook": {
+    "governor": "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1",
+    "emergencyExecutor": "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1",
+    "assets": {
+      "USDC": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "jrUSDe": "0xC58D044404d8B14e953C115E67823784dEA53d8F",
+      "wsrUSD": "0xd3fd63209fa2d55b07a0f6db36c2f43900be3094",
+      "stcUSD": "0x88887bE419578051FF9F4eb6C858A951921D8888",
+      "mHYPER": "0x9b5528528656DBC094765E2abB79F293c21191B9"
+    }
+  },
+  "protocolConfiguration": {
+    "ownerShareMantissa": 300000000000000000,
+    "governorShareMantissa": 200000000000000000
+  },
+  "assets": [
+    {
+      "symbol": "USDC",
+      "configuration": {
+        "name": "Pike USDC",
+        "symbol": "pUSDC",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 1000000000000000,
+        "liquidationThresholdMantissa": 20000000000000000,
+        "liquidationIncentiveMantissa": 80000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 50000000000000,
+        "borrowCap": 45000000000000,
+        "interestRateModel": {
+          "baseRate": 20000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 200000000000000000,
+          "secondKinkMultiplier": 1200000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMax": 13240000000000000000
+        },
+        "oracleConfiguration": {
+          "mainFeed": {
+            "type": "chainlink",
+            "description": "CL USDC/USD",
+            "address": []
+          },
+          "fallbackFeed": {
+            "type": "",
+            "description": "",
+            "address": []
+          },
+          "fallbackLowerBound": "",
+          "fallbackUpperBound": ""
+        }
+      }
+    },
+    {
+      "symbol": "jrUSDe",
+      "configuration": {
+        "name": "Pike jrUSDe",
+        "symbol": "pjrUSDe",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 860000000000000000,
+        "liquidationThresholdMantissa": 880000000000000000,
+        "liquidationIncentiveMantissa": 80000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 5000000000000000000000000,
+        "borrowCap": 1000000000000000000,
+        "interestRateModel": {
+          "baseRate": 20000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 200000000000000000,
+          "secondKinkMultiplier": 1200000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMax": 13240000000000000000
+        },
+        "oracleConfiguration": {
+          "mainFeed": {
+            "type": "",
+            "description": "",
+            "address": []
+          },
+          "fallbackFeed": {
+            "type": "",
+            "description": "",
+            "address": []
+          },
+          "fallbackLowerBound": "",
+          "fallbackUpperBound": ""
+        }
+      }
+    },
+    {
+      "symbol": "wsrUSD",
+      "configuration": {
+        "name": "Pike wsrUSD",
+        "symbol": "pwsrUSD",
+        "decimals": 8,
+        "initialExchangeRate": 200000000000000000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 900000000000000000,
+        "liquidationThresholdMantissa": 920000000000000000,
+        "liquidationIncentiveMantissa": 80000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 20000000000000000000000000,
+        "borrowCap": 1000000000000000000,
+        "interestRateModel": {
+          "baseRate": 20000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 200000000000000000,
+          "secondKinkMultiplier": 1200000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMax": 13240000000000000000
+        },
+        "oracleConfiguration": {
+          "mainFeed": {
+            "type": "",
+            "description": "",
+            "address": []
+          },
+          "fallbackFeed": {
+            "type": "",
+            "description": "",
+            "address": []
+          },
+          "fallbackLowerBound": "",
+          "fallbackUpperBound": ""
+        }
+      }
+    },
+    {
+      "symbol": "stcUSD",
+      "configuration": {
+        "name": "Pike stcUSD",
+        "symbol": "pstcUSD",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 860000000000000000,
+        "liquidationThresholdMantissa": 880000000000000000,
+        "liquidationIncentiveMantissa": 80000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 10000000000000000000000000,
+        "borrowCap": 1000000000000000000,
+        "interestRateModel": {
+          "baseRate": 20000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 200000000000000000,
+          "secondKinkMultiplier": 1200000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMax": 13240000000000000000
+        },
+        "oracleConfiguration": {
+          "mainFeed": {
+            "type": "",
+            "description": "",
+            "address": []
+          },
+          "fallbackFeed": {
+            "type": "",
+            "description": "",
+            "address": []
+          },
+          "fallbackLowerBound": "",
+          "fallbackUpperBound": ""
+        }
+      }
+    },
+    {
+      "symbol": "mHYPER",
+      "configuration": {
+        "name": "Pike mHYPER",
+        "symbol": "pmHYPER",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 860000000000000000,
+        "liquidationThresholdMantissa": 880000000000000000,
+        "liquidationIncentiveMantissa": 80000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 10000000000000000000000000,
+        "borrowCap": 1000000000000000000,
+        "interestRateModel": {
+          "baseRate": 20000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 200000000000000000,
+          "secondKinkMultiplier": 1200000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMax": 13240000000000000000
+        },
+        "oracleConfiguration": {
+          "mainFeed": {
+            "type": "chainlink-composite",
+            "description": "Midas mHYPER/USD",
+            "address": []
+          },
+          "fallbackFeed": {
+            "type": "",
+            "description": "",
+            "address": []
+          },
+          "fallbackLowerBound": "",
+          "fallbackUpperBound": ""
+        }
+      }
+    }
+  ],
+  "workflow": {
+    "pikeBDValidation": {
+      "allCollateralAssetsListed": true,
+      "allAssetAddressesProvided": true,
+      "allOracleFeedsSpecified": true,
+      "allMarketLevelParametersFilled": true,
+      "allAssetLevelParametersFilled": true,
+      "targetChainConfirmed": true,
+      "deploymentTimelineConfirmed": true
+    },
+    "pikeInitialCuration": {
+      "partnerProposalSubmitted": false,
+      "pikeTeamReviewComplete": false,
+      "configurationSignedOff": false,
+      "readyForDeployment": false
+    },
+    "pikeMarketCreation": {
+      "configurationDeployed": false,
+      "deploymentAddressesShared": false,
+      "partnerVerifiedOnChain": false,
+      "deploymentConfirmed": false
+    }
+  }
+}
