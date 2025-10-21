@@ -11,8 +11,9 @@ import {MockOracle} from "@mocks/MockOracle.sol";
 import {ChainlinkOracleProvider} from "@oracles/ChainlinkOracleProvider.sol";
 import {IChainlinkOracleProvider} from "@oracles/interfaces/IChainlinkOracleProvider.sol";
 import {ChainlinkOracleComposite} from "@oracles/ChainlinkOracleComposite.sol";
-import {IChainlinkOracleComposite} from
-    "@oracles/interfaces/IChainlinkOracleComposite.sol";
+import {
+    IChainlinkOracleComposite
+} from "@oracles/interfaces/IChainlinkOracleComposite.sol";
 import {PythOracleProvider} from "@oracles/PythOracleProvider.sol";
 import {IPythOracleProvider} from "@oracles/interfaces/IPythOracleProvider.sol";
 import {OracleEngine} from "@oracles/OracleEngine.sol";
@@ -20,6 +21,7 @@ import {IOracleEngine} from "@oracles/interfaces/IOracleEngine.sol";
 import {MockChainlinkAggregator} from "@mocks/MockChainlinkAggregator.sol";
 import {MockPyth} from "@mocks/MockPyth.sol";
 import "@chainlink/contracts/shared/interfaces/AggregatorV3Interface.sol";
+import {CustomRateFeedWrapper} from "@oracles/CustomRateFeedWrapper.sol";
 
 contract LocalOracle is TestLocal {
     IPToken pUSDC;
@@ -29,6 +31,7 @@ contract LocalOracle is TestLocal {
 
     ChainlinkOracleComposite chainlinkOracleComposite;
     ChainlinkOracleProvider chainlinkOracleProvider;
+    CustomRateFeedWrapper wrapper;
     PythOracleProvider pythOracleProvider;
     OracleEngine oracleEngine;
     MockChainlinkAggregator sequencerUptimeFeed;
@@ -65,6 +68,12 @@ contract LocalOracle is TestLocal {
 
         // deploy sequencer uptime feed
         sequencerUptimeFeed = new MockChainlinkAggregator();
+        console.log(pWSTETH.convertToShares(1_000_000));
+        wrapper = new CustomRateFeedWrapper(
+            address(pWSTETH),18,
+            abi.encodeWithSelector(pWSTETH.convertToShares.selector, 1e18)
+            
+        );
         sequencerUptimeFeed.setRoundData(
             0, block.timestamp - gracePeriod - 1, block.timestamp - gracePeriod - 1
         );
@@ -241,6 +250,29 @@ contract LocalOracle is TestLocal {
         // invalid stale period
         vm.expectRevert(IChainlinkOracleComposite.InvalidStalePeriod.selector);
         chainlinkOracleComposite.setAssetConfig(wsteth, feeds, inverts, stalePeriods);
+    }
+
+    function testChainlinkOracleCompositeWithWrapper() public {
+        vm.startPrank(_testState.admin);
+
+        AggregatorV3Interface[3] memory feeds;
+        bool[3] memory inverts;
+        uint256[3] memory stalePeriods;
+
+        feeds[0] = wstethRateFeed;
+        feeds[1] = AggregatorV3Interface(address(wrapper));
+        stalePeriods[0] = 1 hours;
+        stalePeriods[1] = 1 hours;
+
+        // configure wsteth price
+        chainlinkOracleComposite.setAssetConfig(wsteth, feeds, inverts, stalePeriods);
+
+        chainlinkOracleComposite.getAssetConfig(wsteth);
+
+        // get wsteth price
+        uint256 wstethPrice = chainlinkOracleComposite.getPrice(wsteth);
+
+        assertEq(wstethPrice, 1.2e18);
     }
 
     function testPythOracleProvider() public {
