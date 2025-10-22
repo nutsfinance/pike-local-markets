@@ -37,9 +37,9 @@
     {
       "symbol": "USDC",
       "configuration": {
-        "name": "Pike USDC",
+        "name": "Pike USD Coin",
         "symbol": "pUSDC",
-        "decimals": 6,
+        "decimals": 8,
         "initialExchangeRateMantissa": 200000000000000,
         "reserveFactorMantissa": 100000000000000000,
         "protocolSeizeShareMantissa": 20000000000000000,
@@ -73,9 +73,9 @@
     {
       "symbol": "jrUSDe",
       "configuration": {
-        "name": "Pike jrUSDe",
+        "name": "Pike Strata Junior USDe",
         "symbol": "pjrUSDe",
-        "decimals": 18,
+        "decimals": 8,
         "initialExchangeRateMantissa": 200000000000000000000000000,
         "reserveFactorMantissa": 100000000000000000,
         "protocolSeizeShareMantissa": 20000000000000000,
@@ -119,9 +119,9 @@
     {
       "symbol": "wsrUSD",
       "configuration": {
-        "name": "Pike wsrUSD",
+        "name": "Pike Wrapped Savings rUSD",
         "symbol": "pwsrUSD",
-        "decimals": 18,
+        "decimals": 8,
         "initialExchangeRateMantissa": 200000000000000000000000000,
         "reserveFactorMantissa": 100000000000000000,
         "protocolSeizeShareMantissa": 20000000000000000,
@@ -156,9 +156,9 @@
     {
       "symbol": "stcUSD",
       "configuration": {
-        "name": "Pike stcUSD",
+        "name": "Pike Staked cap USD",
         "symbol": "pstcUSD",
-        "decimals": 18,
+        "decimals": 8,
         "initialExchangeRateMantissa": 200000000000000000000000000,
         "reserveFactorMantissa": 100000000000000000,
         "protocolSeizeShareMantissa": 20000000000000000,
@@ -202,9 +202,9 @@
     {
       "symbol": "mHYPER",
       "configuration": {
-        "name": "Pike mHYPER",
+        "name": "Pike Midas Hyperithm",
         "symbol": "pmHYPER",
-        "decimals": 18,
+        "decimals": 8,
         "initialExchangeRateMantissa": 200000000000000000000000000,
         "reserveFactorMantissa": 100000000000000000,
         "protocolSeizeShareMantissa": 20000000000000000,
