@@ -2,15 +2,21 @@
   "marketMetadata": {
     "protocol": "Pike",
     "marketName": "Ethereum USD Market",
-    "description": "Flagship stablecoin loo=oping market",
-    "targetLendingYield": "6-8%",
-    "targetRiskProfile": "medium/high",
+    "description": "Flagship stablecoin looping market",
     "targetChain": "ethereum",
     "chainId": 1,
-    "configVersion": "1.0.0",
+    "configVersion": "1.0.1",
     "protocolVersion": "1.0.1",
     "submissionTimestamp": 1761039843,
-    "deploymentTimestamp": 0
+    "deploymentTimestamp": 0,
+    "feedDescriptions": {
+      "0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6": "Chainlink USDC/USD",
+      "0xd3fD63209FA2D55B07A0f6db36C2f43900be3094": "Reservoir wsrUSD/rUSD",
+      "0x9A5a3c3Ed0361505cC1D4e824B3854De5724434A": "RedStone cUSD/USD",
+      "0xC58D044404d8B14e953C115E67823784dEA53d8F": "Strata jrUSDe/USDe",
+      "0x43881B05C3BE68B2d33eb70aDdF9F666C5005f68": "Midas mHYPER/USD",
+      "0x88887bE419578051FF9F4eb6C858A951921D8888": "Cap stcUSD/cUSD"
+    }
   },
   "addressBook": {
     "governor": "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1",
@@ -53,18 +59,14 @@
           "borrowRateMax": 13240000000000000000
         },
         "oracleConfiguration": {
-          "mainFeed": {
-            "type": "chainlink",
-            "description": "CL USDC/USD",
-            "address": []
+          "mainOracle": {
+            "provider": "ChainlinkOracleProvider",
+            "feed": "0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6",
+            "maxStalePeriod": 90000
           },
-          "fallbackFeed": {
-            "type": "",
-            "description": "",
-            "address": []
-          },
-          "fallbackLowerBound": "",
-          "fallbackUpperBound": ""
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
         }
       }
     },
@@ -93,18 +95,24 @@
           "borrowRateMax": 13240000000000000000
         },
         "oracleConfiguration": {
-          "mainFeed": {
-            "type": "",
-            "description": "",
-            "address": []
+          "mainOracle": {
+            "provider": "ChainlinkOracleComposite",
+            "feeds": [
+              {
+                "type": "CustomRateFeedWrapper",
+                "target": "0xC58D044404d8B14e953C115E67823784dEA53d8F",
+                "decimals": 18,
+                "callData": "0x07a2d13a0000000000000000000000000000000000000000000000000de0b6b3a7640000"
+              },
+              "0x9A5a3c3Ed0361505cC1D4e824B3854De5724434A",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "invertRates": [false, false, false],
+            "maxStalePeriods": [90000, 90000, 0]
           },
-          "fallbackFeed": {
-            "type": "",
-            "description": "",
-            "address": []
-          },
-          "fallbackLowerBound": "",
-          "fallbackUpperBound": ""
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
         }
       }
     },
@@ -133,18 +141,15 @@
           "borrowRateMax": 13240000000000000000
         },
         "oracleConfiguration": {
-          "mainFeed": {
-            "type": "",
-            "description": "",
-            "address": []
+          "mainOracle": {
+            "provider": "CustomRateFeedWrapper",
+            "target": "0xd3fD63209FA2D55B07A0f6db36C2f43900be3094",
+            "decimals": 18,
+            "calldata": "0x07a2d13a0000000000000000000000000000000000000000000000000de0b6b3a7640000"
           },
-          "fallbackFeed": {
-            "type": "",
-            "description": "",
-            "address": []
-          },
-          "fallbackLowerBound": "",
-          "fallbackUpperBound": ""
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
         }
       }
     },
@@ -173,18 +178,24 @@
           "borrowRateMax": 13240000000000000000
         },
         "oracleConfiguration": {
-          "mainFeed": {
-            "type": "",
-            "description": "",
-            "address": []
+          "mainOracle": {
+            "provider": "ChainlinkOracleComposite",
+            "feeds": [
+              {
+                "type": "CustomRateFeedWrapper",
+                "target": "0x88887bE419578051FF9F4eb6C858A951921D8888",
+                "decimals": 18,
+                "callData": "0x07a2d13a0000000000000000000000000000000000000000000000000de0b6b3a7640000"
+              },
+              "0x9A5a3c3Ed0361505cC1D4e824B3854De5724434A",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "invertRates": [false, false, false],
+            "maxStalePeriods": [90000, 90000, 0]
           },
-          "fallbackFeed": {
-            "type": "",
-            "description": "",
-            "address": []
-          },
-          "fallbackLowerBound": "",
-          "fallbackUpperBound": ""
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
         }
       }
     },
@@ -213,18 +224,14 @@
           "borrowRateMax": 13240000000000000000
         },
         "oracleConfiguration": {
-          "mainFeed": {
-            "type": "chainlink-composite",
-            "description": "Midas mHYPER/USD",
-            "address": []
+          "mainOracle": {
+            "provider": "ChainlinkOracleProvider",
+            "feed": "0x43881B05C3BE68B2d33eb70aDdF9F666C5005f68",
+            "maxStalePeriod": 604800
           },
-          "fallbackFeed": {
-            "type": "",
-            "description": "",
-            "address": []
-          },
-          "fallbackLowerBound": "",
-          "fallbackUpperBound": ""
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
         }
       }
     }
