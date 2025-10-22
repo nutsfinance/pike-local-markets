@@ -61,8 +61,9 @@
         "oracleConfiguration": {
           "mainOracle": {
             "provider": "ChainlinkOracleProvider",
-            "feed": "0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6",
-            "maxStalePeriod": 90000
+            "feeds": ["0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6"],
+            "invertRates": [false],
+            "maxStalePeriods": [90000]
           },
           "fallbackOracle": null,
           "lowerBoundRatio": 0,
@@ -143,9 +144,16 @@
         "oracleConfiguration": {
           "mainOracle": {
             "provider": "CustomRateFeedWrapper",
-            "target": "0xd3fD63209FA2D55B07A0f6db36C2f43900be3094",
-            "decimals": 18,
-            "calldata": "0x07a2d13a0000000000000000000000000000000000000000000000000de0b6b3a7640000"
+            "feeds": [
+              {
+                "type": "CustomRateFeedWrapper",
+                "target": "0xd3fD63209FA2D55B07A0f6db36C2f43900be3094",
+                "decimals": 18,
+                "callData": "0x07a2d13a0000000000000000000000000000000000000000000000000de0b6b3a7640000"
+              }
+            ],
+            "invertRates": [false],
+            "maxStalePeriods": [90000]
           },
           "fallbackOracle": null,
           "lowerBoundRatio": 0,
@@ -226,8 +234,9 @@
         "oracleConfiguration": {
           "mainOracle": {
             "provider": "ChainlinkOracleProvider",
-            "feed": "0x43881B05C3BE68B2d33eb70aDdF9F666C5005f68",
-            "maxStalePeriod": 604800
+            "feeds": ["0x43881B05C3BE68B2d33eb70aDdF9F666C5005f68"],
+            "invertRates": [false],
+            "maxStalePeriods": [604800]
           },
           "fallbackOracle": null,
           "lowerBoundRatio": 0,
