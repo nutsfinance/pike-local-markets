@@ -16,7 +16,9 @@
       "0x9A5a3c3Ed0361505cC1D4e824B3854De5724434A": "RedStone cUSD/USD",
       "0xC58D044404d8B14e953C115E67823784dEA53d8F": "Strata jrUSDe/USDe",
       "0x43881B05C3BE68B2d33eb70aDdF9F666C5005f68": "Midas mHYPER/USD",
-      "0x88887bE419578051FF9F4eb6C858A951921D8888": "Cap stcUSD/cUSD"
+      "0x88887bE419578051FF9F4eb6C858A951921D8888": "Cap stcUSD/cUSD",
+      "0xc315D6e14DDCDC7407784e2Caf815d131Bc1D3E7": "Ether.Fi liquidUSD/USD",
+      "0xAdb2c15Fde49D1A4294740aCb650de94184E66b2": "Resolv RLP/USD"
     }
   },
   "addressBook": {
@@ -27,7 +29,10 @@
       "jrUSDe": "0xC58D044404d8B14e953C115E67823784dEA53d8F",
       "wsrUSD": "0xd3fd63209fa2d55b07a0f6db36c2f43900be3094",
       "stcUSD": "0x88887bE419578051FF9F4eb6C858A951921D8888",
-      "mHYPER": "0x9b5528528656DBC094765E2abB79F293c21191B9"
+      "mHYPER": "0x9b5528528656DBC094765E2abB79F293c21191B9",
+      "liquidUSD": "0x08c6F91e2B681FaF5e17227F2a44C307b3C1364C",
+      "RLP": "0x4956b52aE2fF65D74CA2d61207523288e4528f96",
+      "PT-srUSDe-15JAN2026": "0x1Fb3C5c35D95F48e48FFC8e36bCCe5CB5f29F57c"
     }
   },
   "protocolConfiguration": {
@@ -238,6 +243,133 @@
             "feeds": ["0x43881B05C3BE68B2d33eb70aDdF9F666C5005f68"],
             "invertRates": [false],
             "maxStalePeriods": [604800]
+          },
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
+        }
+      }
+    },
+    {
+      "symbol": "liquidUSD",
+      "configuration": {
+        "name": "Pike Ether.Fi Liquid USD ",
+        "symbol": "pliquidUSD",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 86000000000000000,
+        "liquidationThresholdMantissa": 880000000000000000,
+        "liquidationIncentiveMantissa": 1060000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 5000000000000,
+        "borrowCap": 1000000,
+        "interestRateModel": {
+          "baseRate": 20000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 200000000000000000,
+          "secondKinkMultiplier": 1200000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMaxMantissa": 420000000000
+        },
+        "oracleConfiguration": {
+          "mainOracle": {
+            "provider": "CustomRateFeedWrapper",
+            "feeds": [
+              {
+                "type": "CustomRateFeedWrapper",
+                "target": "0xc315D6e14DDCDC7407784e2Caf815d131Bc1D3E7",
+                "decimals": 6,
+                "callData": "0x679aefce"
+              }
+            ],
+            "invertRates": [false],
+            "maxStalePeriods": [90000]
+          },
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
+        }
+      }
+    },
+    {
+      "symbol": "RLP",
+      "configuration": {
+        "name": "Pike Resolv Liquidity Provider Token",
+        "symbol": "pRLP",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 860000000000000000,
+        "liquidationThresholdMantissa": 880000000000000000,
+        "liquidationIncentiveMantissa": 1060000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 20000000000000000000000000,
+        "borrowCap": 1000000000000000000,
+        "interestRateModel": {
+          "baseRate": 20000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 200000000000000000,
+          "secondKinkMultiplier": 1200000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMaxMantissa": 420000000000
+        },
+        "oracleConfiguration": {
+          "mainOracle": {
+            "provider": "ChainlinkOracleProvider",
+            "feeds": ["0x4956b52aE2fF65D74CA2d61207523288e4528f96"],
+            "invertRates": [false],
+            "maxStalePeriods": [90000]
+          },
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
+        }
+      }
+    },
+    {
+      "symbol": "PT-srUSDe-15JAN2026",
+      "configuration": {
+        "name": "Pike PT Strata Senior USDe 15JAN2026",
+        "symbol": "pPT-srUSDe-15JAN2026",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 840000000000000000,
+        "liquidationThresholdMantissa": 860000000000000000,
+        "liquidationIncentiveMantissa": 1060000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 10000000000000000000000000,
+        "borrowCap": 1000000000000000000,
+        "interestRateModel": {
+          "baseRate": 20000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 200000000000000000,
+          "secondKinkMultiplier": 1200000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMaxMantissa": 420000000000
+        },
+        "oracleConfiguration": {
+          "mainOracle": {
+            "provider": "ChainlinkOracleComposite",
+            "feeds": [
+              {
+                "type": "CustomRateFeedWrapper",
+                "target": "0x9a9Fa8338dd5E5B2188006f1Cd2Ef26d921650C2",
+                "decimals": 18,
+                "callData": "0xabca0eab000000000000000000000000a83174f1dd8475378abca9d676dad3ce97409e0a0000000000000000000000000000000000000000000000000000000000000384"
+              },
+              "0xa569d910839Ae8865Da8F8e70FfFb0cBA869F961",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "invertRates": [false, false, false],
+            "maxStalePeriods": [90000, 90000, 0]
           },
           "fallbackOracle": null,
           "lowerBoundRatio": 0,
