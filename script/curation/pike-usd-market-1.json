@@ -256,7 +256,7 @@
         "name": "Pike Ether.Fi Liquid USD ",
         "symbol": "pliquidUSD",
         "decimals": 8,
-        "initialExchangeRateMantissa": 2000000000000,
+        "initialExchangeRateMantissa": 200000000000000,
         "reserveFactorMantissa": 100000000000000000,
         "protocolSeizeShareMantissa": 20000000000000000,
         "collateralFactorMantissa": 860000000000000000,
