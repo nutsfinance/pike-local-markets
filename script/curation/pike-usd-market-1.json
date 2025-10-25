@@ -321,7 +321,7 @@
         "oracleConfiguration": {
           "mainOracle": {
             "provider": "ChainlinkOracleProvider",
-            "feeds": ["0x4956b52aE2fF65D74CA2d61207523288e4528f96"],
+            "feeds": ["0xAdb2c15Fde49D1A4294740aCb650de94184E66b2"],
             "invertRates": [false],
             "maxStalePeriods": [90000]
           },
