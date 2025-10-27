@@ -254,7 +254,7 @@
     {
       "symbol": "liquidUSD",
       "configuration": {
-        "name": "Pike Ether.Fi Liquid USD ",
+        "name": "Pike Ether.Fi Liquid USD",
         "symbol": "pliquidUSD",
         "decimals": 8,
         "initialExchangeRateMantissa": 200000000000000,
