@@ -1,0 +1,326 @@
+{
+  "marketMetadata": {
+    "protocol": "Pike",
+    "marketName": "Plasma USD Market",
+    "description": "Flagship stablecoin looping market",
+    "targetChain": "plasma",
+    "chainId": 9745,
+    "configVersion": "1.0.1",
+    "protocolVersion": "1.0.1",
+    "submissionTimestamp": 1761850323,
+    "deploymentTimestamp": 0,
+    "feedDescriptions": {
+      "0x3205B49b3C8c5D593589e1e70567993f72C5F845": "Chainlink USDT0/USD",
+      "0xC8A8DF9B210243c55D31c73090F06787aD0A1Bf6": "syzUSD/yzUSD Vault Exchange Rate",
+      "0xf16FA59b32bB1fcDfBA0afa473f361dD57E6d215": "Chainlink RLP/USD Fundamental",
+      "0x9a9Fa8338dd5E5B2188006f1Cd2Ef26d921650C2": "Pendle TWAP Oracle"
+    }
+  },
+  "addressBook": {
+    "governor": "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1",
+    "emergencyExecutor": "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1",
+    "assets": {
+      "USDT0": "0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb",
+      "syzUSD": "0xC8A8DF9B210243c55D31c73090F06787aD0A1Bf6",
+      "RLP": "0x35533f54740F1F1aA4179E57bA37039dfa16868B",
+      "PT-USDai-19MAR2026": "0xD516188daf64EFa04a8d60872F891f2cC811A561",
+      "PT-splUSD-29JAN2026": "0xA6C55E31154d39bb0Aa3CA2FF9F7665BDA4e47FC",
+      "PT-mHYPER-29JAN2026": "0xceA23aB8FdE0b90e4D08EB68e8876E43933721D2"
+    }
+  },
+  "protocolConfiguration": {
+    "ownerShareMantissa": 300000000000000000,
+    "configuratorShareMantissa": 200000000000000000
+  },
+  "assets": [
+    {
+      "symbol": "USDT0",
+      "configuration": {
+        "name": "Pike USDT0",
+        "symbol": "pUSDT0",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 1000000000000000,
+        "liquidationThresholdMantissa": 2000000000000000,
+        "liquidationIncentiveMantissa": 1060000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 100000000000000,
+        "borrowCap": 90000000000000,
+        "interestRateModel": {
+          "baseRate": 40000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 400000000000000000,
+          "secondKinkMultiplier": 2800000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMaxMantissa": 420000000000
+        },
+        "oracleConfiguration": {
+          "mainOracle": {
+            "provider": "ChainlinkOracleComposite",
+            "feeds": [
+              "0x3205B49b3C8c5D593589e1e70567993f72C5F845",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "invertRates": [false, false, false],
+            "maxStalePeriods": [90000, 0, 0]
+          },
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
+        }
+      }
+    },
+    {
+      "symbol": "syzUSD",
+      "configuration": {
+        "name": "Pike Staked Yuzu USD",
+        "symbol": "psyzUSD",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 860000000000000000,
+        "liquidationThresholdMantissa": 880000000000000000,
+        "liquidationIncentiveMantissa": 1060000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 10000000000000000000000000,
+        "borrowCap": 1000000000000000000,
+        "interestRateModel": {
+          "baseRate": 40000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 400000000000000000,
+          "secondKinkMultiplier": 2800000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMaxMantissa": 420000000000
+        },
+        "oracleConfiguration": {
+          "mainOracle": {
+            "provider": "ChainlinkOracleComposite",
+            "feeds": [
+              {
+                "type": "CustomRateFeedWrapper",
+                "target": "0xC8A8DF9B210243c55D31c73090F06787aD0A1Bf6",
+                "decimals": 18,
+                "callData": "0x07a2d13a0000000000000000000000000000000000000000000000000de0b6b3a7640000"
+              },
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "invertRates": [false, false, false],
+            "maxStalePeriods": [90000, 0, 0]
+          },
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
+        }
+      }
+    },
+    {
+      "symbol": "RLP",
+      "configuration": {
+        "name": "Pike Resolv Liquidity Provider Token",
+        "symbol": "pRLP",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 880000000000000000,
+        "liquidationThresholdMantissa": 900000000000000000,
+        "liquidationIncentiveMantissa": 1060000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 20000000000000000000000000,
+        "borrowCap": 1000000000000000000,
+        "interestRateModel": {
+          "baseRate": 40000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 400000000000000000,
+          "secondKinkMultiplier": 2800000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMaxMantissa": 420000000000
+        },
+        "oracleConfiguration": {
+          "mainOracle": {
+            "provider": "ChainlinkOracleComposite",
+            "feeds": [
+              "0xf16FA59b32bB1fcDfBA0afa473f361dD57E6d215",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "invertRates": [false, false, false],
+            "maxStalePeriods": [90000, 0, 0]
+          },
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
+        }
+      }
+    },
+    {
+      "symbol": "PT-USDai-19MAR2026",
+      "configuration": {
+        "name": "Pike PT USDai 19MAR2026",
+        "symbol": "pPT-USDai-19MAR2026",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 880000000000000000,
+        "liquidationThresholdMantissa": 900000000000000000,
+        "liquidationIncentiveMantissa": 1060000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 50000000000000000000000000,
+        "borrowCap": 1000000000000000000,
+        "interestRateModel": {
+          "baseRate": 40000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 400000000000000000,
+          "secondKinkMultiplier": 2800000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMaxMantissa": 420000000000
+        },
+        "oracleConfiguration": {
+          "mainOracle": {
+            "provider": "ChainlinkOracleComposite",
+            "feeds": [
+              {
+                "type": "CustomRateFeedWrapper",
+                "target": "0x9a9Fa8338dd5E5B2188006f1Cd2Ef26d921650C2",
+                "decimals": 18,
+                "callData": "0xabca0eab00000000000000000000000015735f2f53c5cd25a57dff83b11c93eceaf720730000000000000000000000000000000000000000000000000000000000000384"
+              },
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "invertRates": [false, false, false],
+            "maxStalePeriods": [90000, 0, 0]
+          },
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
+        }
+      }
+    },
+    {
+      "symbol": "PT-splUSD-29JAN2026",
+      "configuration": {
+        "name": "Pike PT Staked Plasma USD 29JAN2026",
+        "symbol": "pPT-splUSD-29JAN2026",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 860000000000000000,
+        "liquidationThresholdMantissa": 880000000000000000,
+        "liquidationIncentiveMantissa": 1060000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 20000000000000000000000000,
+        "borrowCap": 1000000000000000000,
+        "interestRateModel": {
+          "baseRate": 40000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 400000000000000000,
+          "secondKinkMultiplier": 2800000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMaxMantissa": 420000000000
+        },
+        "oracleConfiguration": {
+          "mainOracle": {
+            "provider": "ChainlinkOracleComposite",
+            "feeds": [
+              {
+                "type": "CustomRateFeedWrapper",
+                "target": "0x9a9Fa8338dd5E5B2188006f1Cd2Ef26d921650C2",
+                "decimals": 18,
+                "callData": "0xabca0eab0000000000000000000000009d0676ec013cb50b7bf9b291c22b618e9fe868320000000000000000000000000000000000000000000000000000000000000384"
+              },
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "invertRates": [false, false, false],
+            "maxStalePeriods": [90000, 0, 0]
+          },
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
+        }
+      }
+    },
+    {
+      "symbol": "PT-mHYPER-29JAN2026",
+      "configuration": {
+        "name": "Pike PT Midas Hyperithm 29JAN2026",
+        "symbol": "pPT-mHYPER-29JAN2026",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000,
+        "reserveFactorMantissa": 100000000000000000,
+        "protocolSeizeShareMantissa": 20000000000000000,
+        "collateralFactorMantissa": 840000000000000000,
+        "liquidationThresholdMantissa": 860000000000000000,
+        "liquidationIncentiveMantissa": 1060000000000000000,
+        "closeFactorMantissa": 500000000000000000,
+        "supplyCap": 10000000000000,
+        "borrowCap": 1000000,
+        "interestRateModel": {
+          "baseRate": 40000000000000000,
+          "initialMultiplier": 50000000000000000,
+          "firstKinkMultiplier": 400000000000000000,
+          "secondKinkMultiplier": 2800000000000000000,
+          "firstKink": 800000000000000000,
+          "secondKink": 900000000000000000,
+          "borrowRateMaxMantissa": 420000000000
+        },
+        "oracleConfiguration": {
+          "mainOracle": {
+            "provider": "ChainlinkOracleComposite",
+            "feeds": [
+              {
+                "type": "CustomRateFeedWrapper",
+                "target": "0x9a9Fa8338dd5E5B2188006f1Cd2Ef26d921650C2",
+                "decimals": 18,
+                "callData": "0xabca0eab000000000000000000000000ca2d052fcedbf532ca8cef2d3d1d84a041a258f70000000000000000000000000000000000000000000000000000000000000384"
+              },
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "invertRates": [false, false, false],
+            "maxStalePeriods": [90000, 0, 0]
+          },
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
+        }
+      }
+    }
+  ],
+  "workflow": {
+    "pikeBDValidation": {
+      "allCollateralAssetsListed": false,
+      "allAssetAddressesProvided": false,
+      "allOracleFeedsSpecified": false,
+      "allMarketLevelParametersFilled": true,
+      "allAssetLevelParametersFilled": true,
+      "targetChainConfirmed": true,
+      "deploymentTimelineConfirmed": true
+    },
+    "pikeInitialCuration": {
+      "partnerProposalSubmitted": false,
+      "pikeTeamReviewComplete": false,
+      "configurationSignedOff": false,
+      "readyForDeployment": false
+    },
+    "pikeMarketCreation": {
+      "configurationDeployed": false,
+      "deploymentAddressesShared": false,
+      "partnerVerifiedOnChain": false,
+      "deploymentConfirmed": false
+    }
+  }
+}
