@@ -32,12 +32,14 @@ contract TestProtocolFunctionality is Config, Test {
     address public tokenA;
     address public tokenB;
 
+    address oracleEngine;
+
     function run() public {
         setupForkAndContracts();
         setupAccounts();
 
         // Scenario 1: supply & borrow test
-        supplyAndBorrow(alice, bob, 1000, 500, 1000, 700);
+        supplyAndBorrow(alice, bob, 1000, 1000, 700);
 
         // Scenario 2: Interest accrual test
         interestAccrual(180 days);
@@ -46,11 +48,47 @@ contract TestProtocolFunctionality is Config, Test {
         repayAndWithdraw(bob, 700, 500);
     }
 
+    function mockOraclePrice(address ptoken, uint256 price) internal {
+        bytes memory returnData = abi.encode(price);
+
+        // If getUnderlyingPrice(IPToken) is also used, mock that too:
+        bytes memory getUnderlyingPriceCall = abi.encodeWithSelector(
+            bytes4(keccak256("getUnderlyingPrice(address)")), ptoken
+        );
+        vm.mockCall(oracleEngine, getUnderlyingPriceCall, returnData);
+
+        console.log("Mocked oracle price for %s -> %s", ptoken, price);
+    }
+
+    function simulateLiquidation(
+        address borrower,
+        IPToken borrowedPToken,
+        IPToken collateralPToken,
+        uint256 repayAmount,
+        uint256 newPrice
+    ) internal {
+        console.log("=== Simulate Liquidation ===");
+
+        // Drop the price to make the position undercollateralized
+        address collateralAsset = collateralPToken.asset();
+        mockOraclePrice(collateralAsset, newPrice);
+
+        // Trigger liquidation
+        address liquidator = makeAddr("Liquidator");
+        deal(borrowedPToken.asset(), liquidator, repayAmount * 1e18);
+
+        vm.startPrank(liquidator);
+        IERC20(borrowedPToken.asset()).approve(address(borrowedPToken), type(uint256).max);
+        borrowedPToken.liquidateBorrow(borrower, repayAmount * 1e18, collateralPToken);
+        vm.stopPrank();
+
+        console.log("Liquidation executed for borrower: %s", borrower);
+    }
+
     function supplyAndBorrow(
         address supplier,
         address borrower,
         uint256 supplyAmount,
-        uint256 borrowerSupply,
         uint256 collateralAmount,
         uint256 borrowAmount
     ) internal {
@@ -61,7 +99,6 @@ contract TestProtocolFunctionality is Config, Test {
         console.log("Alice supplied %s tokens %s", tokenASymbol, supplyAmount);
 
         // Borrower deposits both supply and collateral
-        supply(borrower, pTokenA, borrowerSupply * tokenADecimals);
         supply(borrower, pTokenB, collateralAmount * tokenBDecimals);
 
         // Borrow
@@ -87,8 +124,15 @@ contract TestProtocolFunctionality is Config, Test {
         console.log("=== Repay and Withdraw ===");
         repay(borrower, pTokenA, repayAmount * tokenADecimals);
         console.log("Bob repaid %s tokens %s", tokenASymbol, repayAmount);
-        // withdraw(borrower, pTokenA, withdrawAmount * tokenADecimals);
-        // console.log("Bob withdrew %s tokens %s", tokenASymbol, withdrawAmount);
+        console.log(
+            "Bob balance %s", pTokenB.balanceOfUnderlying(borrower) / tokenBDecimals
+        );
+
+        mockOraclePrice(address(pTokenB), 1e18);
+        mockOraclePrice(address(pTokenA), 1e18);
+
+        withdraw(borrower, pTokenB, withdrawAmount * tokenBDecimals);
+        console.log("Bob withdrew %s tokens %s", tokenASymbol, withdrawAmount);
     }
 
     function setupForkAndContracts() internal {
@@ -115,6 +159,8 @@ contract TestProtocolFunctionality is Config, Test {
         tokenBDecimals = 10 ** IERC20Metadata(tokenB).decimals();
         tokenASymbol = IERC20Metadata(tokenA).symbol();
         tokenBSymbol = IERC20Metadata(tokenB).symbol();
+
+        oracleEngine = address(riskEngine.oracle());
 
         console.log("=== Contracts Loaded ===");
         console.log("Risk Engine: %s", address(riskEngine));
