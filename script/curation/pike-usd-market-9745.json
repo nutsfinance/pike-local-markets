@@ -35,6 +35,10 @@
   "assets": [
     {
       "symbol": "USDT0",
+      "metadata": {
+        "platformName": "Tether",
+        "underlyingDecimals": 6
+      },
       "configuration": {
         "name": "Pike USDT0",
         "symbol": "pUSDT0",
@@ -76,6 +80,11 @@
     },
     {
       "symbol": "syzUSD",
+      "metadata": {
+        "platformName": "Yuzu Money",
+        "stakingUrl": "https://yuzu.money/",
+        "underlyingDecimals": 18
+      },
       "configuration": {
         "name": "Pike Staked Yuzu USD",
         "symbol": "psyzUSD",
@@ -122,6 +131,11 @@
     },
     {
       "symbol": "RLP",
+      "metadata": {
+        "platformName": "Resolv",
+        "stakingUrl": "https://resolv.xyz",
+        "underlyingDecimals": 18
+      },
       "configuration": {
         "name": "Pike Resolv Liquidity Provider Token",
         "symbol": "pRLP",
@@ -163,6 +177,11 @@
     },
     {
       "symbol": "PT-USDai-19MAR2026",
+      "metadata": {
+        "platformName": "Pendle Finance",
+        "stakingUrl": "https://app.pendle.finance/",
+        "underlyingDecimals": 18
+      },
       "configuration": {
         "name": "Pike PT USDai 19MAR2026",
         "symbol": "pPT-USDai-19MAR2026",
@@ -209,6 +228,11 @@
     },
     {
       "symbol": "PT-splUSD-29JAN2026",
+      "metadata": {
+        "platformName": "Pendle Finance",
+        "stakingUrl": "https://app.pendle.finance",
+        "underlyingDecimals": 18
+      },
       "configuration": {
         "name": "Pike PT Staked Plasma USD 29JAN2026",
         "symbol": "pPT-splUSD-29JAN2026",
@@ -255,6 +279,11 @@
     },
     {
       "symbol": "PT-mHYPER-29JAN2026",
+      "metadata": {
+        "platformName": "Pendle Finance",
+        "stakingUrl": "https://app.pendle.finance",
+        "underlyingDecimals": 6
+      },
       "configuration": {
         "name": "Pike PT Midas Hyperithm 29JAN2026",
         "symbol": "pPT-mHYPER-29JAN2026",
