@@ -5,7 +5,9 @@ args = [
   "<%= settings.pythProvider_owner %>"
 ]
 from = "<%= settings.deployer %>"
-depends = ['var.config', 'var.owner']
+create2=true
+salt="<%= settings.salts_pythOracleProvider %>"
+depends = ['var.config', 'var.owner', 'var.salts']
 
 
 [contract.ChainlinkOracleProvider]
@@ -15,7 +17,9 @@ args = [
   "<%= settings.chainlinkProvider_owner %>"
 ]
 from = "<%= settings.deployer %>"
-depends = ['var.config', 'var.owner']
+create2=true
+salt="<%= settings.salts_chainlinkOracleProvider %>"
+depends = ['var.config', 'var.owner', 'var.salts']
 
 [contract.ChainlinkOracleComposite]
 artifact = "ChainlinkOracleComposite"
@@ -24,7 +28,9 @@ args = [
   "<%= settings.chainlinkProvider_owner %>"
 ]
 from = "<%= settings.deployer %>"
-depends = ['var.config', 'var.owner']
+create2=true
+salt="<%= settings.salts_chainlinkOracleComposite %>"
+depends = ['var.config', 'var.owner', 'var.salts']
 
 [contract.pythProviderProxy]
 artifact = "ERC1967Proxy"
@@ -33,6 +39,8 @@ args = [
   "<%= encodeFunctionData({abi: contracts.PythOracleProvider.abi, functionName: 'initialize'}) %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="<%= settings.salts_pythProviderProxy %>"
 depends = ['contract.PythOracleProvider']
 
 [contract.chainlinkProviderProxy]
@@ -42,6 +50,8 @@ args = [
   "<%= encodeFunctionData({abi: contracts.ChainlinkOracleProvider.abi, functionName: 'initialize'}) %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="<%= settings.salts_chainlinkOracleProviderPoxy %>"
 depends = ['contract.ChainlinkOracleProvider']
 
 [contract.chainlinkCompositeProxy]
@@ -51,4 +61,6 @@ args = [
   "<%= encodeFunctionData({abi: contracts.ChainlinkOracleComposite.abi, functionName: 'initialize'}) %>"
 ]
 from = "<%= settings.deployer %>"
+create2=true
+salt="<%= settings.salts_chainlinkOracleCompositeProxy %>"
 depends = ['contract.ChainlinkOracleComposite']
