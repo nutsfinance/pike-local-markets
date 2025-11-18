@@ -16,44 +16,44 @@ roles_reserveWithdrawerRole = "0x524553455256455f5749544844524157455200000000000
 artifact = "InitialModuleBeacon"
 from = "<%= settings.deployer %>"
 create2=true
-salt="InitialModuleBeacon"
+salt= "<%= settings.salts_initialModuleBeacon %>"
 
 [contract.DoubleJumpRateModel]
 artifact = "DoubleJumpRateModel"
 from = "<%= settings.deployer %>"
 create2=true
 ifExists = "continue"
-salt="DoubleJumpRateModel"
+salt= "<%= settings.salts_doubleJumpRateModel %>"
 
 [contract.RBACModule]
 artifact = "RBACModule"
 from = "<%= settings.deployer %>"
 create2=true
-salt="RBACModule"
+salt= "<%= settings.salts_rbacModule %>"
 
 [contract.PTokenModule]
 artifact = "PTokenModule"
 from = "<%= settings.deployer %>"
 create2=true
-salt="PTokenModule"
+salt= "<%= settings.salts_pTokenModule %>"
 
 [contract.RiskEngineModule]
 artifact = "RiskEngineModule"
 from = "<%= settings.deployer %>"
 create2=true
-salt="RiskEngineModule"
+salt= "<%= settings.salts_riskEngineModule %>"
 
 [contract.OracleEngine]
 artifact = "OracleEngine"
 from = "<%= settings.deployer %>"
 create2=true
-salt="OracleEngine"
+salt= "<%= settings.salts_oracleEngine %>"
 
 [contract.Timelock]
 artifact = "Timelock"
 from = "<%= settings.deployer %>"
 create2=true
-salt="Timelock"
+salt= "<%= settings.salts_timelock %>"
 
 #PToken
 [router.PTokenRouter]
@@ -65,7 +65,7 @@ contracts = [
 ]
 from = "<%= settings.deployer %>"
 create2=true
-salt="PTokenRouter"
+salt= "<%= settings.salts_pTokenRouter %>"
 
 #RiskEngine
 [router.RiskEngineRouter]
@@ -76,4 +76,4 @@ contracts = [
 ]
 from = "<%= settings.deployer %>"
 create2=true
-salt="RiskEngineRouter"
+salt= "<%= settings.salts_riskEngineRouter %>"
