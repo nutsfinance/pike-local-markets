@@ -12,15 +12,19 @@ contract MergeDeploymentData is Script, Config {
 
         string memory baseDir = getBaseDir(dryRun);
         string memory commonDir = string.concat(baseDir, "/common");
-        string memory mergedPath = string.concat(commonDir, "/", vm.envString("CHAIN"),".json");
+        string memory mergedPath =
+            string.concat(commonDir, "/", vm.envString("CHAIN"), ".json");
 
         string memory oraclePath = string.concat(commonDir, "/oracle-providers.json");
         string memory oracleJson = vm.readFile(oraclePath);
         string memory topObject = "merged";
-        string memory merged = vm.serializeString(topObject, "oracle-providers", oracleJson);
+        string memory merged =
+            vm.serializeString(topObject, "oracle-providers", oracleJson);
 
         for (uint256 id = 1; id <= protocolId; id++) {
-            string memory path = string.concat(baseDir, "/protocol-", vm.toString(id), "/deployment-data.json");
+            string memory path = string.concat(
+                baseDir, "/protocol-", vm.toString(id), "/deployment-data.json"
+            );
 
             string memory protocolJson = vm.readFile(path);
 

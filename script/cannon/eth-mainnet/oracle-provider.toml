@@ -10,6 +10,7 @@ salt="PythOracleProvider"
 depends = ['var.config', 'var.owner']
 
 
+
 [contract.ChainlinkOracleProvider]
 artifact = "ChainlinkOracleProvider"
 args = [

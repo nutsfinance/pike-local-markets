@@ -13,7 +13,7 @@ contract PermissionGranter is Config {
     // Mapping from permission names to bytes32 values
     mapping(string => bytes32) public permissionMap;
 
-    constructor() Config() {
+    constructor() {
         // Initialize permission mappings
         permissionMap["CONFIGURATOR"] = "CONFIGURATOR";
         permissionMap["PROTOCOL_OWNER"] = "PROTOCOL_OWNER";

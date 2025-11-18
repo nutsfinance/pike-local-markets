@@ -45,7 +45,7 @@ contract DeployMarket is Config {
     Timelock tm;
     MockProvider mp;
 
-    constructor() Config() {
+    constructor() {
         PATH = "";
     }
 

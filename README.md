@@ -77,6 +77,7 @@ yarn build
 ### Testing
 
 Pike Market uses Foundry v1 for testing.
+
 - Version: `forge 1.0.0-v1.0.0 (8692e92619 2025-02-10T09:05:59.911807000Z)`
 - **Important**: Previous versions of Foundry (e.g., v0.3.0) are not compatible with the current unit tests and may fail to execute them. Ensure you are using latest version for all test operations.
 
