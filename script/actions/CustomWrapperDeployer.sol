@@ -61,9 +61,8 @@ contract DeployCustomWrapper is Config {
                 keccak256(abi.encodePacked(key))
                     != keccak256(abi.encodePacked(vm.toString(token)))
             ) {
-                address addr = vm.parseJsonAddress(
-                    existingJson, string(abi.encodePacked(".", key))
-                );
+                address addr =
+                    vm.parseJsonAddress(existingJson, string(abi.encodePacked(".", key)));
                 vm.serializeAddress(obj, key, addr);
             }
         }

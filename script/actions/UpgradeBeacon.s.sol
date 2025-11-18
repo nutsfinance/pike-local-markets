@@ -10,7 +10,7 @@ import {Config, console} from "../Config.sol";
 contract UpgradeBeacon is Config {
     IFactory factory;
 
-    constructor() Config() {}
+    constructor() {}
 
     // Struct to hold beacon and implementation data
     struct BeaconUpgrade {

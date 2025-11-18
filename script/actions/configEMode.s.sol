@@ -22,7 +22,7 @@ contract EMode is Config {
     IRiskEngine re;
     Timelock tm;
 
-    constructor() Config() {}
+    constructor() {}
 
     function readEModeConfigs() internal view returns (EModeConfig[] memory) {
         string memory configPath = vm.envString("CONFIG_PATH");

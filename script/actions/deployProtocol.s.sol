@@ -35,7 +35,7 @@ contract DeployProtocol is Config {
     IOracleEngine public oe;
     Timelock public tm;
 
-    constructor() Config() {}
+    constructor() {}
 
     function readProtocolInfo() internal view returns (ProtocolInfo memory) {
         string memory configPath = vm.envString("CONFIG_PATH");

@@ -19,7 +19,7 @@ contract Deploy is Config {
 
     address factory;
 
-    constructor() Config() {}
+    constructor() {}
 
     function deployBeacons() internal {
         console.log("---------------");

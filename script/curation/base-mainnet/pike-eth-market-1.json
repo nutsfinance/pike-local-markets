@@ -1,0 +1,231 @@
+{
+  "marketMetadata": {
+    "protocol": "Pike",
+    "marketName": "Base ETH Market",
+    "description": "Flagship ETH looping market",
+    "targetChain": "base",
+    "chainId": 5432,
+    "configVersion": "1.0.1",
+    "protocolVersion": "1.0.1",
+    "submissionTimestamp": 1763393830,
+    "deploymentTimestamp": 0,
+    "feedDescriptions": {
+      "0xA004902B3D582FfF0c22dA312209c1672975bb6D": "Constant Exchange Rate Provider",
+      "0xFC1415403EbB0c693f9a7844b92aD2Ff24775C65": "Chainlink weETH/ETH",
+      "0x43a5C292A453A3bF3606fa856197f09D7B74251a": "Chainlink wstETH/ETH"
+    }
+  },
+  "addressBook": {
+    "governor": "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1",
+    "emergencyExecutor": "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1",
+    "assets": {
+      "WETH": "0x4200000000000000000000000000000000000006",
+      "weETH": "0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A",
+      "wstETH": "0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452",
+      "SPA-weETH-wstETH": "0x9bFDBB3b2e676d1E63E78e36DCE71c44eD4F0b4C"
+    }
+  },
+  "protocolConfiguration": {
+    "ownerShareMantissa": 300000000000000000,
+    "configuratorShareMantissa": 200000000000000000
+  },
+  "assets": [
+    {
+      "symbol": "WETH",
+      "configuration": {
+        "name": "Pike Wrapped Ether",
+        "symbol": "pWETH",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 150000000000000000,
+        "protocolSeizeShareMantissa": 1000000000000000,
+        "collateralFactorMantissa": 930000000000000000,
+        "liquidationThresholdMantissa": 950000000000000000,
+        "liquidationIncentiveMantissa": 1010000000000000000,
+        "closeFactor": 500000000000000000,
+        "supplyCap": 3200000000000000000000000,
+        "borrowCap": 2900000000000000000000000,
+        "interestRateModel": {
+          "baseRate": 0,
+          "initialMultiplier": 0,
+          "firstKinkMultiplier": 28200000000000000,
+          "secondKinkMultiplier": 1000000000000000000,
+          "firstKink": 0,
+          "secondKink": 920000000000000000,
+          "borrowRateMaxMantissa": 420000000000
+        },
+        "oracleConfiguration": {
+          "mainOracle": {
+            "provider": "ChainlinkOracleComposite",
+            "feeds": [
+              {
+                "type": "CustomRateFeedWrapper",
+                "target": "0xA004902B3D582FfF0c22dA312209c1672975bb6D",
+                "decimals": 18,
+                "callData": "0x3ba0b9a9"
+              },
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "invertRates": [false, false, false],
+            "maxStalePeriods": [86400, 0, 0]
+          },
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
+        }
+      }
+    },
+    {
+      "symbol": "weETH",
+      "configuration": {
+        "name": "Pike Wrapped eETH",
+        "symbol": "pweETH",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 450000000000000000,
+        "protocolSeizeShareMantissa": 1000000000000000,
+        "collateralFactorMantissa": 930000000000000000,
+        "liquidationThresholdMantissa": 950000000000000000,
+        "liquidationIncentiveMantissa": 1010000000000000000,
+        "closeFactor": 500000000000000000,
+        "supplyCap": 2200000000000000000000000,
+        "borrowCap": 1000000000000000000,
+        "interestRateModel": {
+          "baseRate": 0,
+          "initialMultiplier": 0,
+          "firstKinkMultiplier": 266600000000000000,
+          "secondKinkMultiplier": 4285700000000000000,
+          "firstKink": 0,
+          "secondKink": 300000000000000000,
+          "borrowRateMaxMantissa": 420000000000
+        },
+        "oracleConfiguration": {
+          "mainOracle": {
+            "provider": "ChainlinkOracleComposite",
+            "feeds": [
+              "0xFC1415403EbB0c693f9a7844b92aD2Ff24775C65",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "invertRates": [false, false, false],
+            "maxStalePeriods": [86400, 0, 0]
+          },
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
+        }
+      }
+    },
+    {
+      "symbol": "wstETH",
+      "configuration": {
+        "name": "Pike Wrapped liquid staked Ether 2.0",
+        "symbol": "pwstETH",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 350000000000000000,
+        "protocolSeizeShareMantissa": 1000000000000000,
+        "collateralFactorMantissa": 930000000000000000,
+        "liquidationThresholdMantissa": 950000000000000000,
+        "liquidationIncentiveMantissa": 1010000000000000000,
+        "closeFactor": 500000000000000000,
+        "supplyCap": 1760000000000000000000000,
+        "borrowCap": 480000000000000000000000,
+        "interestRateModel": {
+          "baseRate": 0,
+          "initialMultiplier": 0,
+          "firstKinkMultiplier": 12500000000000000,
+          "secondKinkMultiplier": 2000000000000000000,
+          "firstKink": 0,
+          "secondKink": 800000000000000000,
+          "borrowRateMaxMantissa": 420000000000
+        },
+        "oracleConfiguration": {
+          "mainOracle": {
+            "provider": "ChainlinkOracleComposite",
+            "feeds": [
+              "0x43a5C292A453A3bF3606fa856197f09D7B74251a",
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "invertRates": [false, false, false],
+            "maxStalePeriods": [86400, 0, 0]
+          },
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
+        }
+      }
+    },
+    {
+      "symbol": "SPA-weETH-wstETH",
+      "configuration": {
+        "name": "Pike Self Pegging Asset weETH wstETH",
+        "symbol": "pSPA-weETH-wstETH",
+        "decimals": 8,
+        "initialExchangeRateMantissa": 200000000000000000000000000,
+        "reserveFactorMantissa": 350000000000000000,
+        "protocolSeizeShareMantissa": 1000000000000000,
+        "collateralFactorMantissa": 890000000000000000,
+        "liquidationThresholdMantissa": 910000000000000000,
+        "liquidationIncentiveMantissa": 1010000000000000000,
+        "closeFactor": 500000000000000000,
+        "supplyCap": 1760000000000000000000000,
+        "borrowCap": 480000000000000000000000,
+        "interestRateModel": {
+          "baseRate": 0,
+          "initialMultiplier": 0,
+          "firstKinkMultiplier": 12500000000000000,
+          "secondKinkMultiplier": 2000000000000000000,
+          "firstKink": 0,
+          "secondKink": 800000000000000000,
+          "borrowRateMaxMantissa": 420000000000
+        },
+        "oracleConfiguration": {
+          "mainOracle": {
+            "provider": "ChainlinkOracleComposite",
+            "feeds": [
+              {
+                "type": "CustomRateFeedWrapper",
+                "target": "0xA004902B3D582FfF0c22dA312209c1672975bb6D",
+                "decimals": 18,
+                "callData": "0x3ba0b9a9"
+              },
+              "0x0000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000"
+            ],
+            "invertRates": [false, false, false],
+            "maxStalePeriods": [86400, 0, 0]
+          },
+          "fallbackOracle": null,
+          "lowerBoundRatio": 0,
+          "upperBoundRatio": 0
+        }
+      }
+    }
+  ],
+  "workflow": {
+    "pikeBDValidation": {
+      "allCollateralAssetsListed": true,
+      "allAssetAddressesProvided": true,
+      "allOracleFeedsSpecified": true,
+      "allMarketLevelParametersFilled": true,
+      "allAssetLevelParametersFilled": true,
+      "targetChainConfirmed": true,
+      "deploymentTimelineConfirmed": true
+    },
+    "pikeInitialCuration": {
+      "partnerProposalSubmitted": false,
+      "pikeTeamReviewComplete": false,
+      "configurationSignedOff": false,
+      "readyForDeployment": false
+    },
+    "pikeMarketCreation": {
+      "configurationDeployed": false,
+      "deploymentAddressesShared": false,
+      "partnerVerifiedOnChain": false,
+      "deploymentConfirmed": false
+    }
+  }
+}

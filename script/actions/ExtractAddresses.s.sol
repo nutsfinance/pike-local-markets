@@ -6,7 +6,6 @@ import {console} from "forge-std/console.sol";
 import {Config} from "../Config.sol";
 
 contract ExtractAddresses is Script, Config {
-
     function run() external {
         bool dryRun = vm.envBool("DRY_RUN");
         uint256 protocolId = vm.envUint("PROTOCOL_ID");
@@ -52,7 +51,7 @@ contract ExtractAddresses is Script, Config {
         extractImplementationAddresses(baseDir, commonDir);
     }
 
-        function extractImplementationAddresses(
+    function extractImplementationAddresses(
         string memory baseDir,
         string memory commonDir
     ) internal {
