@@ -1,0 +1,83 @@
+{
+  "address": "0x15149DB6938E235723A522566F804F983f31F27f",
+  "abi": [
+    {
+      "type": "constructor",
+      "inputs": [
+        {
+          "name": "implementation",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "_data",
+          "type": "bytes",
+          "internalType": "bytes"
+        }
+      ],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "fallback",
+      "stateMutability": "payable"
+    },
+    {
+      "type": "event",
+      "name": "Upgraded",
+      "inputs": [
+        {
+          "name": "implementation",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "AddressEmptyCode",
+      "inputs": [
+        {
+          "name": "target",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ERC1967InvalidImplementation",
+      "inputs": [
+        {
+          "name": "implementation",
+          "type": "address",
+          "internalType": "address"
+        }
+      ]
+    },
+    {
+      "type": "error",
+      "name": "ERC1967NonPayable",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "FailedCall",
+      "inputs": []
+    }
+  ],
+  "constructorArgs": [
+    "0x53eb70429801A6F5CbA02D7e7F43f958C0d0b4c9",
+    "0x8129fc1c"
+  ],
+  "linkedLibraries": {},
+  "deployTxnHash": "",
+  "deployTxnBlockNumber": "",
+  "deployTimestamp": "1763496419",
+  "sourceName": "node_modules/@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol",
+  "contractName": "ERC1967Proxy",
+  "deployedOn": "contract.chainlinkCompositeProxy",
+  "gasUsed": 0,
+  "gasCost": "0"
+}
