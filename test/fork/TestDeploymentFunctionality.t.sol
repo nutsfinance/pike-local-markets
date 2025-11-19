@@ -12,8 +12,8 @@ contract TestProtocolFunctionality is Config, Test {
     address public alice;
     address public bob;
 
-    IPToken wsPToken;
-    IPToken stsPToken;
+    IPToken pTokenA;
+    IPToken pTokenB;
 
     function run() public {
         // Step 1: Set up fork
@@ -36,100 +36,100 @@ contract TestProtocolFunctionality is Config, Test {
         string memory deploymentPath = getDeploymentPath(protocolId);
         string memory json = vm.readFile(deploymentPath);
         address riskEngineAddress = vm.parseJsonAddress(json, ".riskEngine");
-        address wsPTokenAddress = vm.parseJsonAddress(json, ".market-pws");
-        address stsPTokenAddress = vm.parseJsonAddress(json, ".market-psts");
+        address pTokenAddressA = vm.parseJsonAddress(json, ".market-pweth");
+        address pTokenAddressB = vm.parseJsonAddress(json, ".market-pweeth");
 
         IRiskEngine riskEngine = IRiskEngine(riskEngineAddress);
-        wsPToken = IPToken(wsPTokenAddress);
-        stsPToken = IPToken(stsPTokenAddress);
+        pTokenA = IPToken(pTokenAddressA);
+        pTokenB = IPToken(pTokenAddressB);
 
-        address ws = wsPToken.asset();
-        address sts = stsPToken.asset();
+        address A = pTokenA.asset();
+        address B = pTokenB.asset();
         console.log("=== Contracts Loaded ===");
         console.log("Risk Engine: %s", address(riskEngine));
-        console.log("WS PToken: %s (Asset: %s)", address(wsPToken), ws);
-        console.log("STS PToken: %s (Asset: %s)", address(stsPToken), sts);
+        console.log("A PToken: %s (Asset: %s)", address(pTokenA), A);
+        console.log("B PToken: %s (Asset: %s)", address(pTokenB), B);
 
         // Step 4: Prepare assets for accounts
-        uint256 aliceDepositAmount = 1000 ether; // Alice deposits 1000 ws
-        uint256 bobDepositAmount = 500 ether; // Bob deposits 500 ws
-        uint256 bobCollateralAmount = 1000e18; // Bob deposits 1000 sts as collateral
-        uint256 bobBorrowAmount = 700 ether; // Bob borrows 700 ws
+        uint256 aliceDepositAmount = 1000 ether; // Alice deposits 1000 A
+        uint256 bobDepositAmount = 500 ether; // Bob deposits 500 A
+        uint256 bobCollateralAmount = 1000e18; // Bob deposits 1000 B as collateral
+        uint256 bobBorrowAmount = 700 ether; // Bob borrows 700 A
 
-        deal(ws, alice, aliceDepositAmount);
-        deal(ws, bob, bobDepositAmount);
-        deal(sts, bob, bobCollateralAmount);
+        deal(A, alice, aliceDepositAmount);
+        deal(A, bob, bobDepositAmount);
+        deal(B, bob, bobCollateralAmount);
         console.log("=== Assets Prepared ===");
-        console.log("Alice WS balance: %s", IERC20(ws).balanceOf(alice) / 1e18);
-        console.log("Bob WS balance: %s", IERC20(ws).balanceOf(bob) / 1e18);
-        console.log("Bob STS balance: %s", IERC20(sts).balanceOf(bob) / 1e18);
+        console.log("Alice A balance: %s", IERC20(A).balanceOf(alice) / 1e18);
+        console.log("Bob A balance: %s", IERC20(A).balanceOf(bob) / 1e18);
+        console.log("Bob B balance: %s", IERC20(B).balanceOf(bob) / 1e18);
 
-        // Step 5: Alice provides liquidity (ws deposit)
+        // Step 5: Alice provides liquidity (A deposit)
         vm.startPrank(alice);
-        IERC20(ws).approve(address(wsPToken), aliceDepositAmount);
-        wsPToken.deposit(aliceDepositAmount, alice);
-        uint256 alicePTokenBalance = wsPToken.balanceOf(alice);
+        IERC20(A).approve(address(pTokenA), aliceDepositAmount);
+        pTokenA.deposit(aliceDepositAmount, alice);
+        uint256 alicePTokenBalance = pTokenA.balanceOf(alice);
         vm.stopPrank();
         console.log("=== Alice's Actions ===");
-        console.log("Alice deposited %s WS", aliceDepositAmount / 1e18);
-        console.log("Alice WS PToken balance: %s", alicePTokenBalance / 1e8);
+        console.log("Alice deposited %s A", aliceDepositAmount / 1e18);
+        console.log("Alice A PToken balance: %s", alicePTokenBalance / 1e8);
 
-        // Step 6: Bob provides liquidity (ws deposit) and collateral (sts deposit)
+        // Step 6: Bob provides liquidity (A deposit) and collateral (B deposit)
         vm.startPrank(bob);
-        IERC20(ws).approve(address(wsPToken), bobDepositAmount);
-        wsPToken.deposit(bobDepositAmount, bob);
-        uint256 bobwsPTokenBalance = wsPToken.balanceOf(bob);
-        IERC20(sts).approve(address(stsPToken), bobCollateralAmount);
-        stsPToken.deposit(bobCollateralAmount, bob);
-        uint256 bobstsPTokenBalance = stsPToken.balanceOf(bob);
+        IERC20(A).approve(address(pTokenA), bobDepositAmount);
+        pTokenA.deposit(bobDepositAmount, bob);
+        uint256 bobpTokenABalance = pTokenA.balanceOf(bob);
+        IERC20(B).approve(address(pTokenB), bobCollateralAmount);
+        pTokenB.deposit(bobCollateralAmount, bob);
+        uint256 bobpTokenBBalance = pTokenB.balanceOf(bob);
         console.log("=== Bob's Actions ===");
-        console.log("Bob deposited %s WS", bobDepositAmount / 1e18);
-        console.log("Bob WS PToken balance: %s", bobwsPTokenBalance / 1e8);
-        console.log("Bob deposited %s STS as collateral", bobCollateralAmount / 1e18);
-        console.log("Bob STS PToken balance: %s", bobstsPTokenBalance / 1e8);
+        console.log("Bob deposited %s A", bobDepositAmount / 1e18);
+        console.log("Bob A PToken balance: %s", bobpTokenABalance / 1e8);
+        console.log("Bob deposited %s B as collateral", bobCollateralAmount / 1e18);
+        console.log("Bob B PToken balance: %s", bobpTokenBBalance / 1e8);
 
-        // Step 7: Bob borrows ws
-        wsPToken.borrow(bobBorrowAmount);
-        uint256 bobBorrowBalance = wsPToken.borrowBalanceCurrent(bob);
+        // Step 7: Bob borrows A
+        pTokenA.borrow(bobBorrowAmount);
+        uint256 bobBorrowBalance = pTokenA.borrowBalanceCurrent(bob);
         vm.stopPrank();
-        console.log("Bob borrowed %s WS", bobBorrowAmount / 1e18);
-        console.log("Bob WS borrow balance: %s", bobBorrowBalance / 1e18);
+        console.log("Bob borrowed %s A", bobBorrowAmount / 1e18);
+        console.log("Bob A borrow balance: %s", bobBorrowBalance / 1e18);
 
         // Step 8: Log initial APY
-        uint256 initialSupplyRate = wsPToken.supplyRatePerSecond();
-        uint256 initialBorrowRate = wsPToken.borrowRatePerSecond();
+        uint256 initialSupplyRate = pTokenA.supplyRatePerSecond();
+        uint256 initialBorrowRate = pTokenA.borrowRatePerSecond();
         console.log("=== Initial Rates ===");
-        console.log("WS Supply Rate (per second): %s", initialSupplyRate);
-        console.log("WS Borrow Rate (per second): %s", initialBorrowRate);
+        console.log("A Supply Rate (per second): %s", initialSupplyRate);
+        console.log("A Borrow Rate (per second): %s", initialBorrowRate);
 
         // Step 9: Skip time (180 days)
         uint256 timeSkip = 180 days;
         vm.warp(block.timestamp + timeSkip);
         console.log("=== Time Skip ===");
         console.log("Skipped 180 days. New timestamp: %s", block.timestamp);
-        wsPToken.accrueInterest();
+        pTokenA.accrueInterest();
 
         // Step 10: Log final APY and balances
-        uint256 finalSupplyRate = wsPToken.supplyRatePerSecond();
-        uint256 finalBorrowRate = wsPToken.borrowRatePerSecond();
-        alicePTokenBalance = wsPToken.balanceOfUnderlying(alice);
-        bobwsPTokenBalance = wsPToken.balanceOfUnderlying(bob);
-        bobBorrowBalance = wsPToken.borrowBalanceCurrent(bob);
+        uint256 finalSupplyRate = pTokenA.supplyRatePerSecond();
+        uint256 finalBorrowRate = pTokenA.borrowRatePerSecond();
+        alicePTokenBalance = pTokenA.balanceOfUnderlying(alice);
+        bobpTokenABalance = pTokenA.balanceOfUnderlying(bob);
+        bobBorrowBalance = pTokenA.borrowBalanceCurrent(bob);
         console.log("=== Final Rates and Balances ===");
-        console.log("Final WS Supply Rate (per second): %s", finalSupplyRate);
-        console.log("Final WS Borrow Rate (per second): %s", finalBorrowRate);
+        console.log("Final A Supply Rate (per second): %s", finalSupplyRate);
+        console.log("Final A Borrow Rate (per second): %s", finalBorrowRate);
         console.log(
-            "Alice WS PToken Balance of Underlying: %s", alicePTokenBalance / 1e18
+            "Alice A PToken Balance of Underlying: %s", alicePTokenBalance / 1e18
         );
-        console.log("Bob WS PToken Balance of Underlying: %s", bobwsPTokenBalance / 1e18);
-        console.log("Bob WS Borrow Balance: %s", bobBorrowBalance / 1e18);
+        console.log("Bob A PToken Balance of Underlying: %s", bobpTokenABalance / 1e18);
+        console.log("Bob A Borrow Balance: %s", bobBorrowBalance / 1e18);
 
         // Step 11: verify interest accrual
         require(
             alicePTokenBalance > aliceDepositAmount, "Alice's balance did not increase"
         );
         require(
-            bobwsPTokenBalance > bobDepositAmount, "Bob's WS balance did not increase"
+            bobpTokenABalance > bobDepositAmount, "Bob's A balance did not increase"
         );
         require(
             bobBorrowBalance > bobBorrowAmount, "Bob's borrow balance did not increase"
