@@ -1,0 +1,5 @@
+{
+  "chainlinkCompositeProxy": "0x15149DB6938E235723A522566F804F983f31F27f",
+  "chainlinkProviderProxy": "0xB26b0B551F0E5e6cE4998be57Fb73871c4244ad0",
+  "pythProviderProxy": "0x96a65832ca738914f72140ba56BBE8780d2ea1d5"
+}
