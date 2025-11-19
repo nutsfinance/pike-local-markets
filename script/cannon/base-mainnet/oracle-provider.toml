@@ -6,6 +6,7 @@ args = [
 ]
 from = "<%= settings.deployer %>"
 create2=true
+ifExists = "continue"
 salt="<%= settings.salts_pythOracleProvider %>"
 depends = ['var.config', 'var.owner', 'var.salts']
 
@@ -18,6 +19,7 @@ args = [
 ]
 from = "<%= settings.deployer %>"
 create2=true
+ifExists = "continue"
 salt="<%= settings.salts_chainlinkOracleProvider %>"
 depends = ['var.config', 'var.owner', 'var.salts']
 
@@ -29,6 +31,7 @@ args = [
 ]
 from = "<%= settings.deployer %>"
 create2=true
+ifExists = "continue"
 salt="<%= settings.salts_chainlinkOracleComposite %>"
 depends = ['var.config', 'var.owner', 'var.salts']
 
@@ -40,6 +43,7 @@ args = [
 ]
 from = "<%= settings.deployer %>"
 create2=true
+ifExists = "continue"
 salt="<%= settings.salts_pythProviderProxy %>"
 depends = ['contract.PythOracleProvider']
 
@@ -51,6 +55,7 @@ args = [
 ]
 from = "<%= settings.deployer %>"
 create2=true
+ifExists = "continue"
 salt="<%= settings.salts_chainlinkOracleProviderPoxy %>"
 depends = ['contract.ChainlinkOracleProvider']
 
@@ -62,5 +67,6 @@ args = [
 ]
 from = "<%= settings.deployer %>"
 create2=true
+ifExists = "continue"
 salt="<%= settings.salts_chainlinkOracleCompositeProxy %>"
 depends = ['contract.ChainlinkOracleComposite']

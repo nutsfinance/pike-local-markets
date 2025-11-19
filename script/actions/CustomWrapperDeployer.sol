@@ -3,6 +3,8 @@ pragma solidity 0.8.28;
 
 import {CustomRateFeedWrapper} from "@oracles/CustomRateFeedWrapper.sol";
 import {Config, console} from "../Config.sol";
+import {IERC20Metadata} from
+    "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 /// @title DeployCustomWrapper
 contract DeployCustomWrapper is Config {
@@ -13,7 +15,8 @@ contract DeployCustomWrapper is Config {
         string memory version = vm.envString("VERSION");
         bool dryRun = vm.envBool("DRY_RUN");
 
-        address token = vm.envAddress("TOKEN_ADDRESS");
+        string memory symbol = vm.envString("SYMBOL");
+        address target = vm.envAddress("TARGET");
         bytes memory funcData = vm.envBytes("FUNC_DATA"); // full calldata (selector + args)
         uint8 decimals = uint8(vm.envUint("DECIMALS"));
 
@@ -32,18 +35,18 @@ contract DeployCustomWrapper is Config {
         if (!dryRun) {
             uint256 privateKey = vm.parseUint(vm.envString("PRIVATE_KEY"));
             vm.startBroadcast(privateKey);
-            wrapper = new CustomRateFeedWrapper(token, decimals, funcData);
+            wrapper = new CustomRateFeedWrapper(target, decimals, funcData);
             vm.stopBroadcast();
             console.log("Deployed:", address(wrapper));
         } else {
-            wrapper = new CustomRateFeedWrapper(token, decimals, funcData);
+            wrapper = new CustomRateFeedWrapper(target, decimals, funcData);
             console.log("Dry run:", address(wrapper));
         }
 
-        _writeDeployment(outputPath, token, address(wrapper));
+        _writeDeployment(outputPath, symbol, address(wrapper));
     }
 
-    function _writeDeployment(string memory outputPath, address token, address wrapper)
+    function _writeDeployment(string memory outputPath, string memory symbol, address wrapper)
         internal
     {
         string memory existingJson;
@@ -59,7 +62,7 @@ contract DeployCustomWrapper is Config {
             string memory key = keys[i];
             if (
                 keccak256(abi.encodePacked(key))
-                    != keccak256(abi.encodePacked(vm.toString(token)))
+                    != keccak256(abi.encodePacked(symbol))
             ) {
                 address addr =
                     vm.parseJsonAddress(existingJson, string(abi.encodePacked(".", key)));
@@ -67,7 +70,7 @@ contract DeployCustomWrapper is Config {
             }
         }
 
-        string memory updatedJson = vm.serializeAddress(obj, vm.toString(token), wrapper);
+        string memory updatedJson = vm.serializeAddress(obj, symbol, wrapper);
         vm.writeFile(outputPath, updatedJson);
         console.log("Saved wrapper address to:", outputPath);
     }
