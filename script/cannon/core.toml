@@ -7,6 +7,7 @@ include = [
 artifact = "Factory"
 from = "<%= settings.deployer %>"
 create2=true
+ifExists = "continue"
 salt= "<%= settings.salts_factory %>"
 
 [contract.reBeacon]
@@ -17,6 +18,7 @@ args = [
 ]
 from = "<%= settings.deployer %>"
 create2=true
+ifExists = "continue"
 salt= "<%= settings.salts_riskEngineBeacon %>"
 
 [contract.pTokenBeacon]
@@ -27,6 +29,7 @@ args = [
 ]
 from = "<%= settings.deployer %>"
 create2=true
+ifExists = "continue"
 salt= "<%= settings.salts_pTokenBeacon %>"
 
 [contract.timelockBeacon]
@@ -37,6 +40,7 @@ args = [
 ]
 from = "<%= settings.deployer %>"
 create2=true
+ifExists = "continue"
 salt= "<%= settings.salts_timelockBeacon %>"
 
 [contract.oracleEngineBeacon]
@@ -47,6 +51,7 @@ args = [
 ]
 from = "<%= settings.deployer %>"
 create2=true
+ifExists = "continue"
 salt= "<%= settings.salts_oracleEngineBeacon %>"
 
 [contract.factoryProxy]
@@ -58,4 +63,5 @@ args = [
 from = "<%= settings.deployer %>"
 depends = ['contract.Factory','contract.oracleEngineBeacon', 'contract.reBeacon', 'contract.pTokenBeacon', 'contract.timelockBeacon']
 create2=true
+ifExists = "continue"
 salt= "<%= settings.salts_factoryProxy %>"
