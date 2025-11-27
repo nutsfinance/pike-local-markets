@@ -2,13 +2,13 @@
 cache/
 out/
 logs/
-# Ignores development broadcast logs
-# !/broadcast
-# /broadcast/*/31337/
-# /broadcast/*/84532/
-# /broadcast/**/dry-run/
 
-/broadcast
+# Ignore everything in broadcast by default
+broadcast/**
+!broadcast/*/
+!broadcast/*/8453/
+!broadcast/*/8453/**
+broadcast/*/8453/dry-run
 
 node_modules
 
