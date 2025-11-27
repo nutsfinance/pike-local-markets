@@ -86,7 +86,7 @@
   "market-spaweethwsteth": {
     "name": "Pike Self Pegging Asset weETH wstETH",
     "symbol": "pSPA-weETH-wstETH",
-    "baseToken": "0x9bFDBB3b2e676d1E63E78e36DCE71c44eD4F0b4C",
+    "baseToken": "0x8411cF677a0f5412D47860Ce611a2678A3C015c0",
     "decimals": 8,
     "initialExchangeRateMantissa": "200000000000000000000000000",
     "reserveFactorMantissa": "350000000000000000",
