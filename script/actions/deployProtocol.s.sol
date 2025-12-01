@@ -39,13 +39,35 @@ contract DeployProtocol is Config {
 
     function readProtocolInfo() internal view returns (ProtocolInfo memory) {
         string memory configPath = vm.envString("CONFIG_PATH");
+        string memory version = vm.envString("VERSION");
+        uint256 protocolId = vm.envUint("PROTOCOL_ID");
+
         string memory json = vm.readFile(configPath);
+
+        // Build the base JSON pointer:
+        // .versions["1.0.0"].protocol-ids["1"].protocol-info
+        string memory base = string(
+            abi.encodePacked(
+                ".versions.\"",
+                version,
+                "\".protocol-ids.\"",
+                vm.toString(protocolId),
+                "\".protocol-info"
+            )
+        );
+
         return ProtocolInfo({
-            initialGovernor: vm.parseJsonAddress(json, ".protocol-info.initialGovernor"),
-            emergencyExecutor: vm.parseJsonAddress(json, ".protocol-info.emergencyExecutor"),
-            ownerShareMantissa: vm.parseJsonUint(json, ".protocol-info.ownerShareMantissa"),
+            initialGovernor: vm.parseJsonAddress(
+                json, string(abi.encodePacked(base, ".initialGovernor"))
+            ),
+            emergencyExecutor: vm.parseJsonAddress(
+                json, string(abi.encodePacked(base, ".emergencyExecutor"))
+            ),
+            ownerShareMantissa: vm.parseJsonUint(
+                json, string(abi.encodePacked(base, ".ownerShareMantissa"))
+            ),
             configuratorShareMantissa: vm.parseJsonUint(
-                json, ".protocol-info.configuratorShareMantissa"
+                json, string(abi.encodePacked(base, ".configuratorShareMantissa"))
             )
         });
     }
@@ -189,9 +211,8 @@ contract DeployProtocol is Config {
         bool useSafe = safeAddress != address(0);
 
         string memory baseDir = getBaseDir(false); // always use deployed address
-        string memory path = string(
-            abi.encodePacked(baseDir, "/artifacts/factoryProxy.json")
-        );
+        string memory path =
+            string(abi.encodePacked(baseDir, "/artifacts/factoryProxy.json"));
         console.log("Using deployment path: %s", path);
 
         setUp();
