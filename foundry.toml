@@ -40,3 +40,16 @@ quote_style = "double"
 number_underscore = "thousands"
 multiline_func_header = "attributes_first"
 single_line_statement_blocks = "preserve"
+
+[rpc_endpoints]
+mainnet = "${MAINNET_RPC}"
+optimism = "${OPTIMISM_RPC}"
+arbitrum = "${ARBITRUM_RPC}"
+base = "${BASE_RPC}"
+
+[etherscan]
+mainnet = { key = "${ETHERSCAN_V2_KEY}", chain = 1 }
+arbitrum = { key = "${ETHERSCAN_V2_KEY}", chain = 42161 }
+optimism = { key = "${ETHERSCAN_V2_KEY}", chain = 10 }
+base = { key = "${ETHERSCAN_V2_KEY}", chain = 8453 }
+basesepolia = { key = "${ETHERSCAN_V2_KEY}", chain = 84532 }
