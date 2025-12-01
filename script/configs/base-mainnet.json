@@ -1,0 +1,197 @@
+{
+  "protocol": "pike",
+  "versions": {
+    "1.0.0": {
+      "protocol-ids": {
+        "1": {
+          "protocol-info": {
+            "initialGovernor": "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1",
+            "emergencyExecutor": "0xE80bbcAB9E20fc193Ef768B68d69F363a7f9a2a1",
+            "ownerShareMantissa": "300000000000000000",
+            "configuratorShareMantissa": "200000000000000000"
+          },
+          "market-weth": {
+            "name": "Pike Wrapped Ether",
+            "symbol": "pWETH",
+            "baseToken": "0x4200000000000000000000000000000000000006",
+            "decimals": 8,
+            "initialExchangeRateMantissa": "200000000000000000000000000",
+            "reserveFactorMantissa": "150000000000000000",
+            "protocolSeizeShareMantissa": "1000000000000000",
+            "collateralFactorMantissa": "900000000000000000",
+            "liquidationThresholdMantissa": "950000000000000000",
+            "liquidationIncentiveMantissa": "1010000000000000000",
+            "closeFactor": "500000000000000000",
+            "supplyCap": "3200000000000000000000000",
+            "borrowCap": "2900000000000000000000000",
+            "interestRateModel": {
+              "baseRate": "0",
+              "initialMultiplier": "0",
+              "firstKinkMultiplier": "28200000000000000",
+              "secondKinkMultiplier": "1000000000000000000",
+              "firstKink": "0",
+              "secondKink": "920000000000000000",
+              "borrowRateMaxMantissa": "420000000000"
+            },
+            "oracleConfiguration": {
+              "mainOracle": {
+                "provider": "ChainlinkOracleComposite",
+                "providerAddress": "0x15149DB6938E235723A522566F804F983f31F27f",
+                "feeds": [
+                  {
+                    "type": "CustomRateFeedWrapper",
+                    "target": "0xA004902B3D582FfF0c22dA312209c1672975bb6D",
+                    "decimals": 18,
+                    "callData": "0x3ba0b9a9"
+                  },
+                  "0x0000000000000000000000000000000000000000",
+                  "0x0000000000000000000000000000000000000000"
+                ],
+                "invertRates": [false, false, false],
+                "maxStalePeriods": [86400, 0, 0]
+              },
+              "fallbackOracle": null,
+              "lowerBoundRatio": 0,
+              "upperBoundRatio": 0
+            }
+          },
+          "market-weeth": {
+            "name": "Pike Wrapped eETH",
+            "symbol": "pweETH",
+            "baseToken": "0x04C0599Ae5A44757c0af6F9eC3b93da8976c150A",
+            "decimals": 8,
+            "initialExchangeRateMantissa": "200000000000000000000000000",
+            "reserveFactorMantissa": "450000000000000000",
+            "protocolSeizeShareMantissa": "1000000000000000",
+            "collateralFactorMantissa": "900000000000000000",
+            "liquidationThresholdMantissa": "950000000000000000",
+            "liquidationIncentiveMantissa": "1010000000000000000",
+            "closeFactor": "500000000000000000",
+            "supplyCap": "2200000000000000000000000",
+            "borrowCap": "1000000000000000000",
+            "interestRateModel": {
+              "baseRate": "0",
+              "initialMultiplier": "0",
+              "firstKinkMultiplier": "266600000000000000",
+              "secondKinkMultiplier": "4285700000000000000",
+              "firstKink": "0",
+              "secondKink": "300000000000000000",
+              "borrowRateMaxMantissa": "420000000000"
+            },
+            "oracleConfiguration": {
+              "mainOracle": {
+                "provider": "ChainlinkOracleComposite",
+                "providerAddress": "0x15149DB6938E235723A522566F804F983f31F27f",
+                "feeds": [
+                  {
+                    "type": "CustomRateFeedWrapper",
+                    "target": "0xA004902B3D582FfF0c22dA312209c1672975bb6D",
+                    "decimals": 18,
+                    "callData": "0x3ba0b9a9"
+                  },
+                  "0x0000000000000000000000000000000000000000",
+                  "0x0000000000000000000000000000000000000000"
+                ],
+                "invertRates": [false, false, false],
+                "maxStalePeriods": [86400, 0, 0]
+              },
+              "fallbackOracle": null,
+              "lowerBoundRatio": 0,
+              "upperBoundRatio": 0
+            }
+          },
+          "market-wsteth": {
+            "name": "Pike Wrapped liquid staked Ether 2.0",
+            "symbol": "pwstETH",
+            "baseToken": "0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452",
+            "decimals": 8,
+            "initialExchangeRateMantissa": "200000000000000000000000000",
+            "reserveFactorMantissa": "350000000000000000",
+            "protocolSeizeShareMantissa": "1000000000000000",
+            "collateralFactorMantissa": "900000000000000000",
+            "liquidationThresholdMantissa": "950000000000000000",
+            "liquidationIncentiveMantissa": "1010000000000000000",
+            "closeFactor": "500000000000000000",
+            "supplyCap": "1760000000000000000000000",
+            "borrowCap": "480000000000000000000000",
+            "interestRateModel": {
+              "baseRate": "0",
+              "initialMultiplier": "0",
+              "firstKinkMultiplier": "12500000000000000",
+              "secondKinkMultiplier": "2000000000000000000",
+              "firstKink": "0",
+              "secondKink": "800000000000000000",
+              "borrowRateMaxMantissa": "420000000000"
+            },
+            "oracleConfiguration": {
+              "mainOracle": {
+                "provider": "ChainlinkOracleComposite",
+                "providerAddress": "0x15149DB6938E235723A522566F804F983f31F27f",
+                "feeds": [
+                  {
+                    "type": "CustomRateFeedWrapper",
+                    "target": "0xA004902B3D582FfF0c22dA312209c1672975bb6D",
+                    "decimals": 18,
+                    "callData": "0x3ba0b9a9"
+                  },
+                  "0x0000000000000000000000000000000000000000",
+                  "0x0000000000000000000000000000000000000000"
+                ],
+                "invertRates": [false, false, false],
+                "maxStalePeriods": [86400, 0, 0]
+              },
+              "fallbackOracle": null,
+              "lowerBoundRatio": 0,
+              "upperBoundRatio": 0
+            }
+          },
+          "market-spaweethwsteth": {
+            "name": "Pike Self Pegging Asset weETH wstETH",
+            "symbol": "pSPA-weETH-wstETH",
+            "baseToken": "0x8411cF677a0f5412D47860Ce611a2678A3C015c0",
+            "decimals": 8,
+            "initialExchangeRateMantissa": "200000000000000000000000000",
+            "reserveFactorMantissa": "350000000000000000",
+            "protocolSeizeShareMantissa": "1000000000000000",
+            "collateralFactorMantissa": "860000000000000000",
+            "liquidationThresholdMantissa": "910000000000000000",
+            "liquidationIncentiveMantissa": "1010000000000000000",
+            "closeFactor": "500000000000000000",
+            "supplyCap": "1760000000000000000000000",
+            "borrowCap": "480000000000000000000000",
+            "interestRateModel": {
+              "baseRate": "0",
+              "initialMultiplier": "0",
+              "firstKinkMultiplier": "12500000000000000",
+              "secondKinkMultiplier": "2000000000000000000",
+              "firstKink": "0",
+              "secondKink": "800000000000000000",
+              "borrowRateMaxMantissa": "420000000000"
+            },
+            "oracleConfiguration": {
+              "mainOracle": {
+                "provider": "ChainlinkOracleComposite",
+                "providerAddress": "0x15149DB6938E235723A522566F804F983f31F27f",
+                "feeds": [
+                  {
+                    "type": "CustomRateFeedWrapper",
+                    "target": "0xA004902B3D582FfF0c22dA312209c1672975bb6D",
+                    "decimals": 18,
+                    "callData": "0x3ba0b9a9"
+                  },
+                  "0x0000000000000000000000000000000000000000",
+                  "0x0000000000000000000000000000000000000000"
+                ],
+                "invertRates": [false, false, false],
+                "maxStalePeriods": [86400, 0, 0]
+              },
+              "fallbackOracle": null,
+              "lowerBoundRatio": 0,
+              "upperBoundRatio": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}
