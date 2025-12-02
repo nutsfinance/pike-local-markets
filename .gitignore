@@ -6,9 +6,10 @@ logs/
 # Ignore everything in broadcast by default
 broadcast/**
 !broadcast/*/
-!broadcast/*/8453/
-!broadcast/*/8453/**
-broadcast/*/8453/dry-run
+!broadcast/*/*/
+!broadcast/*/*/**
+broadcast/**/dry-run/
+broadcast/*/31337/
 
 node_modules
 
